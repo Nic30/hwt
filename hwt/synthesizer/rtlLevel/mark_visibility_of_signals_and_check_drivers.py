@@ -1,13 +1,13 @@
 from typing import Generator, Tuple, List
 
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator
+from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.statement import HdlStatement
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErrType, \
+from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErrType, \
     SignalDriverErr
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from ipCorePackager.constants import DIRECTION
 
 
@@ -30,7 +30,7 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
       or if they are external interface
     """
     signals = netlist.signals
-    interfaceSignals = netlist.interfaces
+    ioSignals = netlist.hwIOs
 
     signals_with_driver_issue: List[Tuple[SignalDriverErrType, RtlSignal]] = []
     for sig in signals:
@@ -42,7 +42,7 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
         if driver_cnt > 1:
             sig.hidden = False
             for d in sig.drivers:
-                if not isinstance(d, Operator):
+                if not isinstance(d, HOperatorNode):
                     sig.hidden = False
 
                 is_comb_driver = False
@@ -63,18 +63,18 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
 
                 has_comb_driver |= is_comb_driver
         elif driver_cnt == 1:
-            if not isinstance(sig.drivers[0], Operator):
+            if not isinstance(sig.drivers[0], HOperatorNode):
                 sig.hidden = False
         else:
             sig.hidden = False
-            if sig not in interfaceSignals.keys():
+            if sig not in ioSignals.keys():
                 if not sig.def_val._is_full_valid():
                     signals_with_driver_issue.append(
                         (SignalDriverErrType.MISSING_DRIVER, sig))
                 sig._const = True
 
         # chec interface direction if required
-        d = interfaceSignals.get(sig, None)
+        d = ioSignals.get(sig, None)
         if d is None:
             pass
         elif d is DIRECTION.IN:

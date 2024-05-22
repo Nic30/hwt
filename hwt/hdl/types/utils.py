@@ -1,25 +1,25 @@
 from typing import Union, List
 
+from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.types.union import HUnion
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
-def walkFlattenFields(sigOrVal: Union[RtlSignalBase, HValue], skipPadding=True):
+def walkFlattenFields(sigOrConst: Union[RtlSignalBase, HConst], skipPadding=True):
     """
     Walk all simple values in HStruct or HArray
     """
-    t = sigOrVal._dtype
-    if isinstance(t, Bits):
-        yield sigOrVal
+    t = sigOrConst._dtype
+    if isinstance(t, HBits):
+        yield sigOrConst
     elif isinstance(t, HUnion):
-        yield from walkFlattenFields(sigOrVal._val, skipPadding=skipPadding)
+        yield from walkFlattenFields(sigOrConst._val, skipPadding=skipPadding)
     elif isinstance(t, HStruct):
         for f in t.fields:
             isPadding = f.name is None
@@ -27,32 +27,32 @@ def walkFlattenFields(sigOrVal: Union[RtlSignalBase, HValue], skipPadding=True):
                 if isPadding:
                     v = f.dtype.from_py(None)
                 else:
-                    v = getattr(sigOrVal, f.name)
+                    v = getattr(sigOrConst, f.name)
 
                 yield from walkFlattenFields(v)
 
     elif isinstance(t, HArray):
-        for item in sigOrVal:
+        for item in sigOrConst:
             yield from walkFlattenFields(item)
     elif isinstance(t, HStream):
-        assert isinstance(sigOrVal, HValue), sigOrVal
-        for v in sigOrVal:
+        assert isinstance(sigOrConst, HConst), sigOrConst
+        for v in sigOrConst:
             yield from walkFlattenFields(v)
     else:
         raise NotImplementedError(t)
 
 
-def HValue_from_words(t: HdlType,
-                    data: List[Union[HValue, RtlSignalBase, int]],
-                    getDataFn=None, dataWidth=None) -> HValue:
+def HConst_from_words(t: HdlType,
+                      data: List[Union[HConst, RtlSignalBase, int]],
+                      getDataFn=None, dataWidth=None) -> HConst:
     """
-    Parse raw Bits array to a value of specified HdlType
+    Parse raw HBits array to a value of specified HdlType
     """
     if getDataFn is None:
         assert dataWidth is not None
 
         def _getDataFn(x):
-            return toHVal(x)._auto_cast(Bits(dataWidth))
+            return toHVal(x)._auto_cast(HBits(dataWidth))
 
         getDataFn = _getDataFn
 

@@ -4,8 +4,8 @@ from typing import Sequence, Dict, List, Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.statement import HdlStatement
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.constants import NOT_SPECIFIED
+from hwt.mainBases import RtlSignalBase
 
 
 class ListOfHdlStatement(list):

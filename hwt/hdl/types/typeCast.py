@@ -1,11 +1,12 @@
 
 from typing import Optional, Any
 
+from hwt.hdl.const import HConst
 from hwt.hdl.types.defs import INT, STR, BOOL, SLICE, FLOAT64
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.mainBases import HwIOBase
+
 
 defaultPyConversions = {
     int: INT,
@@ -18,9 +19,9 @@ defaultPyConversions = {
 
 def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
     """Convert python or hdl value/signal object to hdl value/signal object"""
-    if isinstance(op, HValue) or isinstance(op, SignalItem):
+    if isinstance(op, HConst) or isinstance(op, SignalItem):
         return op
-    elif isinstance(op, InterfaceBase):
+    elif isinstance(op, HwIOBase):
         return op._sig
     else:
         if suggestedType is not None:

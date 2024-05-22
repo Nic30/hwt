@@ -4,7 +4,7 @@ from typing import Callable, Tuple, Generator, Union, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct, HStructField
@@ -63,7 +63,7 @@ class TransTmpl(object):
     @internal
     def _loadFromBits(self, dtype: HdlType, bitAddr: int):
         """
-        Parse Bits type to this transaction template instance
+        Parse HBits type to this transaction template instance
 
         :return: address of it's end
         """
@@ -151,7 +151,7 @@ class TransTmpl(object):
         """
         self.bitAddr = bitAddr
         childrenAreChoice = False
-        if isinstance(dtype, Bits):
+        if isinstance(dtype, HBits):
             ld = self._loadFromBits
         elif isinstance(dtype, HStruct):
             ld = self._loadFromHStruct
@@ -174,7 +174,7 @@ class TransTmpl(object):
         """
         return self.bitAddrEnd - self.bitAddr
 
-    def walkFlatten(self, offset: int=0,
+    def HwIO_walkFlatten(self, offset: int=0,
                     shouldEnterFn=_default_shouldEnterFn
                     ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
@@ -203,11 +203,11 @@ class TransTmpl(object):
             yield ((base, end), self)
 
         if shouldEnter:
-            if isinstance(t, Bits):
+            if isinstance(t, HBits):
                 pass
             elif isinstance(t, HStruct):
                 for c in self.children:
-                    yield from c.walkFlatten(
+                    yield from c.HwIO_walkFlatten(
                         offset,
                         shouldEnterFn)
             elif isinstance(t, (HArray, HStream)):
@@ -222,7 +222,7 @@ class TransTmpl(object):
                         # replace the index
                         c.rel_field_path = TypePath(i, )
 
-                    yield from c.walkFlatten(
+                    yield from c.HwIO_walkFlatten(
                         base + i * itemSize,
                         shouldEnterFn)
 
@@ -326,5 +326,5 @@ class OneOfTransaction(object):
             for each possiblility in this transaction
         """
         for p in self.possibleTransactions:
-            yield p.walkFlatten(offset=self.offset,
+            yield p.HwIO_walkFlatten(offset=self.offset,
                                 shouldEnterFn=self.shouldEnterFn)

@@ -4,7 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class HdlAssignmentContainer_constructor():

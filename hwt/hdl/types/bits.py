@@ -8,7 +8,7 @@ BITS_DEFAUTL_FORCEVECTOR = False
 BITS_DEFAUTL_NEGATED = False
 
 
-class Bits(HdlType, Bits3t):
+class HBits(HdlType, Bits3t):
     """
     Elemental HDL type representing bits (vector or single bit)
     """
@@ -51,13 +51,13 @@ class Bits(HdlType, Bits3t):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.bitsVal import BitsVal
-            cls._valCls = BitsVal
-            return cls._valCls
+            from hwt.hdl.types.bitsConst import HBitsConst
+            cls._constCls = HBitsConst
+            return cls._constCls
 
     def __hash__(self):
         return hash((Bits3t.__hash__(self), self.const))

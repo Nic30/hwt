@@ -9,10 +9,10 @@ class HString(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.stringVal import HStringVal
-            cls._valCls = HStringVal
-            return cls._valCls
+            from hwt.hdl.types.stringConst import HStringConst
+            cls._constCls = HStringConst
+            return cls._constCls

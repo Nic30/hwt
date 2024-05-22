@@ -6,17 +6,17 @@ from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.code import If
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT
-from hwt.hdl.value import HValue
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 
 
 @internal
@@ -26,7 +26,7 @@ def isResultOfTypeConversion(sig):
 
     if sig.hidden:
         d = sig.singleDriver()
-        return d.operator != AllOps.INDEX
+        return d.operator != HwtOps.INDEX
 
     return False
 
@@ -34,13 +34,13 @@ def isResultOfTypeConversion(sig):
 class ToHdlAstVhdl2008_ops():
     op_transl_dict = {
         **ToHdlAstHwt_ops.op_transl_dict,
-        AllOps.RISING_EDGE: HdlOpType.RISING,
-        AllOps.FALLING_EDGE: HdlOpType.FALLING,
+        HwtOps.RISING_EDGE: HdlOpType.RISING,
+        HwtOps.FALLING_EDGE: HdlOpType.FALLING,
     }
     _cast_ops = {
-        AllOps.BitsAsSigned: "SIGNED",
-        AllOps.BitsAsUnsigned: "UNSIGNED",
-        AllOps.BitsAsVec: "STD_LOGIC_VECTOR",
+        HwtOps.BitsAsSigned: "SIGNED",
+        HwtOps.BitsAsUnsigned: "UNSIGNED",
+        HwtOps.BitsAsVec: "STD_LOGIC_VECTOR",
     }
 
     @internal
@@ -73,9 +73,9 @@ class ToHdlAstVhdl2008_ops():
 
         return o
 
-    def _as_Bits(self, val: Union[RtlSignal, HValue]):
+    def _as_Bits(self, val: Union[RtlSignal, HConst]):
         if val._dtype == BOOL:
-            bit1_t = Bits(1)
+            bit1_t = HBits(1)
             isNew, o = self.tmpVars.create_var_cached(
                 "tmpBool2std_logic_",
                 bit1_t,
@@ -92,15 +92,15 @@ class ToHdlAstVhdl2008_ops():
                 self.tmpVars.finish_var_init(o)
             return o
         else:
-            assert isinstance(val._dtype, Bits), val._dtype
+            assert isinstance(val._dtype, HBits), val._dtype
             return val
 
-    def _as_Bits_vec(self, val: Union[RtlSignal, HValue]):
+    def _as_Bits_vec(self, val: Union[RtlSignal, HConst]):
         val = self._as_Bits(val)
         t = val._dtype
         if not t.force_vector and t.bit_length() == 1:
             # std_logic -> std_logic_vector
-            std_logic_vector = Bits(1, signed=t.signed, force_vector=True)
+            std_logic_vector = HBits(1, signed=t.signed, force_vector=True)
             isNew, o = self.tmpVars.create_var_cached(
                 "tmp_std_logic2vector_",
                 std_logic_vector,
@@ -114,13 +114,13 @@ class ToHdlAstVhdl2008_ops():
             # already a std_logic_vector
             return val
 
-    def as_hdl_operand(self, operand: Union[RtlSignal, HValue]):
+    def as_hdl_operand(self, operand: Union[RtlSignal, HConst]):
         # no nested ternary in expressions like
         # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         # extract them as a tmp variable
         try:
             isTernaryOp = operand.hidden\
-                and operand.drivers[0].operator == AllOps.TERNARY
+                and operand.drivers[0].operator == HwtOps.TERNARY
         except (AttributeError, IndexError):
             isTernaryOp = False
 
@@ -142,15 +142,15 @@ class ToHdlAstVhdl2008_ops():
             except SignalDriverErr:
                 d = None
 
-            if d is not None and isinstance(d, Operator) and d.operator is AllOps.CONCAT:
+            if d is not None and isinstance(d, HOperatorNode) and d.operator is HwtOps.CONCAT:
                 _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
 
-    def as_hdl_Operator(self, op: Operator):
+    def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator
 
-        if o == AllOps.INDEX:
+        if o == HwtOps.INDEX:
             op0, op1 = ops
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
                 _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
@@ -161,15 +161,15 @@ class ToHdlAstVhdl2008_ops():
             # as tmp variable
             op0 = self.as_hdl_operand(op0)
             op0_t = ops[0]._dtype
-            if isinstance(op0_t, Bits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+            if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
                 assert int(ops[1]) == 0, ops
                 # drop whole index operator because it is useless
                 return op0
 
-            if isinstance(op1._dtype, Bits) and op1._dtype != INT:
+            if isinstance(op1._dtype, HBits) and op1._dtype != INT:
                 if op1._dtype.signed is None:
                     if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
-                        _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", Bits(1, force_vector=True), def_val=op1)
+                        _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", HBits(1, force_vector=True), def_val=op1)
                     _op1 = self.as_hdl_operand(op1)
                     _op1 = self.apply_cast("UNSIGNED", _op1)
                 else:
@@ -181,15 +181,15 @@ class ToHdlAstVhdl2008_ops():
 
             return HdlOp(HdlOpType.INDEX, [op0, _op1])
 
-        elif o == AllOps.TERNARY:
+        elif o == HwtOps.TERNARY:
             _c, _op0, _op1 = ops
             op0 = self.as_hdl_cond(_c, True)
             op1 = self.as_hdl_operand(_op0)
             t0 = _op0._dtype
             t1 = _op1._dtype
             if not (t0 == t1):
-                assert isinstance(t0, Bits) and\
-                       isinstance(t1, Bits) and\
+                assert isinstance(t0, HBits) and\
+                       isinstance(t1, HBits) and\
                        t0.bit_length() == t1.bit_length() and\
                        bool(t0.signed) == bool(t1.signed), (t0, t1)
                 _, _op1 = self.tmpVars.create_var_cached("tmpTernaryAutoCast_", t0, def_val=_op1)
@@ -214,14 +214,14 @@ class ToHdlAstVhdl2008_ops():
                     op0 = self._wrapConcatInTmpVariable(op0)
                     op1 = self._wrapConcatInTmpVariable(op1)
 
-                if isinstance(res_t, Bits) and res_t != BOOL:
+                if isinstance(res_t, HBits) and res_t != BOOL:
                     op0 = self._as_Bits(op0)
                     op1 = self._as_Bits(op1)
 
                 _op0 = self.as_hdl_operand(op0)
                 _op1 = self.as_hdl_operand(op1)
                 if o == HdlOpType.EQ and isinstance(_op0, HdlValueId) and\
-                        (isinstance(_op0.obj._dtype, Bits) and self._expandBitsOperandType(_op0.obj) == BOOL) and\
+                        (isinstance(_op0.obj._dtype, HBits) and self._expandBitsOperandType(_op0.obj) == BOOL) and\
                         isinstance(_op1, HdlValueInt) and\
                         _op1.val:
                     # drop unnecessary casts

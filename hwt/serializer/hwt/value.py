@@ -4,16 +4,16 @@ from typing import Union
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType, \
     HdlValueId
+from hdlConvertorAst.translate.common.name_scope import ObjectForNameNotFound
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
-from hdlConvertorAst.translate.common.name_scope import ObjectForNameNotFound
-from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.const import HConst
+from hwt.hdl.types.arrayConst import HArrayConst
+from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.sliceVal import HSliceVal
-from hwt.hdl.value import HValue
+from hwt.hdl.types.enumConst import HEnumConst
+from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
@@ -23,12 +23,12 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
     NONE = HdlValueId("None")
     SLICE = HdlValueId("SLICE", obj=SLICE)
 
-    def is_suitable_for_const_extract(self, val: HValue):
+    def is_suitable_for_const_extract(self, val: HConst):
         # full valid values can be represented as int and do not have any
         # constructor overhead, entirely invalid values can be represented by None
         return not val._is_full_valid() and not isinstance(val._dtype, HEnum)
 
-    def as_hdl_BitsVal(self, val: BitsVal):
+    def as_hdl_HBitsConst(self, val: HBitsConst):
         isFullVld = val._is_full_valid()
         if not self._valueWidthRequired:
             if isFullVld:
@@ -63,10 +63,10 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             else:
                 return HdlValueId(si.name, obj=si)
 
-    def as_hdl_DictVal(self, val):
-        return ToHdlAstSimModel_value.as_hdl_DictVal(self, val)
+    def as_hdl_HDictConst(self, val):
+        return ToHdlAstSimModel_value.as_hdl_HDictConst(self, val)
 
-    def as_hdl_HArrayVal(self, val: HArrayVal):
+    def as_hdl_HArrayConst(self, val: HArrayConst):
         if not val.vld_mask:
             return self.NONE
         # else:
@@ -76,7 +76,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
         #        reference = next(values)
         #         for v in values:
         #             if allValuesSame:
-        #                 allValuesSame = isSameHVal(reference, v)
+        #                 allValuesSame = isSameHConst(reference, v)
         #             else:
         #                 break
         #        if allValuesSame:
@@ -87,9 +87,9 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
 
         # if value can not be simplified it is required to serialize it item
         # by item
-        return self.as_hdl_DictVal(val.val)
+        return self.as_hdl_HDictConst(val.val)
 
-    def as_hdl_HSliceVal(self, val: HSliceVal):
+    def as_hdl_HSliceConst(self, val: HSliceConst):
         if val._is_full_valid():
             return HdlOp(
                 HdlOpType.DOWNTO, [
@@ -98,13 +98,13 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 ])
         else:
             raise NotImplementedError()
-            return "HSliceVal(slice(%s, %s, %s), SLICE, %d)" % (
+            return "HSliceConst(slice(%s, %s, %s), SLICE, %d)" % (
                 self.as_hdl_Value(val.val.start),
                 self.as_hdl_Value(val.val.stop),
                 self.as_hdl_Value(val.val.step),
                 val.vld_mask)
 
-    def as_hdl_HEnumVal(self, val: HEnumVal):
+    def as_hdl_HEnumConst(self, val: HEnumConst):
         try:
             t_name = self.name_scope.get_object_name(val._dtype)
         except ObjectForNameNotFound:

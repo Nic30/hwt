@@ -13,7 +13,7 @@ from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.serializer.combLoopAnalyzer.tarjan import StronglyConnectedComponentSearchTarjan
 from hwt.serializer.resourceAnalyzer.analyzer import ResourceAnalyzer
 from hwt.synthesizer.componentPath import ComponentPath
-from hwt.synthesizer.unit import Unit
+from hwt.hwModule import HwModule
 from ipCorePackager.constants import DIRECTION
 
 
@@ -23,7 +23,7 @@ def collect_comb_inputs(ctx, seen, input_signal, comb_inputs):
         input_signal._walk_sensitivity(comb_inputs, seen, ctx)
 
 
-def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
+def collect_comb_drivers(path_prefix: Tuple[HwModule, ...],
                          stm: iHdlStatement,
                          comb_connection_matrix: dict,
                          comb_inputs: tuple):
@@ -86,7 +86,7 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
 
 class CombLoopAnalyzer():
     """
-    Visitor which can walk synthetized hwt :class:`hwt.synthesizer.unit.Unit` instances and detect clusters connected by combinational logic
+    Visitor which can walk synthetized hwt :class:`hwt.hwModule.HwModule` instances and detect clusters connected by combinational logic
     """
 
     def __init__(self):
@@ -96,13 +96,13 @@ class CombLoopAnalyzer():
         self._report = {}
         self.actual_path_prefix = ComponentPath()
 
-    def visit_Unit(self, u: Unit):
-        if u._shared_component_with is None:
-            arch = u._ctx.arch
+    def visit_HwModule(self, m: HwModule):
+        if m._shared_component_with is None:
+            arch = m._ctx.arch
         else:
-            _u, _, _ = u._shared_component_with
-            arch = _u._ctx.arch
-        assert arch is not None, u
+            _m, _, _ = m._shared_component_with
+            arch = _m._ctx.arch
+        assert arch is not None, m
 
         self.visit_HdlModuleDef(arch)
 
@@ -118,11 +118,10 @@ class CombLoopAnalyzer():
         if o.origin._shared_component_with is not None:
             in_component_path_prefix = in_component_path_prefix / o.origin
 
-
         try:
             assert o.origin, o
             self.actual_path_prefix = in_component_path_prefix
-            self.visit_Unit(o.origin)
+            self.visit_HwModule(o.origin)
 
             for pm in o.port_map:
                 if pm.direction == DIRECTION.OUT:

@@ -1,5 +1,6 @@
+from hwt.hdl.const import HConst
 from hwt.serializer.generic.tmpVarConstructor import TmpVarConstructor
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class ConstantCache(object):
@@ -15,10 +16,10 @@ class ConstantCache(object):
         # {value:usedName}
         self._cache = {}
 
-    def extract_const_val_as_const_var(self, val) -> RtlSignalBase:
+    def extract_const_val_as_const_var(self, val: HConst) -> RtlSignalBase:
         """
         Create a constant variable with a value specified
-        or use existitng variable with same value
+        or use existing variable with same value
         """
         try:
             return self._cache[val]

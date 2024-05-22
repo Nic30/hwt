@@ -1,25 +1,13 @@
 from enum import Enum
+from typing import Union
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 class MethodNotOverloaded(NotImplementedError):
     pass
-
-
-@internal
-def default_reinterpret_cast_fn(typeFrom, sigOrVal, toType):
-    raise TypeConversionErr(
-        "Reinterpretation of %r of type \n%r to type %r is not implemented",
-        (sigOrVal, typeFrom, toType))
-
-
-@internal
-def default_auto_cast_fn(typeFrom, sigOrVal, toType):
-    raise TypeConversionErr(
-        "Conversion of %r of type \n%r to type %r is not implemented",
-        (sigOrVal, typeFrom, toType))
 
 
 class HdlType():
@@ -39,7 +27,7 @@ class HdlType():
         """
         same as from_py just without type checks
         """
-        return self.getValueCls()._from_py(self, v, vld_mask)
+        return self.getConstCls()._from_py(self, v, vld_mask)
 
     def from_py(self, v, vld_mask=None):
         """
@@ -48,17 +36,17 @@ class HdlType():
         """
         if isinstance(v, Enum):
             v = v.value
-        return self.getValueCls().from_py(self, v, vld_mask=vld_mask)
+        return self.getConstCls().from_py(self, v, vld_mask=vld_mask)
 
-    def auto_cast(self, sigOrVal, toType):
+    def auto_cast(self, sigOrConst, toType):
         """
         Cast value or signal of this type to another compatible type.
 
-        :param sigOrVal: instance of signal or value to cast
+        :param sigOrConst: instance of signal or value to cast
         :param toType: instance of HdlType to cast into
         """
-        if sigOrVal._dtype == toType:
-            return sigOrVal
+        if sigOrConst._dtype == toType:
+            return sigOrConst
 
         try:
             c = self._auto_cast_fn
@@ -66,17 +54,17 @@ class HdlType():
             c = self.get_auto_cast_fn()
             self._auto_cast_fn = c
 
-        return c(self, sigOrVal, toType)
+        return c(self, sigOrConst, toType)
 
-    def reinterpret_cast(self, sigOrVal, toType):
+    def reinterpret_cast(self, sigOrConst, toType):
         """
         Cast value or signal of this type to another type of same size.
 
-        :param sigOrVal: instance of signal or value to cast
+        :param sigOrConst: instance of signal or value to cast
         :param toType: instance of HdlType to cast into
         """
         try:
-            return self.auto_cast(sigOrVal, toType)
+            return self.auto_cast(sigOrConst, toType)
         except TypeConversionErr:
             pass
 
@@ -86,7 +74,7 @@ class HdlType():
             r = self.get_reinterpret_cast_fn()
             self._reinterpret_cast_fn = r
 
-        return r(self, sigOrVal, toType)
+        return r(self, sigOrConst, toType)
 
     @internal
     @classmethod
@@ -106,7 +94,7 @@ class HdlType():
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         """
         :attention: Overrode in implementation of concrete HdlType.
 
@@ -138,3 +126,17 @@ class HdlType():
         """
         name = getattr(self, "name", "")
         return f"<{self.__class__.__name__:s} {name:s}>"
+
+
+@internal
+def default_reinterpret_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignalBase", HConst], toType: HdlType):
+    raise TypeConversionErr(
+        "Reinterpretation of %r of type \n%r to type %r is not implemented",
+        (sigOrConst, typeFrom, toType))
+
+
+@internal
+def default_auto_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignalBase", HConst], toType: HdlType):
+    raise TypeConversionErr(
+        "Conversion of %r of type \n%r to type %r is not implemented",
+        (sigOrConst, typeFrom, toType))

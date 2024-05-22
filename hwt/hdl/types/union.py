@@ -1,17 +1,18 @@
 from collections import OrderedDict
+from typing import Optional, Tuple, Any
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
-from hwt.hdl.value import HValue
 from hwt.serializer.generic.indent import getIndent
 
 
-protectedNames = {"clone", "staticEval",
+_protectedNames = {"clone", "staticEval",
                   "from_py", "_dtype", "_usedField", "_val"}
 
 
-class UnionValBase(HValue):
+class HUnionConstBase(HConst):
     """
     Base class for values for union types.
     Every union type has it's own value class derived from this.
@@ -22,7 +23,7 @@ class UnionValBase(HValue):
     """
     __slots__ = ["_dtype", "_val", "_usedField"]
 
-    def __init__(self, typeObj, val):
+    def __init__(self, typeObj: "HUnion", val: Optional[Tuple[str, Any]]):
         """
         :param val: None or tuple (member name, member value)
         :param typeObj: instance of HUnion HdlType for this value
@@ -35,7 +36,7 @@ class UnionValBase(HValue):
             v = None
 
         f = self._dtype.fields[memberName]
-        if not isinstance(v, HValue):
+        if not isinstance(v, HConst):
             v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)
@@ -84,7 +85,7 @@ class HUnionMemberHandler(object):
 
     def set(self, parent, v):
         f = parent._dtype.fields[self.field.name]
-        if not isinstance(v, HValue):
+        if not isinstance(v, HConst):
             v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)
@@ -127,7 +128,7 @@ class HUnion(HdlType):
         self.name = name
         bit_length = None
 
-        class UnionVal(UnionValBase):
+        class UnionVal(HUnionConstBase):
             pass
 
         for f in template:
@@ -160,13 +161,13 @@ class HUnion(HdlType):
         self.__hash = hash((self.name, tuple(self.fields.items())))
 
         usedNames = set(self.fields.keys())
-        assert not protectedNames.intersection(
-            usedNames), protectedNames.intersection(usedNames)
+        assert not _protectedNames.intersection(
+            usedNames), _protectedNames.intersection(usedNames)
 
         if name is not None:
             UnionVal.__name__ = name + "Val"
 
-        self.valueCls = UnionVal
+        self._constCls = UnionVal
 
     def bit_length(self):
         bl = self.__bit_length_val
@@ -177,8 +178,8 @@ class HUnion(HdlType):
             return self.__bit_length_val
 
     @internal
-    def getValueCls(self):
-        return self.valueCls
+    def getConstCls(self):
+        return self._constCls
 
     @internal
     def __fields__eq__(self, other):

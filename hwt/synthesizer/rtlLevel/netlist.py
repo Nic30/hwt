@@ -6,16 +6,16 @@ from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
     HdlCompInst
 from hwt.code import If
 from hwt.doc_markers import internal
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hwParam import HwParam
+from hwt.hdl.const import HConst
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import HValue
+from hwt.mainBases import HwIOBase
 from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import statements_to_HdlStmCodeBlockContainers
@@ -29,18 +29,18 @@ class RtlNetlist():
     :ivar ~.parent: optional parent for debug and late component inspection
     :ivar ~.signals: set of all signals in this context
     :ivar ~.statements: list of all statements which are connected to signals in this context
-    :ivar ~.subUnits: is set of all units in this context
-    :ivar ~.interfaces: initialized in create_HdlModuleDef
+    :ivar ~.subHwModules: is set of all units in this context
+    :ivar ~.hwIOs: initialized in create_HdlModuleDef
     :ivar ~.ent: initialized in create_HdlModuleDec
     :ivar ~.arch: initialized in create_HdlModuleDef
     """
 
-    def __init__(self, parent: Optional["Unit"]=None):
+    def __init__(self, parent: Optional["HwModule"]=None):
         self.parent = parent
         self.signals: Set[RtlSignal] = set()
         self.statements: Set[HdlStatement] = set()
-        self.subUnits: Set["Unit"] = set()
-        self.interfaces: Dict[RtlSignal, DIRECTION] = {}
+        self.subHwModules: Set["HwModule"] = set()
+        self.hwIOs: Dict[RtlSignal, DIRECTION] = {}
         self.ent: Optional[HdlModuleDec] = None
         self.arch: Optional[HdlModuleDef] = None
 
@@ -64,10 +64,10 @@ class RtlNetlist():
             nop_val = _try_cast_any_to_HValue(nop_val, dtype, False)
 
         if clk is not None:
-            if nextSig is not None and isinstance(nextSig, InterfaceBase):
+            if nextSig is not None and isinstance(nextSig, HwIOBase):
                 nextSig = nextSig._sig
             s = RtlSyncSignal(self, name, dtype,
-                              _def_val if isinstance(_def_val, HValue) else dtype.from_py(None),
+                              _def_val if isinstance(_def_val, HConst) else dtype.from_py(None),
                               nop_val,
                               nextSig)
             if syncRst is not None and def_val is None:
@@ -85,14 +85,14 @@ class RtlNetlist():
                     s(s.next, dst_resolve_fn=lambda x: x)
                 ]
 
-            if isinstance(clk, (InterfaceBase, RtlSignal)):
+            if isinstance(clk, (HwIOBase, RtlSignal)):
                 clk_trigger = clk._onRisingEdge()
             else:
-                # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
+                # has to be tuple of (clk_sig, HwtOps.RISING/FALLING_EDGE)
                 clk, clk_edge = clk
-                if clk_edge is AllOps.RISING_EDGE:
+                if clk_edge is HwtOps.RISING_EDGE:
                     clk_trigger = clk._onRisingEdge()
-                elif clk_edge is AllOps.FALLING_EDGE:
+                elif clk_edge is HwtOps.FALLING_EDGE:
                     clk_trigger = clk._onRisingEdge()
                 else:
                     raise ValueError(
@@ -109,14 +109,14 @@ class RtlNetlist():
                 raise SigLvlConfErr(
                     f"Signal {name:s} has nextSig which is used for next register value, but has no clock and thus is not a register.")
 
-            assert isinstance(_def_val, HValue) or (isinstance(_def_val, RtlSignal) and _def_val._const), (_def_val, "The default value needs to be constant")
+            assert isinstance(_def_val, HConst) or (isinstance(_def_val, RtlSignal) and _def_val._const), (_def_val, "The default value needs to be constant")
             s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 
         return s
 
     def create_HdlModuleDec(self, name: str,
                             store_manager: "StoreManager",
-                            params: List[Param]):
+                            params: List[HwParam]):
         """
         Generate a module header (entity) for this module
         """
@@ -128,7 +128,7 @@ class RtlNetlist():
             hdl_val = p.get_hdl_value()
             v = HdlIdDef()
             v.origin = p
-            v.name = p.hdl_name = ns.checked_name(p._name, p)
+            v.name = p._hdl_name = ns.checked_name(p._name, p)
             v.type = hdl_val._dtype
             v.value = hdl_val
             ent.params.append(v)
@@ -161,7 +161,7 @@ class RtlNetlist():
         # add signals, variables, etc. in architecture
         for s in sorted((s for s in self.signals
                         if not s.hidden and
-                        s not in self.interfaces.keys()),
+                        s not in self.hwIOs.keys()),
                         key=RtlSignal_sort_key):
             s: RtlSignal
             assert s.ctx is self, ("RtlSignals in this context must know that they are in this context", s)
@@ -176,13 +176,13 @@ class RtlNetlist():
         for p in processes:
             p.name = ns.checked_name(p.name, p)
         mdef.objs.extend(processes)
-        # instantiate subUnits in architecture
-        for u in self.subUnits:
+        # instantiate subModules in architecture
+        for sm in self.subHwModules:
             ci = HdlCompInst()
-            ci.origin = u
-            ci.module_name = HdlValueId(u._ctx.ent.name, obj=u._ctx.ent)
-            ci.name = HdlValueId(ns.checked_name(u._name + "_inst", ci), obj=u)
-            e = u._ctx.ent
+            ci.origin = sm
+            ci.module_name = HdlValueId(sm._ctx.ent.name, obj=sm._ctx.ent)
+            ci.name = HdlValueId(ns.checked_name(sm._name + "_inst", ci), obj=sm)
+            e = sm._ctx.ent
 
             ci.param_map.extend(e.params)
             ci.port_map.extend(e.ports)
@@ -211,9 +211,9 @@ def _try_cast_any_to_HValue(v, dtype: HdlType, require_const: bool):
         assert not require_const or v._const, \
             "Initial value of signal has to be a constant"
         return v._auto_cast(dtype)
-    elif isinstance(v, HValue):
+    elif isinstance(v, HConst):
         return v._auto_cast(dtype)
-    elif isinstance(v, InterfaceBase):
+    elif isinstance(v, HwIOBase):
         return v._sig
     else:
         return dtype.from_py(v)

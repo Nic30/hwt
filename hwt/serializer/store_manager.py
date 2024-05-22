@@ -2,13 +2,13 @@ from io import StringIO
 import os
 from typing import Type, Optional, Union
 
+from hdlConvertorAst.hdlAst import HdlModuleDef
 from hdlConvertorAst.hdlAst._bases import iHdlObj
 from hdlConvertorAst.translate.common.name_scope import NameScope
-from hwt.pyUtils.uniqList import UniqList
+from hwt.pyUtils.setList import SetList
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter
-from hwt.synthesizer.unit import HdlConstraintList
-from hdlConvertorAst.hdlAst import HdlModuleDef
+from hwt.hwModule import HdlConstraintList
 
 
 class StoreManager(object):
@@ -28,12 +28,12 @@ class StoreManager(object):
             _filter = SerializerFilter()
         self.filter = _filter
 
-    def hierarchy_push(self, obj: "Unit") -> NameScope:
+    def hierarchy_push(self, obj: "HwModule") -> NameScope:
         c = self.name_scope.level_push(obj.name)
         self.name_scope = c
         return c
 
-    def hierarchy_pop(self, obj: "Unit") -> NameScope:
+    def hierarchy_pop(self, obj: "HwModule") -> NameScope:
         p = self.name_scope.parent
         assert p is not None
         self.name_scope = p
@@ -84,7 +84,7 @@ class SaveToFilesFlat(StoreManager):
         super(SaveToFilesFlat, self).__init__(
             serializer_cls, _filter=_filter, name_scope=name_scope)
         self.root = root
-        self.files = UniqList()
+        self.files = SetList()
         self.module_path_prefix = None
         os.makedirs(root, exist_ok=True)
 
@@ -130,7 +130,7 @@ class SaveToSingleFiles(StoreManager):
         self.comp_name = name
         self.file_const = os.path.join(self.root, self.comp_name + self.serializer_cls.TO_CONSTRAINTS.fileExtension)
         self.file_src = os.path.join(self.root, self.comp_name + self.serializer_cls.fileExtension)
-        self.files = UniqList()
+        self.files = SetList()
         self.module_path_prefix = None
         os.makedirs(root, exist_ok=True)
 

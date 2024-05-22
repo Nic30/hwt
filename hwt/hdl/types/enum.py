@@ -1,5 +1,5 @@
-from hwt.hdl.types.hdlType import HdlType
 from hwt.doc_markers import internal
+from hwt.hdl.types.hdlType import HdlType
 
 
 # [TODO] use python enum and only emulate HDL enum for HDL
@@ -41,10 +41,10 @@ class HEnum(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.enumVal import HEnumVal
-            cls._valCls = HEnumVal
-            return cls._valCls
+            from hwt.hdl.types.enumConst import HEnumConst
+            cls._constCls = HEnumConst
+            return cls._constCls

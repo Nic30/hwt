@@ -2,9 +2,9 @@
 import sys
 from typing import Union
 
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import HValue
+from hwt.hdl.const import HConst
 from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
 from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
@@ -16,7 +16,7 @@ from pyMathBitPrecise.enum3t import Enum3t
 
 
 class BasicRtlSimulatorVcd(BasicRtlSimulatorWithSignalRegisterMethods):
-    supported_type_classes = (Bits, HEnum, Bits3t, Enum3t,
+    supported_type_classes = (HBits, HEnum, Bits3t, Enum3t,
                               #Array3t
                               )
 
@@ -36,7 +36,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulatorWithSignalRegisterMethods):
 
     def _logChange(self, nowTime: int,
                   sig: BasicRtlSimProxy,
-                  nextVal: HValue,
+                  nextVal: HConst,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """
         This method is called for every value change of any signal.

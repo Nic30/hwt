@@ -1,6 +1,6 @@
 from hdlConvertorAst.hdlAst._bases import iHdlStatement
 from hdlConvertorAst.hdlAst._expr import HdlAll
-from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmWait,\
+from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmWait, \
     HdlStmBlock
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer

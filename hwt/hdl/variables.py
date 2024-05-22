@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class SignalItem(HdlObject):

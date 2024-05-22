@@ -4,8 +4,8 @@ from hdlConvertorAst.hdlAst import HdlIdDef
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.const import HConst
+from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -19,7 +19,7 @@ class TmpVarConstructor():
 
     def create_var_cached(self, suggestedName: str, dtype: HdlType,
                        const=False,
-                       def_val: Optional[Union[RtlSignalBase, HValue]]=None,
+                       def_val: Optional[Union[RtlSignalBase, HConst]]=None,
                        postponed_init=False,
                        extra_args=None) -> Tuple[bool, RtlSignal]:
         cache_k = (suggestedName, dtype, const, def_val, extra_args)
@@ -35,7 +35,7 @@ class TmpVarConstructor():
                suggestedName: str,
                dtype: HdlType,
                const=False,
-               def_val: Optional[Union[RtlSignalBase, HValue]]=None,
+               def_val: Optional[Union[RtlSignalBase, HConst]]=None,
                postponed_init=False) -> RtlSignal:
         # create a new tmp variable in current process
         s = RtlSignal(None, None, dtype, virtual_only=True)

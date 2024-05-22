@@ -1,17 +1,17 @@
-from typing import Generator, Union, Tuple, Optional, Set
+from typing import Generator, Union, Tuple, Optional, Set, Sequence
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
-from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
+from hwt.hdl.operatorDefs import isEventDependentOp, HOperatorDef
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.value import HValue
+from hwt.hdl.const import HConst
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase, \
     OperatorCaheKeyType
 
 
 @internal
-def getCtxFromOps(operands):
+def getCtxFromOps(operands: Sequence):
     for o in operands:
         if isinstance(o, RtlSignalBase):
             return o.ctx
@@ -19,25 +19,25 @@ def getCtxFromOps(operands):
                     "(value operators should be already resolved)")
 
 
-def isConst(item):
+def isConst(item: Union[HConst, RtlSignalBase]):
     """
     :return: True if expression is constant
     """
-    return isinstance(item, HValue) or item._const
+    return isinstance(item, HConst) or item._const
 
 
-class Operator(HdlObject):
+class HOperatorNode(HdlObject):
     """
     Class of operator in expression tree
 
     :ivar ~.operands: list of operands
     :ivar ~.evalFn: function to evaluate this operator
-    :ivar ~.operator: OpDefinition instance
+    :ivar ~.operator: HOperatorDef instance
     :ivar ~.result: result signal of this operator
     """
 
-    def __init__(self, operator: OpDefinition,
-                 operands: Tuple[Union[RtlSignalBase, HValue]]):
+    def __init__(self, operator: HOperatorDef,
+                 operands: Tuple[Union[RtlSignalBase, HConst]]):
         self.operands = tuple(operands)
         self.operator = operator
         self.result: Optional[RtlSignal] = None
@@ -75,7 +75,7 @@ class Operator(HdlObject):
         Walk all non hidden signals in an expression
         """
         for op in self.operands:
-            if not isinstance(op, HValue) and op not in seen:
+            if not isinstance(op, HConst) and op not in seen:
                 seen.add(op)
                 yield from op._walk_public_drivers(seen)
 
@@ -102,8 +102,8 @@ class Operator(HdlObject):
                     pass
                 break
 
-        # instantiate new Operator
-        op = Operator(opDef, operands)
+        # instantiate new HOperatorNode
+        op = HOperatorNode(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)
         out._const = arr_all(op.operands, isConst)
         out.drivers.append(op)
@@ -125,8 +125,8 @@ class Operator(HdlObject):
                     o._usedOpsAlias[k] = {k, }
                     first_signal = False
             else:
-                assert isinstance(o, HValue), (
-                    "Operator operands can be only signal or values got:", o)
+                assert isinstance(o, HConst), (
+                    "HOperatorNode operands can be only signal or values got:", o)
 
         if out._const:
             # if this signal is constant precompute its value
@@ -206,7 +206,7 @@ class Operator(HdlObject):
                     _k = (self.operator, i, *operands[:i], *operands[i + 1:])
                     for k in o._usedOpsAlias[_k]:
                         res = o._usedOps.pop(k)
-                        assert res is self.result, (self.result.ctx.parent, "Operator was not stored properly in operand cache", res, self.result, o)
+                        assert res is self.result, (self.result.ctx.parent, "HOperatorNode was not stored properly in operand cache", res, self.result, o)
                     first_op_sig = False
         self.result.origin = None
         self.result = None

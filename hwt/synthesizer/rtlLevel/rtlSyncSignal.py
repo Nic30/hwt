@@ -1,11 +1,11 @@
 from typing import Optional
 
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
+from hwt.constants import NOT_SPECIFIED
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.types.hdlType import HdlType
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase, RtlSignalBase
+from hwt.mainBases import RtlMemoryBase, RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -49,14 +49,14 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         d = self.singleDriver()
         assert isinstance(d, IfContainer), d
         cond = d.cond.singleDriver()
-        assert isinstance(cond, Operator) and cond.operator is AllOps.RISING_EDGE, cond
+        assert isinstance(cond, HOperatorNode) and cond.operator is HwtOps.RISING_EDGE, cond
         return cond.operands[0]
 
     def _getAssociatedRst(self):
         d = self.singleDriver()
         assert isinstance(d, IfContainer), d
         cond = d.cond.singleDriver()
-        assert isinstance(cond, Operator) and cond.operator is AllOps.RISING_EDGE, cond
+        assert isinstance(cond, HOperatorNode) and cond.operator is HwtOps.RISING_EDGE, cond
         assert len(d.ifTrue) == 1
         reset_if = d.ifTrue[0]
         return reset_if.cond

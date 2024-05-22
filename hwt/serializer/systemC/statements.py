@@ -5,11 +5,11 @@ from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hwt.doc_markers import internal
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statements.switchContainer import SwitchContainer
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
@@ -77,12 +77,12 @@ class ToHdlAstSystemC_statements():
                 dst = dst[i]
 
         typeOfDst = systemCTypeOfSig(dst)
-        if dst.virtual_only and isinstance(a.src, Operator):
-            assert a.src.operator == AllOps.CONCAT
+        if dst.virtual_only and isinstance(a.src, HOperatorNode):
+            assert a.src.operator == HwtOps.CONCAT
             return self._as_hdl_HdlAssignmentContainer(dst, typeOfDst, a.src.operands)
 
         if dst._dtype == a.src._dtype or (
-                isinstance(dst._dtype, Bits) and a.src._dtype == BOOL):
+                isinstance(dst._dtype, HBits) and a.src._dtype == BOOL):
             return self._as_hdl_HdlAssignmentContainer(dst, typeOfDst, a.src)
         else:
             raise SerializerException("%r <= %r  is not valid assignment\n"

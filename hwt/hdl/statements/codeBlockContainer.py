@@ -6,8 +6,8 @@ from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
+from hwt.mainBases import RtlSignalBase
 
 
 class HdlStmCodeBlockContainer(HdlStatement):
@@ -32,7 +32,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
     @classmethod
     def from_known_io(cls, name: str, statements: ListOfHdlStatement,
                  sensitivity: Set["RtlSignal"],
-                 inputs: UniqList, outputs: UniqList) -> 'HdlStmCodeBlockContainer':
+                 inputs: SetList, outputs: SetList) -> 'HdlStmCodeBlockContainer':
         self = cls()
         self.name = name
         self.statements = statements

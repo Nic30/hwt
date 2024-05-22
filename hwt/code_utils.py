@@ -1,14 +1,14 @@
 from typing import Union
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.types.defs import BIT
-from hwt.hdl.value import HValue
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import HwIOBase
+from hwt.mainBases import RtlSignalBase
 from ipCorePackager.constants import DIRECTION
 
 
-def rename_signal(unit_instance: "Unit",
+def rename_signal(hwModule: "HwModule",
                   sig: Union[RtlSignalBase, int, bool],
                   name: str):
     """
@@ -23,41 +23,41 @@ def rename_signal(unit_instance: "Unit",
     else:
         t = sig._dtype
 
-    if isinstance(sig, (HValue, int, bool)):
-        s = unit_instance._sig(name, t, def_val=sig, nop_val=sig)
+    if isinstance(sig, (HConst, int, bool)):
+        s = hwModule._sig(name, t, def_val=sig, nop_val=sig)
     else:
-        s = unit_instance._sig(name, t)
+        s = hwModule._sig(name, t)
         s(sig)
 
     return s
 
 
-def connect_optional(src: InterfaceBase, dst: InterfaceBase,
-                     check_fn=lambda intf_a, intf_b: (True, [])):
+def connect_optional(src: HwIOBase, dst: HwIOBase,
+                     check_fn=lambda hwIO0, hwIO1: (True, [])):
     """
     Connect interfaces and ignore all missing things
 
-    :param check_fn: filter function(intf_a, intf_b) which check if interfaces should be connected
+    :param check_fn: filter function(hwIO0, hwIO1) which check if interfaces should be connected
         returns tuple (do_check, extra_connection_list)
     """
     return list(_connect_optional(src, dst, check_fn, False))
 
 
 @internal
-def _connect_optional(src: InterfaceBase, dst: InterfaceBase, check_fn, dir_reverse):
+def _connect_optional(src: HwIOBase, dst: HwIOBase, check_fn, dir_reverse):
     do_connect, extra_connections = check_fn(src, dst)
     yield from extra_connections
     if not do_connect:
         return
 
-    if not src._interfaces:
-        assert not dst._interfaces, (src, dst)
+    if not src._hwIOs:
+        assert not dst._hwIOs, (src, dst)
         if dir_reverse:
             yield src(dst)
         else:
             yield dst(src)
 
-    for _s in src._interfaces:
+    for _s in src._hwIOs:
         _d = getattr(dst, _s._name, None)
         if _d is None:
             # if the interfaces does not have subinterface of same name
@@ -72,8 +72,8 @@ def _connect_optional(src: InterfaceBase, dst: InterfaceBase, check_fn, dir_reve
 
 
 @internal
-def _intfToSig(obj):
-    if isinstance(obj, InterfaceBase):
+def _HwIOToRtlSignal(obj):
+    if isinstance(obj, HwIOBase):
         return obj._sig
     else:
         return obj

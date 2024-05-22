@@ -7,7 +7,7 @@ from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlCompInst
 from hdlConvertorAst.to.systemc.keywords import SYSTEMC_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
-from hwt.interfaces.std import Clk
+from hwt.hwIOs.std import HwIOClk
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst, \
     HWT_TO_HDLCONVEROTR_DIRECTION
 from hwt.serializer.simModel.serializer import ToHdlAstSimModel
@@ -41,9 +41,9 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         return ToHdlAstSimModel.as_hdl_HdlModuleDec(self, o)
 
     def as_hdl_HdlPortItem(self, o: HdlPortItem):
-        i = o.getInternSig()._interface
+        i = o.getInternSig()._hwIO
         d = o.direction
-        if isinstance(i, Clk):
+        if isinstance(i, HwIOClk):
             assert i._dtype.bit_length() == 1, i
             if d == DIRECTION.IN:
                 t = self.sc_in_clk

@@ -57,13 +57,13 @@ class HStream(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.streamVal import HStreamVal
-            cls._valCls = HStreamVal
-            return cls._valCls
+            from hwt.hdl.types.streamConst import HStreamConst
+            cls._constCls = HStreamConst
+            return cls._constCls
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         return "%s<%s len:%s, align:%r\n%s>" % (

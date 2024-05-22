@@ -7,7 +7,7 @@ from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
     ChoicesOfFrameParts
 from hwt.hdl.transPart import TransPart
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
@@ -321,7 +321,7 @@ class FrameTmpl(object):
                 fVal = None
 
             new_path = (*path, f)
-            if isinstance(f.dtype, Bits):
+            if isinstance(f.dtype, HBits):
                 if fVal is not None:
                     assert isinstance(fVal, int)
                     res[new_path] = fVal
@@ -343,7 +343,7 @@ class FrameTmpl(object):
 
         :return: list of BitsVal which are representing values of words
         """
-        typeOfWord = Bits(self.wordWidth, None)
+        typeOfWord = HBits(self.wordWidth, None)
         fieldToVal = self._fieldToTPart
         if fieldToVal is None:
             fieldToVal = self._fieldToTPart = self.fieldToDataDict(
@@ -373,7 +373,7 @@ class FrameTmpl(object):
                 actualVal = set_bit_range(actualVal, low, high - low, newBits)
                 actualVldMask = set_bit_range(actualVldMask, low, high - low, vld)
 
-            v = typeOfWord.getValueCls()(typeOfWord, actualVal,
+            v = typeOfWord.getConstCls()(typeOfWord, actualVal,
                                          actualVldMask)
             yield v
 

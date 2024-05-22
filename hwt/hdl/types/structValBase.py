@@ -1,16 +1,18 @@
-from hwt.hdl.value import HValue, areHValues
+from typing import Optional
+
+from hwt.hdl.const import HConst, areHConsts
 from hwt.serializer.generic.indent import getIndent
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
-class StructValBase(HValue):
+class HStructConstBase(HConst):
     """
     Base class for values for structure types.
     Every structure type has it's own value class derived from this.
     """
     __slots__ = []
 
-    def __init__(self, typeObj, val, skipCheck=False):
+    def __init__(self, typeObj: "HStruct", val: Optional[dict], skipCheck=False):
         """
         :param val: None or dict {field name: field value}
         :param typeObj: instance of HString HdlType
@@ -30,7 +32,7 @@ class StructValBase(HValue):
             else:
                 v = val.get(f.name, None)
 
-            if not isinstance(v, (HValue, RtlSignalBase)):
+            if not isinstance(v, (HConst, RtlSignalBase)):
                 v = f.dtype.from_py(v)
 
             setattr(self, f.name, v)
@@ -80,7 +82,7 @@ class StructValBase(HValue):
         return d
 
     def __ne__(self, other):
-        if areHValues(self, other):
+        if areHConsts(self, other):
             if self._dtype == other._dtype:
                 for f in self._dtype.fields:
                     isPadding = f.name is None
@@ -93,13 +95,13 @@ class StructValBase(HValue):
             else:
                 return True
         else:
-            return super(HValue, self).__ne__(other)
+            return super(HConst, self).__ne__(other)
 
     def _eq(self, other):
         return self.__eq__(other)
 
     def __eq__(self, other):
-        if areHValues(self, other):
+        if areHConsts(self, other):
             if self._dtype == other._dtype:
                 for f in self._dtype.fields:
                     isPadding = f.name is None
@@ -112,7 +114,7 @@ class StructValBase(HValue):
             else:
                 return False
         else:
-            return super(HValue, self).__eq__(other)
+            return super(HConst, self).__eq__(other)
 
     def __repr__(self, indent=0):
         buff = ["{"]

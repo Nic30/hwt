@@ -1,6 +1,6 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from pyMathBitPrecise.floatt import Floatt
-from hwt.doc_markers import internal
 
 
 class HFloat(HdlType, Floatt):
@@ -21,7 +21,7 @@ class HFloat(HdlType, Floatt):
 
     @internal
     @classmethod
-    def getValueCls(cls):
-        from hwt.hdl.types.floatVal import HFloatVal
-        return HFloatVal
+    def getConstCls(cls):
+        from hwt.hdl.types.floatConst import HFloatConst
+        return HFloatConst
 

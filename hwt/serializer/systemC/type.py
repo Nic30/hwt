@@ -1,14 +1,14 @@
 from hdlConvertorAst.hdlAst._expr import HdlOp, HdlOpType, HdlValueId
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.defs import FLOAT64
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import MethodNotOverloaded
 from hwt.serializer.verilog.types import ToHdlAstVerilog_types
-from hwt.hdl.types.defs import FLOAT64
-from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstSystemC_type():
@@ -30,7 +30,7 @@ class ToHdlAstSystemC_type():
         assert not declaration
         return self.STRING
 
-    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
+    def as_hdl_HdlType_bits(self, typ: HBits, declaration=False):
         if declaration:
             raise NotImplementedError()
 

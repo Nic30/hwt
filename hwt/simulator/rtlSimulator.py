@@ -7,17 +7,17 @@ from types import ModuleType
 from typing import Union, Optional, Set, Tuple, Callable
 
 from hwt.doc_markers import internal
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import HValue
+from hwt.hdl.const import HConst
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 from hwt.serializer.simModel import SimModelSerializer
 from hwt.serializer.store_manager import SaveToStream, SaveToFilesFlat
 from hwt.synthesizer.dummyPlatform import DummyPlatform
-from hwt.synthesizer.interface import Interface
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import to_rtl
+from hwt.hwIO import HwIO
+from hwt.mainBases import RtlSignalBase
+from hwt.hwModule import HwModule
+from hwt.synth import to_rtl
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
 from pyDigitalWaveTools.vcd.value_format import VcdBitsFormatter, \
     VcdEnumFormatter
@@ -62,7 +62,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     @classmethod
     def build(cls,
-              unit: Unit,
+              module: HwModule,
               unique_name: str,
               build_dir: Optional[str],
               target_platform=DummyPlatform(),
@@ -71,14 +71,14 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         Create a hwtSimApi.basic_hdl_simulator based simulation model
         for specified unit and load it to python
 
-        :param unit: interface level unit which you wont prepare for simulation
+        :param module: interface level unit which you wont prepare for simulation
         :param unique_name: unique name for build directory and python module with simulator
         :param target_platform: target platform for this synthesis
         :param build_dir: directory to store sim model build files,
             if None sim model will be constructed only in memory
         """
         if unique_name is None:
-            unique_name = unit._getDefaultName()
+            unique_name = module._getDefaultName()
 
         _filter = SerializerFilterDoNotExclude()
         if build_dir is None or not do_compile:
@@ -93,7 +93,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                                         _filter=_filter)
             store_man.module_path_prefix = unique_name
 
-        to_rtl(unit,
+        to_rtl(module,
                name=unique_name,
                target_platform=target_platform,
                store_manager=store_man)
@@ -118,18 +118,18 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             exec(buff.getvalue(),
                  simModule.__dict__)
 
-        model_cls = simModule.__dict__[unit._name]
+        model_cls = simModule.__dict__[module._name]
         # can not use just function as it would get bounded to class
-        return cls(model_cls, unit)
+        return cls(model_cls, module)
 
     @internal
     @staticmethod
     def get_trace_formatter(t)\
-            ->Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
+            ->Tuple[str, int, Callable[[RtlSignalBase, HConst], str]]:
         """
         :return: (vcd type name, vcd width, formatter fn)
         """
-        if isinstance(t, (Bits3t, Bits)):
+        if isinstance(t, (Bits3t, HBits)):
             return (VCD_SIG_TYPE.WIRE, t.bit_length(), VcdBitsFormatter())
         elif isinstance(t, (Enum3t, HEnum)):
             return (VCD_SIG_TYPE.REAL, 1, VcdEnumFormatter())
@@ -149,35 +149,35 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
             ww.enddefinitions()
 
-    def create_wave_writer(self, file_name):
+    def create_wave_writer(self, file_name: str):
         self.wave_writer = None
 
     def finalize(self):
         pass
 
     def _collect_empty_hiearchy_containers(self,
-                                   obj: Union[Interface, Unit],
+                                   obj: Union[HwIO, HwModule],
                                    model: BasicRtlSimModel,
-                                   res: Set[Union[Unit, Interface]]):
-        intfs = getattr(obj, "_interfaces", None)
+                                   res: Set[Union[HwModule, HwIO]]):
+        hIOs = getattr(obj, "_hwIOs", None)
         isEmpty = True
-        if intfs:
-            for chIntf in intfs:
-                isEmpty &= self._collect_empty_hiearchy_containers(chIntf, model, res)
+        if hIOs:
+            for chHwIO in hIOs:
+                isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 
-            if isinstance(obj, Unit):
+            if isinstance(obj, HwModule):
                 seenNames: Set[str] = set()
-                for chIntf in obj._private_interfaces:
+                for chHwIO in obj._private_hwIOs:
                     # skip io without name and with duplicit name
-                    if chIntf._name is not None and chIntf._name not in seenNames:
-                        seenNames.add(chIntf._name)
-                        isEmpty &= self._collect_empty_hiearchy_containers(chIntf, model, res)
+                    if chHwIO._name is not None and chHwIO._name not in seenNames:
+                        seenNames.add(chHwIO._name)
+                        isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 
-                for u in obj._units:
-                    m = getattr(model, u._name + "_inst")
-                    if u._shared_component_with is not None:
-                        u, _, _ = u._shared_component_with
-                    isEmpty &= self._collect_empty_hiearchy_containers(u, m, res)
+                for sm in obj._subHwModules:
+                    m = getattr(model, sm._name + "_inst")
+                    if sm._shared_component_with is not None:
+                        sm, _, _ = sm._shared_component_with
+                    isEmpty &= self._collect_empty_hiearchy_containers(sm, m, res)
             if isEmpty:
                 res.add(obj)
         else:
@@ -191,17 +191,17 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         return isEmpty
 
     def _wave_register_signals(self,
-                              obj: Union[Interface, Unit],
+                              obj: Union[HwIO, HwModule],
                               model: BasicRtlSimModel,
                               parent: Optional[VcdVarWritingScope],
-                              empty_hiearchy_containers: Set[Union[Unit, Interface]]):
+                              empty_hiearchy_containers: Set[Union[HwModule, HwIO]]):
         """
-        Register signals from interfaces for Interface or :class:`hwt.synthesizer.unit.Unit` instances
+        Register signals from interfaces for HwIO or :class:`hwt.hwModule.HwModule` instances
         """
         if obj in empty_hiearchy_containers:
             return
-        if obj._interfaces:
-            if isinstance(obj, Unit):
+        if obj._hwIOs:
+            if isinstance(obj, HwModule):
                 name = model._name
             else:
                 name = obj._name
@@ -212,20 +212,20 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
             with subScope:
                 # register all subinterfaces
-                for chIntf in obj._interfaces:
-                    self._wave_register_signals(chIntf, model, subScope, empty_hiearchy_containers)
-                if isinstance(obj, Unit):
-                    for chIntf in obj._private_interfaces:
+                for chHwIO in obj._hwIOs:
+                    self._wave_register_signals(chHwIO, model, subScope, empty_hiearchy_containers)
+                if isinstance(obj, HwModule):
+                    for chHwIO in obj._private_hwIOs:
                         # skip io without name and with duplicit name
-                        if chIntf._name is not None and chIntf._name not in subScope.children:
-                            self._wave_register_signals(chIntf, model, subScope, empty_hiearchy_containers)
+                        if chHwIO._name is not None and chHwIO._name not in subScope.children:
+                            self._wave_register_signals(chHwIO, model, subScope, empty_hiearchy_containers)
 
                     # register interfaces from all subunits
-                    for u in obj._units:
-                        m = getattr(model, u._name + "_inst")
-                        if u._shared_component_with is not None:
-                            u, _, _ = u._shared_component_with
-                        self._wave_register_signals(u, m, subScope, empty_hiearchy_containers)
+                    for sm in obj._subHwModules:
+                        m = getattr(model, sm._name + "_inst")
+                        if sm._shared_component_with is not None:
+                            sm, _, _ = sm._shared_component_with
+                        self._wave_register_signals(sm, m, subScope, empty_hiearchy_containers)
 
                     self._wave_register_remaining_signals(subScope, model, empty_hiearchy_containers)
         else:
@@ -245,7 +245,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
     def _wave_register_remaining_signals(self, unitScope,
                                         model: BasicRtlSimModel,
                                         interface_signals: Set[BasicRtlSimProxy]):
-        for s in model._interfaces:
+        for s in model._hwIOs:
             if s not in interface_signals and s not in self.wave_writer._idScope:
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
@@ -257,7 +257,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     def logChange(self, nowTime: int,
                   sig: BasicRtlSimProxy,
-                  nextVal: HValue,
+                  nextVal: HConst,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """
         This method is called for every value change of any signal.

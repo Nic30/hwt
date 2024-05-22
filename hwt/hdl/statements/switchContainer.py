@@ -15,11 +15,11 @@ from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_list
     HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import HValue
-from hwt.hdl.valueUtils import isSameHVal
+from hwt.hdl.const import HConst
+from hwt.hdl.constUtils import isSameHConst
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -38,7 +38,7 @@ class SwitchContainer(HdlStatement):
     _DEEPCOPY_SHALLOW_ONLY = (*HdlStatement._DEEPCOPY_SHALLOW_ONLY, '_case_value_index', '_case_enclosed_for', '_default_enclosed_for')
 
     def __init__(self, switchOn: RtlSignal,
-                 cases: List[Tuple[HValue, ListOfHdlStatement]],
+                 cases: List[Tuple[HConst, ListOfHdlStatement]],
                  default: Optional[ListOfHdlStatement]=None,
                  parentStm: HdlStatement=None,
                  event_dependent_from_branch: Optional[int]=None):
@@ -440,11 +440,11 @@ class SwitchContainer(HdlStatement):
             return False
 
         if isinstance(other, SwitchContainer) \
-                and isSameHVal(self.switchOn, other.switchOn)\
+                and isSameHConst(self.switchOn, other.switchOn)\
                 and len(self.cases) == len(other.cases)\
                 and isSameStatementList(self.default, other.default):
             for (ac, astm), (bc, bstm) in zip(self.cases, other.cases):
-                if not isSameHVal(ac, bc)\
+                if not isSameHConst(ac, bc)\
                         or not isSameStatementList(astm, bstm):
                     return False
             return True

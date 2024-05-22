@@ -5,8 +5,8 @@ from typing import List, Tuple, Union, Optional, Dict, Callable, Generator
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.pyUtils.arrayQuery import flatten
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
+from hwt.mainBases import RtlSignalBase
 
 
 class HwtSyntaxError(Exception):
@@ -20,10 +20,10 @@ class HdlStatement(HdlObject):
     :ivar ~._event_dependent_from_branch: index of code branch if statement is event (clk) dependent else None
     :ivar ~.parentStm: parent instance of HdlStatement or None
     :ivar ~.parentStmList: list in parent statement where this statement is stored
-    :ivar ~._inputs: UniqList of input signals for this statement
+    :ivar ~._inputs: SetList of input signals for this statement
         (All input signals which are directly used in any statement. Note that the expression is also the signal.)
-    :ivar ~._outputs: UniqList of output signals for this statement
-    :ivar ~._sensitivity: UniqList of input signals
+    :ivar ~._outputs: SetList of output signals for this statement
+    :ivar ~._sensitivity: SetList of input signals
         or (rising/falling) operator
     :ivar ~._enclosed_for: set of outputs for which this statement is enclosed
         (for which there is not any unused branch)
@@ -35,14 +35,14 @@ class HdlStatement(HdlObject):
 
     def __init__(self, parentStm:Optional["HdlStatement"]=None,
                  parentStmList: Optional["ListOfHdlStatement"]=None,
-                 sensitivity:Optional[UniqList]=None,
+                 sensitivity:Optional[SetList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         assert event_dependent_from_branch is None or isinstance(event_dependent_from_branch, int), event_dependent_from_branch
         self._event_dependent_from_branch = event_dependent_from_branch
         self.parentStm = parentStm
         self.parentStmList = parentStmList
-        self._inputs = UniqList()
-        self._outputs = UniqList()
+        self._inputs = SetList()
+        self._outputs = SetList()
         self._enclosed_for = None
 
         self._sensitivity = sensitivity
@@ -299,8 +299,8 @@ class HdlStatement(HdlObject):
                 if parentStmList is not None:
                     for o in self._outputs:
                         parentStmList._unregisterOutput(o, self)
-                self._inputs = UniqList()
-                self._outputs = UniqList()
+                self._inputs = SetList()
+                self._outputs = SetList()
                 self._collect_io()
 
     @internal

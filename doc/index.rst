@@ -27,7 +27,7 @@ What is HWToolkit (hwt)
   * The type itself drives it's hw representation, that means the typesystem is user extensible.
 
 * HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
-  However nothings is sacrificed and everything can be overriden.
+  However nothings is sacrificed and everything can be overridden.
 
 * HWT uses UVM like verification environment implemented in hwtSimApi. hwtSimApi can use verilator or python based simulator
   to achieve high-speed simulation or nearly-zero simulator spin-up.
@@ -43,10 +43,10 @@ Where to start
 --------------
 
 Tutorial is in hwtLib.examples.*, every file in this module contains user-entry-level comments.
-E.g. hwtLib.examples.simple.SimpleUnit is a good starting point.
+E.g. hwtLib.examples.simple.SimpleHwModule is a good starting point.
 
-Component in HWT is a class which inherits from Unit class.
-Object of such a class can be converted to a vhdl/Verilog by from hwt.synthesizer.utils.to_rtl function.
+Component in HWT is a class which inherits from HwModule class.
+Object of such a class can be converted to a vhdl/Verilog by from hwt.synth.to_rtl function.
 
 You can also download this doc in `PDF
 <https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.

@@ -3,9 +3,9 @@ from typing import Union
 from hdlConvertorAst.hdlAst import iHdlStatement
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from ipCorePackager.constants import DIRECTION
 
@@ -37,7 +37,7 @@ def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
                 and d.parentStm is None\
                 and not d.indexes\
                 and d._event_dependent_from_branch is None\
-                and (isinstance(d.src, HValue) or not d.src.hidden):
+                and (isinstance(d.src, HConst) or not d.src.hidden):
             # primitive assignment
             return SIGNAL_TYPE.WIRE
         elif isinstance(d, iHdlStatement) and d.in_preproc:

@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.structValBase import StructValBase
+from hwt.hdl.types.structValBase import HStructConstBase
 from hwt.serializer.generic.indent import getIndent
 
 
@@ -12,6 +12,7 @@ class HStructFieldMeta():
         should be synchronized as a one interface
         or each it's part should be synchronized separately
     """
+
     def __init__(self, split=False):
         self.split = split
 
@@ -26,6 +27,7 @@ class HStructFieldMeta():
 
 
 class HStructField(object):
+
     def __init__(self, typ: HdlType, name: str, meta=None):
         assert isinstance(name, str) or name is None, name
         assert isinstance(typ, HdlType), typ
@@ -59,9 +61,10 @@ class HStruct(HdlType):
     :ivar ~.fields: tuple of :class:`~.HStructField` instances in this struct
     :ivar ~.name: name of this HStruct type
     :ivar ~.field_by_name: dictionary which maps the name of the field to :class:`~.HStructField` instance
-    :ivar ~.valueCls: Class of value for this type as usual
+    :ivar ~._constCls: Class of value for this type as usual
         in HdlType implementations
     """
+
     def __init__(self, *template, name=None, const=False):
         """
         :param template: list of tuples (type, name) or :class:`~.HStructField` objects
@@ -102,16 +105,16 @@ class HStruct(HdlType):
         self.__bit_length_val = bit_length
 
         usedNames = set(field_by_name.keys())
-        assert not protectedNames.intersection(usedNames),\
+        assert not protectedNames.intersection(usedNames), \
             protectedNames.intersection(usedNames)
 
-        class StructVal(StructValBase):
+        class StructConst(HStructConstBase):
             __slots__ = list(usedNames)
 
         if name is not None:
-            StructVal.__name__ = name + "Val"
+            StructConst.__name__ = name + "Val"
 
-        self.valueCls = StructVal
+        self._constCls = StructConst
 
     def bit_length(self):
         bl = self.__bit_length_val
@@ -122,8 +125,8 @@ class HStruct(HdlType):
             return self.__bit_length_val
 
     @internal
-    def getValueCls(self):
-        return self.valueCls
+    def getConstCls(self):
+        return self._constCls
 
     @internal
     @classmethod

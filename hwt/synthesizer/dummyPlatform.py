@@ -10,7 +10,7 @@ class DummyPlatform():
     It can also contains pre/post processing callbacks and optimizations required for this target.
 
     :note: all processors has to be callable with only one parameter
-        which is actual Unit/RtlNetlist instance
+        which is actual HwModule/RtlNetlist instance
     """
 
     def __init__(self):

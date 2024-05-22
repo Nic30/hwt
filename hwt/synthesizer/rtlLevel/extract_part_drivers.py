@@ -2,35 +2,35 @@ from itertools import islice
 from typing import Dict, List, Tuple, Union, Optional, Sequence
 
 from hwt.code import Concat
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.operator import isConst
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import SLICE
-from hwt.hdl.types.sliceVal import HSliceVal
-from hwt.hdl.value import HValue
-from hwt.pyUtils.uniqList import UniqList
+from hwt.hdl.types.sliceConst import HSliceConst
+from hwt.pyUtils.setList import SetList
 from hwt.serializer.utils import RtlSignal_sort_key, HdlStatement_sort_key
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 def _format_indexes(indexes):
     return tuple(
         (int(i) + 1, int(i))
-            if isinstance(i, BitsVal) else
+            if isinstance(i, HBitsConst) else
         (int(i.val.start), int(i.val.stop))
         for i in indexes)
 
 
 @internal
 def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
-                                    indexes: List[Union[BitsVal, HSliceVal]],
+                                    indexes: List[Union[HBitsConst, HSliceConst]],
                                     src: Optional[RtlSignal],
                                     is_signal_needed: bool) -> RtlSignal:
     """
@@ -38,7 +38,7 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
 
     :param dst: a signal which slice we want to generate tmp signal for
     :param indexes: a indexes to specify the slice of the dst
-    :param is_signal_needed: True if we need a signal which will we drive later, else returns HValue instance
+    :param is_signal_needed: True if we need a signal which will we drive later, else returns HConst instance
         resolved from default and nop value
     """
     if is_signal_needed:
@@ -53,7 +53,7 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
 
         if is_signal_needed:
             dst = dst[i]
-            if isinstance(i, HSliceVal):
+            if isinstance(i, HSliceConst):
                 if int(i.val.step) == -1:
                     stop = int(i.val.stop)
                     start = int(i.val.start)
@@ -83,18 +83,18 @@ def resolve_splitpoints(s: RtlSignal, parts):
             raise NotImplementedError(s, i)
         i = i[0]
 
-        if isinstance(i, BitsVal):
+        if isinstance(i, HBitsConst):
             # index is normal integer
             i = int(i)
             add_split_point(i)
             add_split_point(i + 1)
         else:
             # index is slice
-            assert isinstance(i, HSliceVal), (s, i)
+            assert isinstance(i, HSliceConst), (s, i)
             add_split_point(int(i.val.start))
             add_split_point(int(i.val.stop))
 
-    if isinstance(s._dtype, Bits):
+    if isinstance(s._dtype, HBits):
         # add boundary points in the case something is unconnected
         add_split_point(0)
         add_split_point(s._dtype.bit_length())
@@ -132,7 +132,7 @@ class RtlNetlistPassExtractPartDrivers():
     @classmethod
     def find_independent_slice_drivers(cls, stm: HdlStatement):
         if isinstance(stm, HdlAssignmentContainer):
-            if stm.indexes and len(stm.indexes) == 1 and isinstance(stm.dst._dtype, Bits):
+            if stm.indexes and len(stm.indexes) == 1 and isinstance(stm.dst._dtype, HBits):
                 dst = stm.dst
                 for i in stm.indexes:
                     if not isConst(i):
@@ -164,7 +164,7 @@ class RtlNetlistPassExtractPartDrivers():
 
     @classmethod
     def resolve_final_parts_from_splitpoints_and_parts(cls, signal_parts):
-        final_signal_parts: Dict[RtlSignal, Dict[Tuple[Tuple[int, int], ...], Union[HValue, RtlSignal]]] = {}
+        final_signal_parts: Dict[RtlSignal, Dict[Tuple[Tuple[int, int], ...], Union[HConst, RtlSignal]]] = {}
         # split part intervals to non-overlapping chunks
         for s, parts in sorted(signal_parts.items(), key=lambda x: RtlSignal_sort_key(x[0])):
             split_point = resolve_splitpoints(s, parts)
@@ -181,12 +181,12 @@ class RtlNetlistPassExtractPartDrivers():
 
                 i = indexes[0]
                 split_p = split_point[split_i]
-                if isinstance(i, BitsVal):
+                if isinstance(i, HBitsConst):
                     low = int(i)
                     high = low + 1
                     index_key = ((high, low),)
                 else:
-                    assert isinstance(i, HSliceVal), (s, i)
+                    assert isinstance(i, HSliceConst), (s, i)
                     if i.val.step != -1:
                         raise NotImplementedError(s, i)
                     high, low = int(i.val.start), int(i.val.stop)
@@ -302,7 +302,7 @@ class RtlNetlistPassExtractPartDrivers():
     @classmethod
     def extract_part_drivers_stm(cls, stm: HdlStatement,
                                  signal_parts: Dict[RtlSignal,
-                                                    List[Tuple[RtlSignal, List[HValue]]]]
+                                                    List[Tuple[RtlSignal, List[HConst]]]]
                                  ) -> bool:
         """
         :return: True if statement was modified
@@ -368,8 +368,8 @@ class RtlNetlistPassExtractPartDrivers():
                 assert not stm._enclosed_for, "_enclosed_for is expected not to be initialized yet"
                 outputs = stm._outputs
                 inputs = stm._inputs
-                stm._outputs = UniqList()
-                stm._inputs = UniqList()
+                stm._outputs = SetList()
+                stm._inputs = SetList()
                 stm._collect_io()
                 if stm.parentStm is None:
                     for o in outputs:

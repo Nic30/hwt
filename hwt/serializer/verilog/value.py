@@ -4,18 +4,18 @@ from hdlConvertorAst.to.hdlUtils import bit_string
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_downto, \
     hdl_call
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BOOL, BIT
-from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.sliceVal import HSliceVal
-from hwt.hdl.value import HValue
+from hwt.hdl.types.enumConst import HEnumConst
+from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.utils import verilogTypeOfSig
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class ToHdlAstVerilog_Value(ToHdlAst_Value):
@@ -23,21 +23,21 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     # TRUE = HdlValueId("true", obj=LanguageKeyword())
     # FALSE = HdlValueId("false", obj=LanguageKeyword())
 
-    def as_hdl_BoolVal(self, val: BitsVal):
+    def as_hdl_HBoolConst(self, val: HBitsConst):
         return self.as_hdl_int(val.val)
 
     def as_hdl_cond(self, c, forceBool):
-        assert isinstance(c, (RtlSignalBase, HValue))
+        assert isinstance(c, (RtlSignalBase, HConst))
         if not forceBool or c._dtype == BOOL:
             return self.as_hdl(c)
         elif c._dtype == BIT:
             return self.as_hdl(c)
-        elif isinstance(c._dtype, Bits):
+        elif isinstance(c._dtype, HBits):
             return self.as_hdl(c != 0)
         else:
             raise NotImplementedError()
 
-    def as_hdl_HEnumVal(self, val: HEnumVal):
+    def as_hdl_HEnumConst(self, val: HEnumConst):
         i = val._dtype._allValues.index(val.val)
         assert i >= 0
         return HdlValueInt(i, None, None)
@@ -49,13 +49,13 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
         else:
             return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
 
-    def as_hdl_HSliceVal(self, val: HSliceVal):
+    def as_hdl_HSliceConst(self, val: HSliceConst):
         upper = val.val.start - 1
         return hdl_downto(self.as_hdl_Value(upper),
                           self.as_hdl_Value(val.val.stop))
 
     def sensitivityListItem(self, item, anyIsEventDependent):
-        if isinstance(item, Operator):
+        if isinstance(item, HOperatorNode):
             return HdlOp(HWT_TO_HDLCONVERTOR_OPS[item.operator],
                            [self.as_hdl(item.operands[0]), ])
         elif anyIsEventDependent:
@@ -67,7 +67,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
 
         return self.as_hdl(item)
 
-    def as_hdl_HArrayVal(self, val):
+    def as_hdl_HArrayConst(self, val):
         raise ValueError(
             "Verilog do not have a array constants(they are part of SV)"
             " and that is why array constants should converted to initialization"

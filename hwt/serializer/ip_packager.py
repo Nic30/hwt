@@ -7,19 +7,19 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.doc_markers import internal
-from hwt.hdl.types.bits import Bits
+from hwt.hwIO import HwIO
+from hwt.hwModule import HwModule
+from hwt.hwParam import HwParam
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
+from hwt.mainBases import RtlSignalBase
 from hwt.serializer.store_manager import SaveToFilesFlat
 from hwt.serializer.vhdl import Vhdl2008Serializer, ToHdlAstVhdl2008
+from hwt.synth import to_rtl
 from hwt.synthesizer.dummyPlatform import DummyPlatform
-from hwt.synthesizer.interface import Interface
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
-from hwt.synthesizer.param import Param
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.interfaceLevel.hwModuleImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import to_rtl
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
@@ -48,12 +48,12 @@ class IpPackager(IpCorePackager):
 
     """
 
-    def __init__(self, topUnit: Unit, name: str=None,
+    def __init__(self, topHwModule: HwModule, name: str=None,
                  extra_files: List[str]=[],
                  serializer_cls=Vhdl2008Serializer,
                  target_platform=DummyPlatform()):
         """
-        :param topObj: :class:`hwt.synthesizer.unit.Unit` instance of top component
+        :param topObj: :class:`hwt.hwModule.HwModule` instance of top component
         :param name: optional name of top
         :param extra_files: list of extra HDL/constrain file names for files
             which should be distributed in this IP-core
@@ -62,10 +62,10 @@ class IpPackager(IpCorePackager):
         :param target_platform: specifies properties of target platform, like available resources, vendor, etc.
         """
         if not name:
-            name = topUnit._getDefaultName()
+            name = topHwModule._getDefaultName()
 
         super(IpPackager, self).__init__(
-            topUnit, name, extra_files)
+            topHwModule, name, extra_files)
         self.serializer = serializer_cls
         self.target_platform = target_platform
 
@@ -114,7 +114,7 @@ class IpPackager(IpCorePackager):
         elif t == STR:
             val.format = "string"
             val.text = v.val
-        elif isinstance(t, Bits):
+        elif isinstance(t, HBits):
             bitString(t.bit_length())
         else:
             raise NotImplementedError(
@@ -131,12 +131,12 @@ class IpPackager(IpCorePackager):
         return p.type
 
     @internal
-    def iterParams(self, unit: Unit):
-        return unit._ctx.ent.params
+    def iterParams(self, module: HwModule):
+        return module._ctx.ent.params
 
     @internal
-    def iterInterfaces(self, top: Unit):
-        return top._interfaces
+    def iterInterfaces(self, top: HwModule):
+        return top._hwIOs
 
     @internal
     def serializeType(self, hdlType: HdlType) -> str:
@@ -157,36 +157,36 @@ class IpPackager(IpCorePackager):
         """
         if dtype == BIT:
             return False
-        elif isinstance(dtype, Bits):
+        elif isinstance(dtype, HBits):
             return [dtype.bit_length() - 1, INT.from_py(0)]
 
     @internal
-    def getInterfaceType(self, intf: Interface) -> HdlType:
+    def getInterfaceType(self, hwIO: HwIO) -> HdlType:
         """
         :see: doc of method on parent class
         """
-        return intf._dtype
+        return hwIO._dtype
 
     @internal
-    def getInterfaceLogicalName(self, intf: Interface):
+    def getInterfaceLogicalName(self, hwIO: HwIO):
         """
         :see: doc of method on parent class
         """
-        return getSignalName(intf)
+        return getSignalName(hwIO)
 
     @internal
-    def getInterfacePhysicalName(self, intf: Interface):
+    def getInterfacePhysicalName(self, hwIO: HwIO):
         """
         :see: doc of method on parent class
         """
-        return intf._sigInside.name
+        return hwIO._sigInside.name
 
     @internal
-    def getInterfaceDirection(self, thisIntf):
+    def getInterfaceDirection(self, thisHwIO: HwIO):
         """
         :see: doc of method on parent class
         """
-        return thisIntf._direction
+        return thisHwIO._direction
 
     @internal
     def getTypeWidth(self, dtype: HdlType, do_eval=False)\
@@ -199,7 +199,7 @@ class IpPackager(IpCorePackager):
         return width, widthStr, False
 
     @internal
-    def getObjDebugName(self, obj: Union[Interface, Unit, Param]) -> str:
+    def getObjDebugName(self, obj: Union[HwIO, HwModule, HwParam]) -> str:
         """
         :see: doc of method on parent class
         """

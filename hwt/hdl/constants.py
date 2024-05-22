@@ -1,16 +1,4 @@
-"""
-Commonly used constants during HW devel.
-"""
 from enum import Enum
-
-# import constants from other packages to have them on one place
-from ipCorePackager.constants import INTF_DIRECTION, DIRECTION
-from hwtSimApi.constants import Time, CLK_PERIOD
-
-READ = "READ"
-WRITE = "WRITE"
-READ_WRITE = "RW"
-NOP = "NOP"
 
 
 class SENSITIVITY(Enum):

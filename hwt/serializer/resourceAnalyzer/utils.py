@@ -1,34 +1,34 @@
 from typing import Union
 
-from hwt.hdl.operator import Operator
+from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.serializer.resourceAnalyzer.resourceTypes import \
     ResourceFF, ResourceMUX, ResourceLatch, ResourceRAM
+from hwt.hwModule import HwModule
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
 
 
 class ResourceContext():
     """
     Container of informations about resources used in architecture
 
-    :ivar ~.unit: optional unit for which is this context build
+    :ivar ~.module: optional module for which is this context build
     :ivar ~.seen: set of seen objects
     :ivar ~.resources: dictionary {type of resource: cnt}
     :ivar ~.discoveredRamSignals: set of signals which seems to be some kind
         of RAM/ROM memory
     """
 
-    def __init__(self, unit: Unit):
-        self.unit = unit
+    def __init__(self, module: HwModule):
+        self.module = module
         self.seen = set()
         self.resources = {}
-        # {RtlSignal or Statement or Operator: HwResource or typle (HwResource, cnt)}
+        # {RtlSignal or Statement or HOperatorNode: HwResource or typle (HwResource, cnt)}
         self.resource_for_object = {}
         # {(mem, addr, syncFlag, r/w): cnt}
         self.memories = {}
 
-    def registerOperator(self, op: Operator):
+    def registerOperator(self, op: HOperatorNode):
         w = op.operands[0]._dtype.bit_length()
         res = self.resources
         k = (op.operator, w)
@@ -36,7 +36,7 @@ class ResourceContext():
 
         self.resource_for_object[op] = k
 
-    def registerMUX(self, stm: Union[HdlStatement, Operator], sig: RtlSignal,
+    def registerMUX(self, stm: Union[HdlStatement, HOperatorNode], sig: RtlSignal,
                     inputs_cnt: int):
         """
         mux record is in format (self.MUX, n, m)

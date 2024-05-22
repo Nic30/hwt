@@ -4,18 +4,18 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef, \
     HdlCompInst
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator, isConst
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode, isConst
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
-from hwt.hdl.value import HValue
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
+from hwt.hwModule import HwModule
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
 
 
 @internal
@@ -39,11 +39,11 @@ def count_mux_inputs_for_outputs(stm):
 
 # operators which do not consume a hw resorce directly
 IGNORED_OPERATORS = {
-    AllOps.BitsAsSigned,
-    AllOps.BitsAsUnsigned,
-    AllOps.BitsAsVec,
-    AllOps.RISING_EDGE,
-    AllOps.FALLING_EDGE,
+    HwtOps.BitsAsSigned,
+    HwtOps.BitsAsUnsigned,
+    HwtOps.BitsAsVec,
+    HwtOps.RISING_EDGE,
+    HwtOps.FALLING_EDGE,
 }
 
 
@@ -64,20 +64,20 @@ class ResourceAnalyzer():
         ctx = self.context
         seen = ctx.seen
         for d in sig.drivers:
-            if (not isinstance(d, Operator)
+            if (not isinstance(d, HOperatorNode)
                     or d in seen):
                 continue
 
             skip_op = d.operator in IGNORED_OPERATORS
             if not skip_op:
-                if d.operator == AllOps.EQ:
+                if d.operator == HwtOps.EQ:
                     o1 = d.operands[1]
-                    if (isinstance(o1, HValue)
+                    if (isinstance(o1, HConst)
                             and o1._dtype.bit_length() == 1
                             and o1.val):
                         # to bool conversion
                         skip_op = True
-                elif d.operator == AllOps.INDEX:
+                elif d.operator == HwtOps.INDEX:
                     o1 = d.operands[1]
                     skip_op = True
                     if isConst(o1):
@@ -89,7 +89,7 @@ class ResourceAnalyzer():
                             ctx.registerRAM_read_port(o0, o1, synchronous)
                         else:
                             ctx.registerMUX(d, sig, 2)
-                elif d.operator == AllOps.TERNARY:
+                elif d.operator == HwtOps.TERNARY:
                     o1 = d.operands[1]
                     o2 = d.operands[2]
                     if (isConst(o1)
@@ -177,8 +177,8 @@ class ResourceAnalyzer():
         raise NotImplementedError()
 
     # [TODO] constant to ROMs
-    def visit_Unit(self, u: Unit):
-        self.visit_HdlModuleDef(u._ctx.arch)
+    def visit_HwModule(self, m: HwModule):
+        self.visit_HdlModuleDef(m._ctx.arch)
 
     def report(self):
         ctx = self.context

@@ -2,15 +2,15 @@ from copy import copy
 from itertools import compress
 from typing import Generator, List, Tuple
 
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
+from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure, \
     HdlAssignmentContainer_constructor
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -65,9 +65,9 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops: b
     if not proc_statements:
         return
 
-    outputs = UniqList()
-    _inputs = UniqList()
-    sensitivity = UniqList()
+    outputs = SetList()
+    _inputs = SetList()
+    sensitivity = SetList()
     enclosed_for = set()
     _proc_statements = ListOfHdlStatement()
     for _stm in proc_statements:
@@ -125,7 +125,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops: b
         assert not o.hidden, o
 
     seen = set()
-    inputs = UniqList()
+    inputs = SetList()
     for i in _inputs:
         inputs.extend(i._walk_public_drivers(seen))
 

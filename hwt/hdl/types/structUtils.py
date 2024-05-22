@@ -2,12 +2,13 @@ from copy import copy
 from typing import Union, Dict
 
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStructField, HStruct
 from hwt.synthesizer.typePath import TypePath
+
 
 filed_filter_t = Dict[Union[int, str], "filed_filter_t"]
 
@@ -34,7 +35,7 @@ def HdlType_select(t: HStruct, fieldsToUse: filed_filter_t):
         new_t = copy(t)
         new_t.elment = HdlType_select(t.element_t, v)
         return new_t
-    elif isinstance(t, (Bits, HEnum)):
+    elif isinstance(t, (HBits, HEnum)):
         # scalar
         return t
     else:

@@ -3,7 +3,7 @@ from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.synthesizer.param import Param
+from hwt.hwParam import HwParam
 from ipCorePackager.constants import DIRECTION
 
 
@@ -25,7 +25,7 @@ def systemCTypeOfSig(s):
             return SIGNAL_TYPE.PORT_REG
         else:
             raise ValueError(t)
-    elif isinstance(s, Param):
+    elif isinstance(s, HwParam):
         return SIGNAL_TYPE.PORT_REG
     elif s._const or\
         arr_any(s.drivers,

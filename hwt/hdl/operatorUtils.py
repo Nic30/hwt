@@ -1,17 +1,16 @@
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
+
 
 # from hwt.hdl.operator import Operator
-
-
 @internal
-def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue], toReplace: SignalReplaceSpecType) -> RtlSignalBase:
+def _replace_input_in_expr(expr: Union[RtlSignalBase, HConst], toReplace: SignalReplaceSpecType) -> RtlSignalBase:
     """
     :return: newly rewritten expression with the subexpression replaced, True if changed else False
     """
@@ -56,9 +55,9 @@ def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue], toReplace: Signal
 @internal
 def replace_input_in_expr(topStatement: "HdlStatement",
                           parentStm: "HdlStatement",
-                          expr: Union[RtlSignalBase, HValue],
+                          expr: Union[RtlSignalBase, HConst],
                           toReplace: SignalReplaceSpecType,
-                          # maybeDisconnectedSignals: UniqList[RtlSignalBase]
+                          # maybeDisconnectedSignals: SetList[RtlSignalBase]
                           ) -> Tuple[RtlSignalBase, bool]:
     """
     :return: tuple (newExpression, True if expr is toReplace and should be replaced else False)
@@ -66,9 +65,9 @@ def replace_input_in_expr(topStatement: "HdlStatement",
     res, didContainExpr = _replace_input_in_expr(expr, toReplace)
     if didContainExpr:
         # maybeDisconnectedSignals.append(expr)
-        if not isinstance(expr, HValue):
+        if not isinstance(expr, HConst):
             expr.endpoints.discard(topStatement)
-        if not isinstance(res, HValue):
+        if not isinstance(res, HConst):
             res.endpoints.append(topStatement)
 
         return res, True

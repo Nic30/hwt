@@ -1,4 +1,3 @@
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from typing import Set
 
 
@@ -32,7 +31,7 @@ class InterfaceStructureErr(IntfLvlConfErr):
     :ivar exclude: a set of sub-interfaces which should be excluded during the comparison
     """
 
-    def __init__(self, dst: InterfaceBase, src: InterfaceBase, exclude: Set[InterfaceBase]):
+    def __init__(self, dst: "HwIOBase", src: "HwIOBase", exclude: Set["HwIOBase"]):
         super(InterfaceStructureErr, self).__init__()
         self.src = src
         self.dst = dst
@@ -47,15 +46,15 @@ class InterfaceStructureErr(IntfLvlConfErr):
         dst = self.dst
         src = self.src
         exclude = self.exclude
-        for i in src._interfaces:
-            i2 = getattr(dst, i._name, None)
-            if i2 is None and (not exclude or i not in exclude):
-                missing_on_dst.append(i._name)
+        for sHwIO in src._hwIOs:
+            io2 = getattr(dst, sHwIO._name, None)
+            if io2 is None and (not exclude or sHwIO not in exclude):
+                missing_on_dst.append(sHwIO._name)
 
-        for i in dst._interfaces:
-            i2 = getattr(src, i._name, None)
-            if i2 is None and (not exclude or i not in exclude):
-                missing_on_src.append(i._name)
+        for sHwIO in dst._hwIOs:
+            io2 = getattr(src, sHwIO._name, None)
+            if io2 is None and (not exclude or sHwIO not in exclude):
+                missing_on_src.append(sHwIO._name)
 
         buff = [f"<{self.__class__.__name__} {dst} <= {src}"]
         if missing_on_dst:

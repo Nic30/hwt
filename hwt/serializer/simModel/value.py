@@ -2,17 +2,17 @@ from typing import Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_getattr
-from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.code import Concat
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
+from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.value import HValue
+from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
@@ -37,15 +37,15 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     CONCAT = HdlValueId("Concat", obj=Concat)
     op_transl_dict = {
         **HWT_TO_HDLCONVERTOR_OPS,
-        AllOps.INDEX: HdlOpType.INDEX,
+        HwtOps.INDEX: HdlOpType.INDEX,
     }
     _cast_ops = {
-        AllOps.BitsAsSigned,
-        AllOps.BitsAsUnsigned,
-        AllOps.BitsAsVec,
+        HwtOps.BitsAsSigned,
+        HwtOps.BitsAsUnsigned,
+        HwtOps.BitsAsVec,
     }
 
-    def is_suitable_for_const_extract(self, val: HValue):
+    def is_suitable_for_const_extract(self, val: HConst):
         return not isinstance(val._dtype, HEnum) or val.vld_mask == 0
 
     def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
@@ -59,7 +59,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             return super(ToHdlAstSimModel_value, self).as_hdl_SignalItem(
                 si, declaration=declaration)
 
-    def as_hdl_BitsVal(self, val: BitsVal):
+    def as_hdl_HBitsConst(self, val: HBitsConst):
         dtype = val._dtype
         as_hdl_int = self.as_hdl_int
         t = hdl_call(self.Bits3t, [
@@ -68,20 +68,20 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                                         as_hdl_int(val.val),
                                         as_hdl_int(val.vld_mask)])
 
-    def as_hdl_DictVal(self, val):
+    def as_hdl_HDictConst(self, val):
         return {
             self.as_hdl_int(int(k)): self.as_hdl_Value(v)
             for k, v in val.items()
         }
 
-    def as_hdl_HArrayVal(self, val):
+    def as_hdl_HArrayConst(self, val):
         return hdl_call(self.Array3val, [
             self.as_hdl_HdlType(val._dtype),
-            self.as_hdl_DictVal(val.val),
+            self.as_hdl_HDictConst(val.val),
             self.as_hdl_int(val.vld_mask)
         ])
 
-    def as_hdl_HSliceVal(self, val):
+    def as_hdl_HSliceConst(self, val):
         args = (
             val.val.start,
             val.val.stop,
@@ -89,7 +89,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         )
         return hdl_call(self.SLICE, [self.as_hdl_int(int(a)) for a in args])
 
-    def as_hdl_HEnumVal(self, val: HEnumVal):
+    def as_hdl_HEnumConst(self, val: HEnumConst):
         t_name = self.name_scope.get_object_name(val._dtype)
         if val.vld_mask:
             name = self.name_scope.get_object_name(val)
@@ -98,15 +98,15 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             return hdl_call(hdl_getattr(hdl_getattr(self.SELF, t_name), "from_py"),
                             [None, ])
 
-    def as_hdl_Operator(self, op: Operator):
+    def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator
 
-        if o == AllOps.EQ:
+        if o == HwtOps.EQ:
             op0 = self.as_hdl_Value(ops[0])
             op1 = self.as_hdl_Value(ops[1])
             return hdl_call(hdl_getattr(op0, "_eq"), [op1, ])
-        elif o == AllOps.TERNARY:
+        elif o == HwtOps.TERNARY:
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
                 return self.as_hdl_cond(ops[0], True)
@@ -115,8 +115,8 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                 op1 = self.as_hdl_Value(ops[1])
                 op2 = self.as_hdl_Value(ops[2])
                 return hdl_call(hdl_getattr(op0, "_ternary"), [op1, op2])
-        elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
-            if o == AllOps.RISING_EDGE:
+        elif o == HwtOps.RISING_EDGE or o == HwtOps.FALLING_EDGE:
+            if o == HwtOps.RISING_EDGE:
                 fn = "_onRisingEdge"
             else:
                 fn = "_onFallingEdge"
@@ -137,10 +137,10 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                 return hdl_call(hdl_getattr(op_hdl, "cast_sign"), [sign, ])
             else:
                 return op_hdl
-        elif o == AllOps.CONCAT:
+        elif o == HwtOps.CONCAT:
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_concat"),
                             [self.as_hdl_Value(ops[1]), ])
-        elif o == AllOps.EQ:
+        elif o == HwtOps.EQ:
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_eq"),
                             [self.as_hdl_Value(ops[1]), ])
         else:

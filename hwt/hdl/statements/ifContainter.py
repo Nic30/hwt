@@ -18,8 +18,8 @@ from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import discover_sensitivity_of_sig
+from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignalWalkers import discover_sensitivity_of_sig
 
 
 class IfContainer(HdlStatement):

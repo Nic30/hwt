@@ -1,15 +1,15 @@
 from collections import deque
 
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator
+from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.interfaceLevel.utils import HwIO_walkSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from ipCorePackager.constants import DIRECTION
 
@@ -50,12 +50,16 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
     :attention: does not remove signals in cycles which does not affect outputs
     """
     # walk circuit from outputs to inputs and collect seen signals
-    toSearch = deque(s for s, d in netlist.interfaces.items() if d != DIRECTION.IN)
+    toSearch = deque(s for s, d in netlist.hwIOs.items() if d != DIRECTION.IN)
     seen = set(toSearch)
-    for c in netlist.subUnits:
-        for sig in walkPhysInterfaces(c):
+    for c in netlist.subHwModules:
+        for sig in HwIO_walkSignals(c):
+            # if sig._direction == INTF_DIRECTION.SLAVE and sig._masterDir == DIRECTION.OUT:
+            #     continue
+            # if sig._direction == INTF_DIRECTION.MASTER and sig._masterDir == DIRECTION.IN:
+            #     continue
             s = sig._sig
-            assert s is not None, (netlist.parent, sig, "broken Interface instance")
+            assert s is not None, (netlist.parent, sig, "broken HwIO instance")
             assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
             toSearch.append(s)
 
@@ -63,7 +67,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
         sig = toSearch.popleft()
 
         for e in sig.drivers:
-            if isinstance(e, Operator):
+            if isinstance(e, HOperatorNode):
                 inputs = e.operands
             elif isinstance(e, HdlPortItem):
                 # we are already added inputs of all components
@@ -86,11 +90,11 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
                 toSearch.append(nv)
 
     # add all io because it can not be removed
-    seen.update(s for s, d in netlist.interfaces.items() if d == DIRECTION.IN)
-    for c in netlist.subUnits:
-        for sig in walkPhysInterfaces(c):
+    seen.update(s for s, d in netlist.hwIOs.items() if d == DIRECTION.IN)
+    for c in netlist.subHwModules:
+        for sig in HwIO_walkSignals(c):
             s = sig._sig
-            assert s is not None, (netlist.parent, sig, "broken Interface instance after initial scan")
+            assert s is not None, (netlist.parent, sig, "broken HwIO instance after initial scan")
             assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
             seen.add(s)
 
@@ -104,7 +108,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
         for e in tuple(sig.drivers):
             # drivers of this signal are useless rm them
-            if isinstance(e, Operator):
+            if isinstance(e, HOperatorNode):
                 removed_e = e
             elif isinstance(e, HdlPortItem):
                 raise NotImplementedError(sig)
@@ -114,12 +118,12 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
             if removed_e is not None:
                 # must not destroy before processing inputs
                 removed_e._destroy()
-        intf = getattr(sig, "_interface", None)
-        if intf:
-            if intf._sig is sig:
-                intf._sig = None
+        hwIO = getattr(sig, "_hwIO", None)
+        if hwIO:
+            if hwIO._sig is sig:
+                hwIO._sig = None
             else:
-                assert intf._sigInside is None or intf._sigInside is sig, (intf, intf._sigInside, sig)
-                intf._sigInside = None
+                assert hwIO._sigInside is None or hwIO._sigInside is sig, (hwIO, hwIO._sigInside, sig)
+                hwIO._sigInside = None
 
     netlist.signals = seen

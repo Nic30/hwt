@@ -3,17 +3,17 @@ from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.defs import INT, SLICE
-from hwt.hdl.value import HValue
+from hwt.hdl.const import HConst
 
 
 def _getVal(v):
-    while not isinstance(v, HValue):
+    while not isinstance(v, HConst):
         v = v._val
 
     return v
 
 
-class OpDefinition():
+class HOperatorDef():
     """
     Operator definition
 
@@ -22,7 +22,7 @@ class OpDefinition():
     """
 
     def __init__(self, evalFn, allowsAssignTo=False, idStr=None):
-        self.id = idStr  # assigned automatically in AllOps
+        self.id = idStr  # assigned automatically in HwtOps
         self._evalFn = evalFn
         self.allowsAssignTo = allowsAssignTo
 
@@ -44,7 +44,7 @@ class OpDefinition():
 
 
 def isEventDependentOp(operator):
-    return operator in (AllOps.RISING_EDGE, AllOps.FALLING_EDGE)
+    return operator in (HwtOps.RISING_EDGE, HwtOps.FALLING_EDGE)
 
 
 def onRisingEdgeFn(a):
@@ -108,132 +108,132 @@ def bitsAsVec(a):
     return a._vec()
 
 
-class AllOps():
+class HwtOps():
     """
     :attention: Remember that and operator "and" is & and "or" is \|, "and"
         and "or" can not be used because they can not be overloaded
     :attention: These are operators of internal AST,
         they are not equal to verilog or vhdl operators
     """
-    RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
-    FALLING_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
+    RISING_EDGE = HOperatorDef(onRisingEdgeFn)  # unnecessary
+    FALLING_EDGE = HOperatorDef(onFallingEdgeFn)  # unnecessary
 
-    MINUS_UNARY = OpDefinition(neg)
-    DIV = OpDefinition(floordiv)
-    UDIV = OpDefinition(lambda a, b: a._unsigned() // b._unsigned())
-    SDIV = OpDefinition(lambda a, b: a._signed() <= b._signed())
+    MINUS_UNARY = HOperatorDef(neg)
+    DIV = HOperatorDef(floordiv)
+    UDIV = HOperatorDef(lambda a, b: a._unsigned() // b._unsigned())
+    SDIV = HOperatorDef(lambda a, b: a._signed() <= b._signed())
 
-    ADD = OpDefinition(add)
-    SUB = OpDefinition(sub)
-    POW = OpDefinition(power)
-    MOD = OpDefinition(mod)
-    MUL = OpDefinition(mul)
+    ADD = HOperatorDef(add)
+    SUB = HOperatorDef(sub)
+    POW = HOperatorDef(power)
+    MOD = HOperatorDef(mod)
+    MUL = HOperatorDef(mul)
 
-    NOT = OpDefinition(inv, allowsAssignTo=True)
-    XOR = OpDefinition(xor)
-    AND = OpDefinition(and_)
-    OR = OpDefinition(or_)
+    NOT = HOperatorDef(inv, allowsAssignTo=True)
+    XOR = HOperatorDef(xor)
+    AND = HOperatorDef(and_)
+    OR = HOperatorDef(or_)
 
-    DOT = OpDefinition(dotOpFn)
-    DOWNTO = OpDefinition(downtoFn)
-    TO = OpDefinition(toFn)
-    CONCAT = OpDefinition(concatFn, allowsAssignTo=True)
+    DOT = HOperatorDef(dotOpFn)
+    DOWNTO = HOperatorDef(downtoFn)
+    TO = HOperatorDef(toFn)
+    CONCAT = HOperatorDef(concatFn, allowsAssignTo=True)
 
-    EQ = OpDefinition(eqFn)
-    NE = OpDefinition(ne)
-    GT = OpDefinition(gt)
-    GE = OpDefinition(ge)
-    LT = OpDefinition(lt)
-    LE = OpDefinition(le)
+    EQ = HOperatorDef(eqFn)
+    NE = HOperatorDef(ne)
+    GT = HOperatorDef(gt)
+    GE = HOperatorDef(ge)
+    LT = HOperatorDef(lt)
+    LE = HOperatorDef(le)
 
-    ULE = OpDefinition(lambda a, b: a._unsigned() <= b._unsigned())
-    ULT = OpDefinition(lambda a, b: a._unsigned() < b._unsigned())
-    UGT = OpDefinition(lambda a, b: a._unsigned() > b._unsigned())
-    UGE = OpDefinition(lambda a, b: a._unsigned() >= b._unsigned())
+    ULE = HOperatorDef(lambda a, b: a._unsigned() <= b._unsigned())
+    ULT = HOperatorDef(lambda a, b: a._unsigned() < b._unsigned())
+    UGT = HOperatorDef(lambda a, b: a._unsigned() > b._unsigned())
+    UGE = HOperatorDef(lambda a, b: a._unsigned() >= b._unsigned())
 
-    SLE = OpDefinition(lambda a, b: a._signed() <= b._signed())
-    SLT = OpDefinition(lambda a, b: a._signed() < b._signed())
-    SGT = OpDefinition(lambda a, b: a._signed() > b._signed())
-    SGE = OpDefinition(lambda a, b: a._signed() >= b._signed())
+    SLE = HOperatorDef(lambda a, b: a._signed() <= b._signed())
+    SLT = HOperatorDef(lambda a, b: a._signed() < b._signed())
+    SGT = HOperatorDef(lambda a, b: a._signed() > b._signed())
+    SGE = HOperatorDef(lambda a, b: a._signed() >= b._signed())
 
-    INDEX = OpDefinition(getitem, allowsAssignTo=True)
-    TERNARY = OpDefinition(ternaryFn)
-    CALL = OpDefinition(callFn)
+    INDEX = HOperatorDef(getitem, allowsAssignTo=True)
+    TERNARY = HOperatorDef(ternaryFn)
+    CALL = HOperatorDef(callFn)
 
-    BitsAsSigned = OpDefinition(bitsAsSignedFn, allowsAssignTo=True)
-    BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn, allowsAssignTo=True)
-    BitsAsVec = OpDefinition(bitsAsVec, allowsAssignTo=True)
+    BitsAsSigned = HOperatorDef(bitsAsSignedFn, allowsAssignTo=True)
+    BitsAsUnsigned = HOperatorDef(bitsAsUnsignedFn, allowsAssignTo=True)
+    BitsAsVec = HOperatorDef(bitsAsVec, allowsAssignTo=True)
 
 
-for a_name in dir(AllOps):
-    o = getattr(AllOps, a_name)
-    if isinstance(o, OpDefinition):
+for a_name in dir(HwtOps):
+    o = getattr(HwtOps, a_name)
+    if isinstance(o, HOperatorDef):
         o.id = a_name
 
-CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
-BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
+CAST_OPS = (HwtOps.BitsAsVec, HwtOps.BitsAsSigned, HwtOps.BitsAsUnsigned)
+BITWISE_OPS = (HwtOps.NOT, HwtOps.XOR, HwtOps.AND, HwtOps.OR)
 COMPARE_OPS = (
-    AllOps.EQ,
-    AllOps.NE,
-    AllOps.GT,
-    AllOps.GE,
-    AllOps.LT,
-    AllOps.LE,
-    AllOps.ULE,
-    AllOps.ULT,
-    AllOps.UGT,
-    AllOps.UGE,
-    AllOps.SLE,
-    AllOps.SLT,
-    AllOps.SGT,
-    AllOps.SGE,
+    HwtOps.EQ,
+    HwtOps.NE,
+    HwtOps.GT,
+    HwtOps.GE,
+    HwtOps.LT,
+    HwtOps.LE,
+    HwtOps.ULE,
+    HwtOps.ULT,
+    HwtOps.UGT,
+    HwtOps.UGE,
+    HwtOps.SLE,
+    HwtOps.SLT,
+    HwtOps.SGT,
+    HwtOps.SGE,
 )
 
 # change of compare operator on operand order swap
 CMP_OP_SWAP = {
-    AllOps.EQ: AllOps.EQ,   # (a == b) == (b == a) 
-    AllOps.NE: AllOps.NE,   # (a != b) == (b != a) 
+    HwtOps.EQ: HwtOps.EQ,   # (a == b) == (b == a) 
+    HwtOps.NE: HwtOps.NE,   # (a != b) == (b != a) 
     
-    AllOps.GT: AllOps.LT,   # (a > b)  == (b < a) 
-    AllOps.GE: AllOps.LE,   # (a >= b) == (b <= a)
-    AllOps.LT: AllOps.GT,   # (a < b)  == (b > a)
-    AllOps.LE: AllOps.GE,   # (a <= b) == (b >= a)
+    HwtOps.GT: HwtOps.LT,   # (a > b)  == (b < a) 
+    HwtOps.GE: HwtOps.LE,   # (a >= b) == (b <= a)
+    HwtOps.LT: HwtOps.GT,   # (a < b)  == (b > a)
+    HwtOps.LE: HwtOps.GE,   # (a <= b) == (b >= a)
 
-    AllOps.UGT: AllOps.ULT,
-    AllOps.UGE: AllOps.ULE,
-    AllOps.ULT: AllOps.UGT,
-    AllOps.ULE: AllOps.UGE,
+    HwtOps.UGT: HwtOps.ULT,
+    HwtOps.UGE: HwtOps.ULE,
+    HwtOps.ULT: HwtOps.UGT,
+    HwtOps.ULE: HwtOps.UGE,
 
-    AllOps.SGT: AllOps.SLT,
-    AllOps.SGE: AllOps.SLE,
-    AllOps.SLT: AllOps.SGT,
-    AllOps.SLE: AllOps.SGE,
+    HwtOps.SGT: HwtOps.SLT,
+    HwtOps.SGE: HwtOps.SLE,
+    HwtOps.SLT: HwtOps.SGT,
+    HwtOps.SLE: HwtOps.SGE,
 
 }
 
 CMP_OPS_NEG = {
-    AllOps.EQ: AllOps.NE,
-    AllOps.NE: AllOps.EQ,
+    HwtOps.EQ: HwtOps.NE,
+    HwtOps.NE: HwtOps.EQ,
 
-    AllOps.GT: AllOps.LE,
-    AllOps.GE: AllOps.LT,
-    AllOps.LT: AllOps.GE,
-    AllOps.LE: AllOps.GT,
+    HwtOps.GT: HwtOps.LE,
+    HwtOps.GE: HwtOps.LT,
+    HwtOps.LT: HwtOps.GE,
+    HwtOps.LE: HwtOps.GT,
 
-    AllOps.UGT: AllOps.ULE,
-    AllOps.UGE: AllOps.ULT,
-    AllOps.ULT: AllOps.UGE,
-    AllOps.ULE: AllOps.UGT,
+    HwtOps.UGT: HwtOps.ULE,
+    HwtOps.UGE: HwtOps.ULT,
+    HwtOps.ULT: HwtOps.UGE,
+    HwtOps.ULE: HwtOps.UGT,
 
-    AllOps.SGT: AllOps.SLE,
-    AllOps.SGE: AllOps.SLT,
-    AllOps.SLT: AllOps.SGE,
-    AllOps.SLE: AllOps.SGT,
+    HwtOps.SGT: HwtOps.SLE,
+    HwtOps.SGE: HwtOps.SLT,
+    HwtOps.SLT: HwtOps.SGE,
+    HwtOps.SLE: HwtOps.SGT,
 
 }
 
 # always commutative operators for which order of operands does not matter
-ALWAYS_COMMUTATIVE_OPS = (AllOps.EQ, AllOps.NE, AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
+ALWAYS_COMMUTATIVE_OPS = (HwtOps.EQ, HwtOps.NE, HwtOps.XOR, HwtOps.AND, HwtOps.OR, HwtOps.ADD, HwtOps.MUL)
 # always commutative associative operators for which order of operands in expression tree does not matter
-ALWAYS_ASSOCIATIVE_COMMUTATIVE_OPS = (AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
-EVENT_OPS = (AllOps.RISING_EDGE, AllOps.FALLING_EDGE)
+ALWAYS_ASSOCIATIVE_COMMUTATIVE_OPS = (HwtOps.XOR, HwtOps.AND, HwtOps.OR, HwtOps.ADD, HwtOps.MUL)
+EVENT_OPS = (HwtOps.RISING_EDGE, HwtOps.FALLING_EDGE)

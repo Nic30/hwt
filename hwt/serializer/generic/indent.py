@@ -2,7 +2,7 @@ _indent = "    "
 _indentCache = {}
 
 
-def getIndent(indentNum):
+def getIndent(indentNum: int):
     """
     Cached indent getter function
     """

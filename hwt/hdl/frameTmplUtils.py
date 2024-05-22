@@ -227,7 +227,7 @@ class TransTmplWordIterator():
         """
         wordWidth = self.wordWidth
         end = addrOffset
-        for tmp in transaction.walkFlatten(offset=addrOffset):
+        for tmp in transaction.HwIO_walkFlatten(offset=addrOffset):
             if isinstance(tmp, OneOfTransaction):
                 # unions
                 split = [self.splitOnWords(ch, end)

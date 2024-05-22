@@ -7,11 +7,11 @@ from hdlConvertorAst.hdlAst._statements import HdlStmIf, HdlStmAssign, \
     HdlStmProcess, HdlStmBlock
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef
 from hdlConvertorAst.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_map_asoc, hdl_call
-from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
@@ -22,14 +22,14 @@ from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.simModel.tmpVarConstructorConstOnly import TmpVarConstructorConstOnly
 from hwt.serializer.simModel.types import ToHdlAstSimModel_types
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 from hwtSimApi.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
                        ToHdlAst):
     """
-    Serializer which converts :class:`hwt.synthesizer.unit.Unit` instances to simulator code
+    Serializer which converts :class:`hwt.hwModule.HwModule` instances to simulator code
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in SIMMODEL_KEYWORDS}
     SIM_EVAL_COND = HdlValueId("sim_eval_cond", obj=sim_eval_cond)
@@ -39,7 +39,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
 
     def __init__(self, name_scope: Optional[NameScope]=None):
         super(ToHdlAstSimModel, self).__init__(name_scope)
-        self.currentUnit = None
+        self.currentHwModule = None
         self.stm_outputs = {}
 
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
@@ -182,11 +182,11 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         return self.as_hdl_IfContainer(topIf)
 
     def sensitivityListItem(self, item, anyEventDependent):
-        if isinstance(item, Operator):
+        if isinstance(item, HOperatorNode):
             op = item.operator
-            if op == AllOps.RISING_EDGE:
+            if op == HwtOps.RISING_EDGE:
                 sens = HdlOpType.RISING
-            elif op == AllOps.FALLING_EDGE:
+            elif op == HwtOps.FALLING_EDGE:
                 sens = HdlOpType.FALLING
             else:
                 raise TypeError("This is not an event sensitivity", op)

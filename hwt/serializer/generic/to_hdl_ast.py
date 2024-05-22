@@ -10,14 +10,14 @@ from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
-from hwt.hdl.operator import Operator
+from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import STR, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
@@ -31,8 +31,8 @@ from hwt.serializer.generic.tmpVarConstructor import TmpVarConstructor, \
 from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     TmpVarsSwap
 from hwt.serializer.utils import HdlStatement_sort_key
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.value import HValue
+from hwt.mainBases import RtlSignalBase
+from hwt.hdl.const import HConst
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -93,7 +93,7 @@ class ToHdlAst():
 
         if typ == STR:
             sFn = self.as_hdl_HdlType_str
-        elif isinstance(typ, Bits):
+        elif isinstance(typ, HBits):
             sFn = self.as_hdl_HdlType_bits
         elif isinstance(typ, HEnum):
             sFn = self.as_hdl_HdlType_enum
@@ -182,8 +182,8 @@ class ToHdlAst():
                 srcT = a.src._dtype
                 dstT = dst._dtype
                 correct = False
-                if (isinstance(srcT, Bits) and
-                        isinstance(dstT, Bits)):
+                if (isinstance(srcT, HBits) and
+                        isinstance(dstT, HBits)):
                     bl0 = srcT.bit_length()
                     if bl0 == dstT.bit_length():
                         if bl0 == 1 and srcT.force_vector != dstT.force_vector:
@@ -435,7 +435,7 @@ class ToHdlAst():
                         assert isinstance(statements, list)
                         p.body.body = statements
                     anyIsEventDependnt = arr_any(
-                        proc._sensitivity, lambda s: isinstance(s, Operator))
+                        proc._sensitivity, lambda s: isinstance(s, HOperatorNode))
                     p.sensitivity = sorted([
                         self.sensitivityListItem(s, anyIsEventDependnt)
                         for s in proc._sensitivity])
@@ -457,7 +457,7 @@ class ToHdlAst():
             if p.value is None:
                 continue
             v = p.value
-            if isinstance(v, (HValue, RtlSignal)):
+            if isinstance(v, (HConst, RtlSignal)):
                 v = self.as_hdl(v)
             else:
                 v = deepcopy(v)

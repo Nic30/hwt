@@ -2,11 +2,11 @@ from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.statement import HdlStatement
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 @internal
-def getMaxStmIdForStm(stm):
+def getMaxStmIdForStm(stm: HdlStatement):
     """
     Get maximum _instId from all assignments in statement,
     used for sorting of processes in architecture

@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class HArray(HdlType):
@@ -47,19 +47,19 @@ class HArray(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.arrayVal import HArrayVal
-            cls._valCls = HArrayVal
-            return cls._valCls
+            from hwt.hdl.types.arrayConst import HArrayConst
+            cls._constCls = HArrayConst
+            return cls._constCls
 
     @internal
     @classmethod
     def get_reinterpret_cast_fn(cls):
-        from hwt.hdl.types.arrayCast import reinterpret_cast_harray
-        return reinterpret_cast_harray
+        from hwt.hdl.types.arrayCast import reinterpret_cast_HArray
+        return reinterpret_cast_HArray
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """

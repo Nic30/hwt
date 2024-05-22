@@ -1,15 +1,15 @@
 from hdlConvertorAst.hdlAst._expr import HdlTypeAuto, HdlValueId, HdlOp, \
     HdlOpType
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index, \
     hdl_downto
-from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import INT, FLOAT64
+from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.serializer.verilog.utils import SIGNAL_TYPE
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstVerilog_types():
@@ -24,7 +24,7 @@ class ToHdlAstVerilog_types():
             pass
         return False
 
-    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
+    def as_hdl_HdlType_bits(self, typ: HBits, declaration=False):
         isVector = typ.force_vector or typ.bit_length() > 1
         sigType = self.signalType
 
@@ -67,11 +67,11 @@ class ToHdlAstVerilog_types():
     def as_hdl_HdlType_enum(self, typ, declaration=False):
         if declaration:
             raise TypeError(
-                "Target language does not use enum types, this library should uses Bits instead"
+                "Target language does not use enum types, this library should uses HBits instead"
                 " (this should not be required because it should have been filtered before)")
         else:
             valueCnt = len(typ._allValues)
-            return self.as_hdl_HdlType_bits(Bits(valueCnt.bit_length()),
+            return self.as_hdl_HdlType_bits(HBits(valueCnt.bit_length()),
                                             declaration=declaration)
 
     def as_hdl_HdlType_float(self, typ: HFloat, declaration=False):

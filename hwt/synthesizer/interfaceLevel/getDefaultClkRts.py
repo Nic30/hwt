@@ -1,32 +1,32 @@
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.mainBases import HwModuleBase
 
 
-def getClk(unit: UnitBase):
+def getClk(module: HwModuleBase):
     """
     Get clock signal from unit instance
     """
     try:
-        return unit.clk
+        return module.clk
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr(f"Can not find clock signal on unit {unit}")
+    raise IntfLvlConfErr(f"Can not find clock signal on module {module}")
 
 
-def getRst(unit: UnitBase):
+def getRst(module: HwModuleBase):
     """
     Get reset signal from unit instance
     """
     try:
-        return unit.rst
+        return module.rst
     except AttributeError:
         pass
 
     try:
-        return unit.rst_n
+        return module.rst_n
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr(f"Can not find reset signal on unit {unit}")
+    raise IntfLvlConfErr(f"Can not find reset signal on module {module}")
 

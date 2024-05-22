@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import HValue
 
 
 class HFunction(HdlType):
@@ -13,9 +13,9 @@ class HFunction(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
-        return HFunctionVal
+    def getConstCls(cls):
+        return HFunctionConst
 
 
-class HFunctionVal(HValue):
+class HFunctionConst(HConst):
     pass

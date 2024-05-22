@@ -8,15 +8,15 @@ Placement of component if FPGA etc.
 from copy import copy
 from typing import Union, Tuple
 
-from hwt.synthesizer.interface import Interface
+from hwt.hwIO import HwIO
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
+from hwt.hwModule import HwModule
 from hwt.synthesizer.componentPath import ComponentPath
 
 
 class iHdlConstrain():
 
-    def _get_parent(self) -> Unit:
+    def _get_parent(self) -> HwModule:
         raise NotImplementedError(self)
 
     def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
@@ -26,21 +26,21 @@ class iHdlConstrain():
         self._get_parent()._constraints.append(self)
 
 
-def _get_parent_unit(path: Tuple[Union[Unit, Interface, RtlSignal, iHdlConstrain], ...]) -> Unit:
+def _get_parent_HwModule(path: Tuple[Union[HwModule, HwIO, RtlSignal, iHdlConstrain], ...]) -> HwModule:
     """
-    Search parent :class:`hwt.synthesizer.unit.Unit` instance in path
+    Search parent :class:`hwt.hwModule.HwModule` instance in path
     """
     if isinstance(path, iHdlConstrain):
         return path._get_parent()
 
     for o in reversed(path):
-        if isinstance(o, Unit):
+        if isinstance(o, HwModule):
             return o
 
-    raise AssertionError("No parent unit in path", path)
+    raise AssertionError("No parent HwModule in path", path)
 
 
-def _get_absolute_path(obj) -> Union[Tuple[Union[Unit, Interface, RtlSignal, iHdlConstrain], ...], None]:
+def _get_absolute_path(obj) -> Union[Tuple[Union[HwModule, HwIO, RtlSignal, iHdlConstrain], ...], None]:
     """
     Get tuple containing a path of objects from top to this object
     """
@@ -73,8 +73,8 @@ class set_max_delay(iHdlConstrain):
     """
 
     def __init__(self,
-                 start: Union[Interface, RtlSignal],
-                 end: Union[Interface, RtlSignal],
+                 start: Union[HwIO, RtlSignal],
+                 end: Union[HwIO, RtlSignal],
                  time_ns: float,
                  datapath_only=True,
                  ommit_registration=False):
@@ -93,14 +93,14 @@ class set_max_delay(iHdlConstrain):
             self.end, old_path_prefix, new_path_prefix)
         return new_o
 
-    def _get_parent(self) -> Unit:
-        return _get_parent_unit(self.end)
+    def _get_parent(self) -> HwModule:
+        return _get_parent_HwModule(self.end)
 
 
 class set_false_path(iHdlConstrain):
 
-    def __init__(self, start: Union[None, Interface, RtlSignal],
-                 end: Union[None, Interface, RtlSignal],
+    def __init__(self, start: Union[None, HwIO, RtlSignal],
+                 end: Union[None, HwIO, RtlSignal],
                  ommit_registration=False):
         self.start = _get_absolute_path(start)
         self.end = _get_absolute_path(end)
@@ -110,16 +110,16 @@ class set_false_path(iHdlConstrain):
     def _copy_with_root_upadate(self, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
         return set_max_delay._copy_with_root_upadate(self, old_path_prefix, new_path_prefix)
 
-    def _get_parent(self) -> Unit:
+    def _get_parent(self) -> HwModule:
         o = self.start
         if o is None:
             o = self.end
-        return _get_parent_unit(o)
+        return _get_parent_HwModule(o)
 
 
 class get_clock_of(iHdlConstrain):
 
-    def __init__(self, obj: Union[Interface, RtlSignal],
+    def __init__(self, obj: Union[HwIO, RtlSignal],
                  ommit_registration=False):
         self.obj = _get_absolute_path(obj)
 
@@ -129,8 +129,8 @@ class get_clock_of(iHdlConstrain):
             self.obj, old_path_prefix, new_path_prefix)
         return new_o
 
-    def _get_parent(self) -> Unit:
-        return _get_parent_unit(self.obj)
+    def _get_parent(self) -> HwModule:
+        return _get_parent_HwModule(self.obj)
 
 
 class set_async_reg(iHdlConstrain):
@@ -153,6 +153,6 @@ class set_async_reg(iHdlConstrain):
             self.sig, old_path_prefix, new_path_prefix)
         return new_o
 
-    def _get_parent(self) -> Unit:
-        return _get_parent_unit(self.sig)
+    def _get_parent(self) -> HwModule:
+        return _get_parent_HwModule(self.sig)
 

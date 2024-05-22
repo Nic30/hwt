@@ -1,8 +1,8 @@
 from copy import deepcopy
 
-from hwt.synthesizer.interface import Interface
+from hwt.hwIO import HwIO
+from hwt.hwModule import HwModule
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
 
 
 def to_tuple_of_names(objs):
@@ -36,9 +36,9 @@ class ComponentPath(tuple):
         The ComponentPath is in absolute format only if:
 
         * The first member is a top component or path is empty
-        * All members except the last are :class:`hwt.synthesizer.unit.Unit` instances (last can be RtlSignal/Interface)
-        * Each successor member is instantiated in predecessor except for :class:`hwt.synthesizer.unit.Unit` instance with shared component
-        * If member is a :class:`hwt.synthesizer.unit.Unit` instance with shared component the successor must be an interface of this instance or an object from shared component
+        * All members except the last are :class:`hwt.hwModule.HwModule` instances (last can be RtlSignal/HwIO)
+        * Each successor member is instantiated in predecessor except for :class:`hwt.hwModule.HwModule` instance with shared component
+        * If member is a :class:`hwt.hwModule.HwModule` instance with shared component the successor must be an interface of this instance or an object from shared component
         """
         it = iter(reversed(self))
         try:
@@ -50,7 +50,7 @@ class ComponentPath(tuple):
         path = []
         while obj is not None:
             _handle = next(it, None)
-            if isinstance(_handle, Unit) and _handle._shared_component_with is not None:
+            if isinstance(_handle, HwModule) and _handle._shared_component_with is not None:
                 handle, _, _ = _handle._shared_component_with
             else:
                 handle = _handle
@@ -62,7 +62,7 @@ class ComponentPath(tuple):
                         path.append(obj)
                     obj = obj.ctx.parent
 
-                while isinstance(obj, Interface):
+                while isinstance(obj, HwIO):
                     if not path:
                         path.append(obj)
                     if obj is handle:
@@ -70,7 +70,7 @@ class ComponentPath(tuple):
                     obj = obj._parent
 
                 while obj is not handle:
-                    assert isinstance(obj, Unit), obj
+                    assert isinstance(obj, HwModule), obj
                     # to not modify path if it is already in absolute format
                     if not path or path[-1] is not obj:
                         path.append(obj)
@@ -85,8 +85,8 @@ class ComponentPath(tuple):
         """
         :return: True if path starts with a top component else False
         """
-        u = self[0]
-        return isinstance(u, Unit) and u._parent is None
+        m = self[0]
+        return isinstance(m, HwModule) and m._parent is None
 
     def update_prefix(self, old_path_prefix: "ComponentPath", new_path_prefix: "ComponentPath"):
         """

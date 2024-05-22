@@ -5,7 +5,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.pyUtils.arrayQuery import groupedby
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
+from hwt.constants import NOT_SPECIFIED
 
 
 @internal
@@ -107,13 +107,13 @@ def HdlStatement_try_reduce_list(statements: ListOfHdlStatement)\
     new_statements, rank_decrease = HdlStatement_merge_statements(
         new_statements)
 
-    new_statements, io_change, _rank_decrease = HdlStatement_reduce_overriden_assignments(new_statements)
+    new_statements, io_change, _rank_decrease = HdlStatement_reduce_overridden_assignments(new_statements)
     rank_decrease += _rank_decrease
     return new_statements, rank_decrease, io_change
 
 
 @internal
-def HdlStatement_reduce_overriden_assignments(statements: ListOfHdlStatement)\
+def HdlStatement_reduce_overridden_assignments(statements: ListOfHdlStatement)\
         ->Tuple[ListOfHdlStatement, bool, int]:
     io_change = False
     new_statements = []

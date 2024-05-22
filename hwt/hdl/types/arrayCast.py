@@ -1,11 +1,12 @@
 from hwt.code import Concat
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bitConstFunctions import AnyHValue
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
+from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import TypeConversionErr
 from pyMathBitPrecise.bit_utils import get_bit_range, mask
-from hwt.hdl.types.struct import HStruct
 
 
 @internal
@@ -20,7 +21,7 @@ def getBits_from_array(array, wordWidth, start, end,
         copy of selected bits
     """
     inPartOffset = 0
-    value = Bits(end - start, None).from_py(None)
+    value = HBits(end - start, None).from_py(None)
 
     while start != end:
         assert start < end, (start, end)
@@ -49,9 +50,9 @@ def getBits_from_array(array, wordWidth, start, end,
 
 
 @internal
-def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
+def reinterptet_HArray_to_HBits(typeFrom: HArray, sigOrConst: AnyHValue, bitsT: HBits):
     """
-    Cast HArray signal or value to signal or value of type Bits
+    Cast HArray signal or value to signal or value of type HBits
     """
     size = int(typeFrom.size)
     widthOfElm = typeFrom.element_t.bit_length()
@@ -60,14 +61,14 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
         raise TypeConversionErr(
             "Size of types is different", size * widthOfElm, w)
 
-    partT = Bits(widthOfElm)
-    parts = [p._reinterpret_cast(partT) for p in sigOrVal]
+    partT = HBits(widthOfElm)
+    parts = [p._reinterpret_cast(partT) for p in sigOrConst]
 
     return Concat(*reversed(parts))._reinterpret_cast(bitsT)
 
 
 @internal
-def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
+def reinterpret_HArray_to_HArray(typeFrom: HArray, sigOrConst: AnyHValue, arrayT: HArray):
     mySize = int(typeFrom.size)
     myWidthOfElm = typeFrom.element_t.bit_length()
     size = int(arrayT.size)
@@ -77,36 +78,36 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
         raise TypeConversionErr("Size of types is different",
                                 size * widthOfElm, mySize * myWidthOfElm)
 
-    if isinstance(typeFrom.element_t, Bits):
+    if isinstance(typeFrom.element_t, HBits):
         reinterpretElmToType = None
     else:
-        reinterpretElmToType = Bits(myWidthOfElm)
+        reinterpretElmToType = HBits(myWidthOfElm)
 
     res = arrayT.from_py(None)
-    res.vld_mask = sigOrVal.vld_mask
+    res.vld_mask = sigOrConst.vld_mask
     for i in range(size):
         start = i * widthOfElm
         end = (i + 1) * widthOfElm
         item = getBits_from_array(
-            sigOrVal, myWidthOfElm, start, end, reinterpretElmToType)
+            sigOrConst, myWidthOfElm, start, end, reinterpretElmToType)
         res[i] = item._reinterpret_cast(arrayT.element_t)
 
     return res
 
 
 @internal
-def reinterpret_harray_to_hstruct(typeFrom, sigOrVal, structT):
-    as_bits = sigOrVal._reinterpret_cast(Bits(typeFrom.bit_length()))
+def reinterpret_HArray_to_HStruct(typeFrom: HArray, sigOrConst: AnyHValue, structT):
+    as_bits = sigOrConst._reinterpret_cast(HBits(typeFrom.bit_length()))
     return as_bits._reinterpret_cast(structT)
 
 
 @internal
-def reinterpret_cast_harray(typeFrom, sigOrVal, toType):
-    if isinstance(toType, Bits):
-        return reinterptet_harray_to_bits(typeFrom, sigOrVal, toType)
+def reinterpret_cast_HArray(typeFrom: HArray, sigOrConst: AnyHValue, toType):
+    if isinstance(toType, HBits):
+        return reinterptet_HArray_to_HBits(typeFrom, sigOrConst, toType)
     elif isinstance(toType, HArray):
-        return reinterpret_harray_to_harray(typeFrom, sigOrVal, toType)
+        return reinterpret_HArray_to_HArray(typeFrom, sigOrConst, toType)
     elif isinstance(toType, HStruct):
-        return reinterpret_harray_to_hstruct(typeFrom, sigOrVal, toType)
+        return reinterpret_HArray_to_HStruct(typeFrom, sigOrConst, toType)
     else:
-        return default_reinterpret_cast_fn(typeFrom, sigOrVal, toType)
+        return default_reinterpret_cast_fn(typeFrom, sigOrConst, toType)

@@ -1,18 +1,19 @@
 from typing import Generator, Dict, Tuple, Set, Union
 
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
+from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
+from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr, \
     SignalDriverErrType
-from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
+from hwt.synthesizer.rtlLevel.rtlSignalOps import RtlSignalOps
+
 
 OperatorCaheKeyType = Union[
     Tuple['OpDefinition', int, object],
@@ -26,9 +27,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     RtlSignal signal is container of connection
     between statements and operators
 
-    :ivar ~.endpoints: UniqList of operators and statements
+    :ivar ~.endpoints: SetList of operators and statements
         for which this signal is driver.
-    :ivar ~.drivers: UniqList of operators and statements
+    :ivar ~.drivers: SetList of operators and statements
         which can drive this signal.
         If driver is statement tree only top statement is present.
     :ivar ~._usedOps: A dictionary of used operators which can be reused.
@@ -59,7 +60,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         "_instId",
         "_nop_val",
         "_const",
-        "_interface",
+        "_hwIO",
         "origin",
     ]
 
@@ -94,8 +95,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             ctx.signals.add(self)
 
         # set can not be used because hash of items are changing
-        self.endpoints: UniqList[Union[HdlStatement, HdlPortItem, "Operator"]] = UniqList()
-        self.drivers: UniqList[HdlStatement, HdlPortItem, "Operator"] = UniqList()
+        self.endpoints: SetList[Union[HdlStatement, HdlPortItem, "Operator"]] = SetList()
+        self.drivers: SetList[HdlStatement, HdlPortItem, "Operator"] = SetList()
         self._usedOps: Dict[OperatorCaheKeyType, RtlSignal] = {}
         self._usedOpsAlias: Dict[OperatorCaheKeyType, Set[OperatorCaheKeyType]] = {}
         self.hidden: bool = True
@@ -132,7 +133,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 # _val is invalid initialization value
                 self._val = self.def_val.__copy__()
 
-        if not isinstance(self._val, HValue):
+        if not isinstance(self._val, HConst):
             raise ValueError(
                 "Evaluation of signal returned not supported object (%r)"
                 % (self._val,))

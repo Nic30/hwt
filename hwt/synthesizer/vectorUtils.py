@@ -3,10 +3,10 @@ from math import ceil
 from typing import Union
 
 from hwt.doc_markers import internal
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.const import HConst
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.utils import walkFlattenFields
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class BitWidthErr(Exception):
@@ -15,7 +15,7 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: Bits,
+def fitTo_t(what: Union[RtlSignalBase, HConst], where_t: HBits,
             extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
@@ -51,7 +51,7 @@ def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: Bits,
             ext = reduce(lambda a, b: a._concat(b), [msb for _ in range(w)])
         else:
             # 0 extend
-            ext = Bits(w).from_py(0)
+            ext = HBits(w).from_py(0)
 
         res = ext._concat(what)
         if where_t.signed is not None:
@@ -59,7 +59,7 @@ def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: Bits,
         return res
 
 
-def fitTo(what: Union[RtlSignalBase, HValue], where: Union[RtlSignalBase, HValue],
+def fitTo(what: Union[RtlSignalBase, HConst], where: Union[RtlSignalBase, HConst],
           extend: bool=True, shrink: bool=True):
     return fitTo_t(what, where._dtype, extend, shrink)
 
@@ -74,18 +74,18 @@ class BitWalker():
     """
     Walker which can walk chunks of bits on signals/values of all types
 
-    :ivar ~.sigOrVal: signal or value to iterate over
+    :ivar ~.sigOrConst: signal or value to iterate over
     :ivar ~.fillup: flag that means that if there is not enough bits
         for last item fill it up with invalid bits (otherwise raise)
     """
 
-    def __init__(self, sigOrVal: Union[RtlSignalBase, HValue],
+    def __init__(self, sigOrConst: Union[RtlSignalBase, HConst],
                  skipPadding: bool=True,
                  fillup: bool=False):
         """
         :param skipPadding: if true padding is skipped in dense types
         """
-        self.it = walkFlattenFields(sigOrVal, skipPadding=skipPadding)
+        self.it = walkFlattenFields(sigOrConst, skipPadding=skipPadding)
         self.fillup = fillup
         self.actuallyHave = 0
         self.actual = None
@@ -135,7 +135,7 @@ class BitWalker():
             if doCollect:
                 t = self.actual._dtype
                 fillupW = numberOfBits - self.actuallyHave
-                padding_t = Bits(fillupW, signed=t.signed, negated=t.negated)
+                padding_t = HBits(fillupW, signed=t.signed, negated=t.negated)
                 padding = padding_t.from_py(None)
                 actual = padding._concat(actual)
             self.actuallyHave = 0
@@ -155,7 +155,7 @@ class BitWalker():
             else:
                 return actual[(actualOffset + numberOfBits):actualOffset]
 
-    def get(self, numberOfBits: int) -> Union[RtlSignalBase, HValue]:
+    def get(self, numberOfBits: int) -> Union[RtlSignalBase, HConst]:
         """
         :param numberOfBits: number of bits to get from actual position
         :return: chunk of bits of specified size (instance of Value or RtlSignal)
@@ -182,20 +182,20 @@ class BitWalker():
         raise AssertionError("there are still some items")
 
 
-def iterBits(sigOrVal: Union[RtlSignalBase, HValue], bitsInOne: int=1,
+def iterBits(sigOrConst: Union[RtlSignalBase, HConst], bitsInOne: int=1,
              skipPadding: bool=True, fillup: bool=False):
     """
     Iterate over bits in vector
 
-    :param sigOrVal: signal or value to iterate over
+    :param sigOrConst: signal or value to iterate over
     :param bitsInOne: number of bits in one part
     :param skipPadding: if true padding is skipped in dense types
     :param fillup: flag that means that if there is not enough bits
         for last item fill it up with invalid bits (otherwise raise)
     """
-    bw = BitWalker(sigOrVal, skipPadding, fillup)
+    bw = BitWalker(sigOrConst, skipPadding, fillup)
     try:
-        bit_len = sigOrVal._dtype.bit_length()
+        bit_len = sigOrConst._dtype.bit_length()
     except TypeError:
         bit_len = None
     if bit_len is None:

@@ -1,11 +1,11 @@
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType, \
     HdlTypeType
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index, \
     hdl_downto
-from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT, FLOAT64
 from hwt.hdl.types.float import HFloat
 
@@ -23,7 +23,7 @@ class ToHdlAstVhdl2008_types():
         assert not declaration
         return self.STRING
 
-    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
+    def as_hdl_HdlType_bits(self, typ: HBits, declaration=False):
         if declaration:
             raise NotImplementedError()
         if typ == BOOL:

@@ -1,11 +1,11 @@
 from types import MethodType
-from typing import Tuple, Set, Optional
+from typing import Tuple, Set, Optional, Callable
 
 from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.hObjList import HObjList
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
-from hwt.synthesizer.param import Param
+from hwt.hObjList import HObjList
+from hwt.mainBases import HwModuleBase, HwIOBase
+from hwt.hwParam import HwParam
 from hdlConvertorAst.translate.common.name_scope import WithNameScope
 
 
@@ -16,7 +16,7 @@ def nameAvailabilityCheck(obj, propName, prop):
     but allow to cast current property to a parameter
     """
     cur = getattr(obj, propName, None)
-    if cur is not None and (not isinstance(prop, Param) or cur is not prop._initval):
+    if cur is not None and (not isinstance(prop, HwParam) or cur is not prop._initval):
         p = getattr(obj, propName)
         raise IntfLvlConfErr(f"{obj} already has property {propName:s} old:{p} new:{prop}")
 
@@ -28,29 +28,29 @@ class MakeParamsShared(object):
     specified in constructor of this object.
     """
 
-    def __init__(self, unit, exclude, prefix):
-        self.unit = unit
+    def __init__(self, module: "HwModule", exclude:Optional[Tuple[Set[str], Set[str]]], prefix:str):
+        self.module = module
         self.exclude = exclude
         self.prefix = prefix
 
     def __enter__(self):
-        orig = self.unit._setAttrListener
+        orig = self.module._setAttrListener
         self.orig = orig
         exclude = self.exclude
         prefix = self.prefix
 
         def MakeParamsSharedWrap(self, iName, i):
-            if isinstance(i, (InterfaceBase, UnitBase, HObjList)):
+            if isinstance(i, (HwIOBase, HwModuleBase, HObjList)):
                 i._updateParamsFrom(self, exclude=exclude, prefix=prefix)
             return orig(iName, i)
 
-        self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
-                                                self.unit)
+        self.module._setAttrListener = MethodType(MakeParamsSharedWrap,
+                                                self.module)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            self.unit._setAttrListener = self.orig
+            self.module._setAttrListener = self.orig
 
 
 @internal
@@ -60,29 +60,29 @@ class MakeClkRstAssociations(object):
     specified in constructor of this object.
     """
 
-    def __init__(self, unit, clk=None, rst=None):
-        self.unit = unit
+    def __init__(self, module: "HwModule", clk=None, rst=None):
+        self.module = module
         self.clk = clk
         self.rst = rst
 
     def __enter__(self):
-        orig = self.unit._setAttrListener
+        orig = self.module._setAttrListener
         self.orig = orig
         clk = self.clk
         rst = self.rst
 
         def MakeClkRstAssociationsWrap(self, iName, i):
-            if isinstance(i, (InterfaceBase, HObjList)):
+            if isinstance(i, (HwIOBase, HObjList)):
                 i._make_association(clk=clk, rst=rst)
             return orig(iName, i)
 
-        self.unit._setAttrListener = MethodType(MakeClkRstAssociationsWrap,
-                                                self.unit)
+        self.module._setAttrListener = MethodType(MakeClkRstAssociationsWrap,
+                                                  self.module)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            self.unit._setAttrListener = self.orig
+            self.module._setAttrListener = self.orig
 
 
 class PropDeclrCollector(object):
@@ -93,7 +93,7 @@ class PropDeclrCollector(object):
     It uses __setattr__ listeners to detect new properties and then calls
     a litener function to process the registration.
 
-    Used for Unit, Interface classes to detect and load interfaces and components.
+    Used for HwModule, HwIO classes to detect and load interfaces and components.
     """
 
     def _config(self) -> None:
@@ -101,7 +101,7 @@ class PropDeclrCollector(object):
         Configure object parameters
 
         * setup all parameters on this object,
-          use Param class instances to allow use of parameter inheritance
+          use HwParam class instances to allow use of parameter inheritance
         * called in __init__ of class
         """
         pass
@@ -112,8 +112,8 @@ class PropDeclrCollector(object):
         It is also better to declare sub components there as it allows for better parallelization during the build.
 
         * _declr method is called after _config
-        * if this object is :class:`hwt.synthesizer.unit.Unit` all interfaces are treated as externally accessible interfaces
-          if this object is Interface instance all subinterfaces are loaded as well
+        * if this object is :class:`hwt.hwModule.HwModule` all interfaces are treated as externally accessible interfaces
+          if this object is HwIO instance all subinterfaces are loaded as well
         """
         pass
 
@@ -126,7 +126,7 @@ class PropDeclrCollector(object):
         pass
 
     @internal
-    def __setattr__(self, attr, value) -> None:
+    def __setattr__(self, attr:str, value) -> None:
         """setattr with listener injector"""
         try:
             saListerner = self._setAttrListener
@@ -145,29 +145,29 @@ class PropDeclrCollector(object):
         Load params in _config()
         """
         if not hasattr(self, '_params'):
-            self._params = []
+            self._hwParams = []
 
         self._setAttrListener = self._paramCollector
         self._config()
         self._setAttrListener = None
 
     @internal
-    def _registerParameter(self, pName, parameter: Param) -> None:
+    def _registerParameter(self, pName:str, parameter: HwParam) -> None:
         """
-        Register Param object on interface level object
+        Register HwParam object on interface level object
         """
         nameAvailabilityCheck(self, pName, parameter)
         # resolve name in this scope
         assert parameter._name is None, (
-            "Param object is already assigned to %r.%s"
-            % (parameter.unit, parameter._name))
+            "HwParam object is already assigned to %r.%s"
+            % (parameter.module, parameter._name))
         # add name in this scope
         parameter._name = pName
         parameter._parent = self
 
-        self._params.append(parameter)
+        self._hwParams.append(parameter)
 
-    def _paramsShared(self,
+    def _hwParamsShared(self,
                       exclude: Optional[Tuple[Set[str], Set[str]]]=None,
                       prefix="") -> MakeParamsShared:
         """
@@ -176,7 +176,7 @@ class PropDeclrCollector(object):
 
         .. code-block:: python
 
-            with self._paramsShared():
+            with self._hwParamsShared():
                 # your interfaces and unit which should share all params with "self" there
 
         :param exclude: tuple (src param names to exclude, dst param names to exclude)
@@ -207,7 +207,7 @@ class PropDeclrCollector(object):
         .. code-block:: python
 
             with self._associated(clk=self.myClk, rst=self.myRst):
-                self.myAxi = AxiStrem()
+                self.myAxi = Axi4Stream()
                 # this interface is associated with myClk and myRst
                 # simulation agents and component builders will use them
 
@@ -218,15 +218,14 @@ class PropDeclrCollector(object):
 
     def _updateParamsFrom(self,
                           otherObj: "PropDeclrCollector",
-                          updater,
+                          updater: Callable[["PropDeclrCollector", HwParam, HwParam], None],
                           exclude: Optional[Tuple[Set[str], Set[str]]],
                           prefix: str) -> "PropDeclrCollector":
         """
         Update all parameters which are defined on self from otherObj
 
-        :param otherObj: other object which Param instances should be updated
-        :param updater: updater function(self, myParameter,
-                                         onOtherParameterName, otherParameter)
+        :param otherObj: other object which HwParam instances should be updated
+        :param updater: updater function(self, myParameter, otherParameter)
         :param exclude: tuple of set of param names for src and dst which
                         which should be excluded
         :param prefix: prefix which should be added to name of paramters
@@ -238,14 +237,14 @@ class PropDeclrCollector(object):
             exclude_src = set(exclude[0])
             exclude_dst = set(exclude[1])
 
-        for myP in self._params:
+        for myP in self._hwParams:
             if exclude is not None and myP._name in exclude_dst:
                 excluded_dst.add(myP._name)
                 continue
             pPName = prefix + myP._name
             try:
                 otherP = getattr(otherObj, pPName)
-                # if not isinstance(otherP, Param):
+                # if not isinstance(otherP, HwParam):
                 #     continue
             except AttributeError:
                 continue
@@ -263,34 +262,34 @@ class PropDeclrCollector(object):
 
     # declaration phase
     @internal
-    def _registerUnit(self, uName, unit):
+    def _registerSubmodule(self, mName:str, submodule:"HwModule"):
         """
         Register unit object on interface level object
         """
-        nameAvailabilityCheck(self, uName, unit)
-        assert unit._parent is None
-        unit._parent = self
-        unit._name = uName
-        self._units.append(unit)
+        nameAvailabilityCheck(self, mName, submodule)
+        assert submodule._parent is None
+        submodule._parent = self
+        submodule._name = mName
+        self._subHwModules.append(submodule)
 
     @internal
-    def _registerInterface(self, iName, intf, isPrivate=False):
+    def _registerHwIO(self, hwIOName, hwIO, isPrivate=False):
         """
-        Register interface object on interface level object
+        Register HwIO object on interface level object
         """
-        nameAvailabilityCheck(self, iName, intf)
-        assert intf._parent is None
-        intf._parent = self
-        intf._name = iName
-        intf._ctx = self._ctx
+        nameAvailabilityCheck(self, hwIOName, hwIO)
+        assert hwIO._parent is None
+        hwIO._parent = self
+        hwIO._name = hwIOName
+        hwIO._ctx = self._ctx
 
-        # _setAsExtern() not used because _interfaces are not intitialized yet
+        # _setAsExtern() not used because _hwIOs are not initialized yet
         if isPrivate:
-            self._private_interfaces.append(intf)
-            intf._isExtern = False
+            self._private_hwIOs.append(hwIO)
+            hwIO._isExtern = False
         else:
-            self._interfaces.append(intf)
-            intf._isExtern = True
+            self._hwIOs.append(hwIO)
+            hwIO._isExtern = True
 
     @internal
     def _declrCollector(self, name: str, prop: object):
@@ -298,10 +297,10 @@ class PropDeclrCollector(object):
             object.__setattr__(self, name, prop)
             return prop
 
-        if isinstance(prop, InterfaceBase):
-            self._registerInterface(name, prop)
-        elif isinstance(prop, UnitBase):
-            self._registerUnit(name, prop)
+        if isinstance(prop, HwIOBase):
+            self._registerHwIO(name, prop)
+        elif isinstance(prop, HwModuleBase):
+            self._registerSubmodule(name, prop)
         elif isinstance(prop, HObjList):
             self._registerArray(name, prop)
         return prop
@@ -332,21 +331,21 @@ class PropDeclrCollector(object):
         self._setAttrListener = None
 
     @internal
-    def _registerUnitInImpl(self, uName, u):
+    def _registerSubmoduleInImpl(self, uName, u):
         """
         :attention: unit has to be parametrized before it is registered
             (some components can change interface by parametrization)
         """
-        self._registerUnit(uName, u)
+        self._registerSubmodule(uName, u)
         u._loadDeclarations()
         sm = self._store_manager
         with WithNameScope(sm, sm.name_scope.parent):
             self._lazy_loaded.extend(u._to_rtl(
                 self._target_platform, self._store_manager))
-        u._signalsForSubUnitEntity(self._ctx, "sig_" + uName)
+        u._signalsForSubHwModuleEntity(self._ctx, "sig_" + uName)
 
     @internal
-    def _registerIntfInImpl(self, iName, i):
+    def _registerHwIOInImpl(self, hwIOName, i):
         """
         Register interface in implementation phase
         """
@@ -354,7 +353,7 @@ class PropDeclrCollector(object):
 
     @internal
     def _paramCollector(self, pName, prop):
-        if isinstance(prop, Param):
+        if isinstance(prop, HwParam):
             self._registerParameter(pName, prop)
             return prop._initval
         else:
@@ -365,14 +364,14 @@ class PropDeclrCollector(object):
         """
         Handle property definitions in _impl phase
         """
-        if isinstance(prop, InterfaceBase):
+        if isinstance(prop, HwIOBase):
             if prop._parent is self:
                 return prop
-            self._registerIntfInImpl(name, prop)
-        elif isinstance(prop, UnitBase):
+            self._registerHwIOInImpl(name, prop)
+        elif isinstance(prop, HwModuleBase):
             if prop._parent is self:
                 return prop
-            self._registerUnitInImpl(name, prop)
+            self._registerSubmoduleInImpl(name, prop)
         elif isinstance(prop, HObjList):
             if prop._parent is self:
                 return prop

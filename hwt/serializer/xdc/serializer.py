@@ -3,12 +3,12 @@ from typing import Union, Tuple
 
 from hwt.constraints import set_max_delay, set_false_path, \
     set_async_reg, get_clock_of, iHdlConstrain
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.pyUtils.arrayQuery import iter_with_last
-from hwt.synthesizer.interface import Interface
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
+from hwt.hwIO import HwIO
+from hwt.hwModule import HwModule
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.unit import Unit
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 
 
 class XdcSerializer():
@@ -20,7 +20,7 @@ class XdcSerializer():
     def __init__(self, out):
         self.out = out
 
-    def _get(self, o: Union[Tuple[Unit, RtlSignal, Interface], iHdlConstrain], only_first=False):
+    def _get(self, o: Union[Tuple[HwModule, RtlSignal, HwIO], iHdlConstrain], only_first=False):
         """
         :param only_first: if true select only first bit from vector, else select whole vector
         """
@@ -35,7 +35,7 @@ class XdcSerializer():
                 if d._event_dependent_from_branch is not None:
                     is_reg = True
 
-        elif isinstance(_o, Interface):
+        elif isinstance(_o, HwIO):
             q = "get_pins"
 
         else:
@@ -47,12 +47,12 @@ class XdcSerializer():
         path = o
         # [TODO] find out how to make select with ip top module/entity name
         for last, p in iter_with_last(islice(path, 1, None)):
-            if isinstance(p, Unit):
+            if isinstance(p, HwModule):
                 w(p._name)
                 w("_inst")
             elif isinstance(p, RtlSignal):
                 w(p.name)
-            elif isinstance(p, Interface):
+            elif isinstance(p, HwIO):
                 w(p._name)
             else:
                 raise NotImplementedError(p)
@@ -62,7 +62,7 @@ class XdcSerializer():
         t = _o._dtype
         if is_reg:
             w("_reg")
-        if isinstance(t, Bits) and (t.bit_length() > 1 or t.force_vector):
+        if isinstance(t, HBits) and (t.bit_length() > 1 or t.force_vector):
             # * on end because of Vivado _replica
             if only_first:
                 w("[0]*")

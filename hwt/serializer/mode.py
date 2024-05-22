@@ -7,13 +7,14 @@ use serialize* methods to specify serialization mode for unit class
 .. code-block:: python
 
     @serializeExclude
-    class MyUnit(Unit):
+    class MyHwModule(HwModule):
         # ...
         pass
 
 """
 
 from collections import namedtuple
+from typing import Type
 
 from hwt.doc_markers import internal
 
@@ -29,16 +30,16 @@ def freeze_dict(data):
 
 
 @internal
-def paramsToValTuple(unit):
+def hwParamsToValTuple(module: "HwModule"):
     # [TODO] check sub params
     d = {}
-    for p in unit._params:
+    for p in module._hwParams:
         v = p.get_value()
         d[p._name] = v
     return freeze_dict(d)
 
 
-def serializeExclude(cls):
+def serializeExclude(cls: Type["HwModule"]):
     """
     Never serialize HDL objects from this class
     """
@@ -46,7 +47,7 @@ def serializeExclude(cls):
     return cls
 
 
-def serializeOnce(cls):
+def serializeOnce(cls: Type["HwModule"]):
     """
     Serialize HDL objects only once per class
     """
@@ -54,7 +55,7 @@ def serializeOnce(cls):
     return cls
 
 
-def serializeParamsUniq(cls):
+def serializeParamsUniq(cls: Type["HwModule"]):
     """
     Decide to serialize only when parameters are unique
     """
@@ -63,7 +64,7 @@ def serializeParamsUniq(cls):
 
 
 @internal
-def _serializeExclude_eval(parentUnit, priv):
+def _serializeExclude_eval(parentModule: "HwModule", priv):
     """
     Always decide not to serialize obj
 
@@ -71,18 +72,18 @@ def _serializeExclude_eval(parentUnit, priv):
     :return: tuple (do serialize this object, next priv, replacement unit)
     """
 
-    # do not use this :class:`hwt.synthesizer.unit.Unit` instance and do not use any prelacement
-    # (useful when the :class:`hwt.synthesizer.unit.Unit` instance is a placeholder for something
+    # do not use this :class:`hwt.hwModule.HwModule` instance and do not use any replacement
+    # (useful when the :class:`hwt.hwModule.HwModule` instance is a placeholder for something
     #  which already exists in hdl word)
     if priv is None:
-        priv = parentUnit
+        priv = parentModule
         return False, priv, None
     else:
         return False, priv, priv
 
 
 @internal
-def _serializeOnce_eval(parentUnit, priv):
+def _serializeOnce_eval(parentModule: "HwModule", priv):
     """
     Decide to serialize only first obj of it's class
 
@@ -94,12 +95,12 @@ def _serializeOnce_eval(parentUnit, priv):
         (first object with class == obj.__class__)
     """
     if priv is None:
-        priv = parentUnit
+        priv = parentModule
         serialize = True
         replacement = None
-        # use this :class:`hwt.synthesizer.unit.Unit` instance and store it for later use
+        # use this :class:`hwt.hwModule.HwModule` instance and store it for later use
     else:
-        # use existing :class:`hwt.synthesizer.unit.Unit` instance
+        # use existing :class:`hwt.hwModule.HwModule` instance
         serialize = False
         replacement = priv
 
@@ -107,9 +108,9 @@ def _serializeOnce_eval(parentUnit, priv):
 
 
 @internal
-def _serializeParamsUniq_eval(parentUnit, priv):
+def _serializeParamsUniq_eval(parentModule: "HwModule", priv):
     """
-    Decide to serialize only objs with uniq parameters and class
+    Decide to serialize only objs with unique parameters and class
 
     :param priv: private data for this function
         ({frozen_params: obj})
@@ -117,17 +118,17 @@ def _serializeParamsUniq_eval(parentUnit, priv):
     :return: tuple (do serialize this object, next priv, replacement unit)
     """
 
-    params = paramsToValTuple(parentUnit)
+    params = hwParamsToValTuple(parentModule)
 
     if priv is None:
         priv = {}
 
     try:
-        prevUnit = priv[params]
+        prevModule = priv[params]
     except KeyError:
-        priv[params] = parentUnit
+        priv[params] = parentModule
         # serialize new
         return True, priv, None
 
-    # use previous :class:`hwt.synthesizer.unit.Unit` instance with same config
-    return False, priv, prevUnit
+    # use previous :class:`hwt.hwModule.HwModule` instance with same config
+    return False, priv, prevModule

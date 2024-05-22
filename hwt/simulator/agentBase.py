@@ -7,14 +7,14 @@ from hwtSimApi.process_utils import OnRisingCallbackLoop
 
 class AgentWitReset(pcAgentWitReset):
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        pcAgentWitReset.__init__(self, sim, intf, (None, False))
-        self.rst, self.rstOffIn = self._discoverReset(intf, allowNoReset)
+    def __init__(self, sim: HdlSimulator, hwIO, allowNoReset=False):
+        pcAgentWitReset.__init__(self, sim, hwIO, (None, False))
+        self.rst, self.rstOffIn = self._discoverReset(hwIO, allowNoReset)
 
     @classmethod
-    def _discoverReset(cls, intf, allowNoReset):
+    def _discoverReset(cls, hwIO, allowNoReset: bool):
         try:
-            rst = intf._getAssociatedRst()
+            rst = hwIO._getAssociatedRst()
             rstOffIn = int(rst._dtype.negated)
             rst = rst._sigInside
         except IntfLvlConfErr:
@@ -43,10 +43,10 @@ class SyncAgentBase(AgentWitReset, pcSyncAgentBase):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        self.intf = intf
-        clk = self.intf._getAssociatedClk()
-        rst = self._discoverReset(intf, allowNoReset)
+    def __init__(self, sim: HdlSimulator, hwIO, allowNoReset=False):
+        self.hwIO = hwIO
+        clk = self.hwIO._getAssociatedClk()
+        rst = self._discoverReset(hwIO, allowNoReset)
         pcSyncAgentBase.__init__(
-            self, sim, intf, clk, rst)
+            self, sim, hwIO, clk, rst)
 

@@ -4,24 +4,24 @@ from typing import Union
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlDirection
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import INT, BOOL, FLOAT64
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
-from hwt.hdl.types.function import HFunction, HFunctionVal
+from hwt.hdl.types.function import HFunction, HFunctionConst
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.string import HString
-from hwt.hdl.types.stringVal import HStringVal
-from hwt.hdl.value import HValue
+from hwt.hdl.types.stringConst import HStringConst
+from hwt.hdl.const import HConst
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.mainBases import RtlSignalBase
 
 
 class ToHdlAst_Value():
 
-    def is_suitable_for_const_extract(self, val: HValue):
+    def is_suitable_for_const_extract(self, val: HConst):
         """
         :return: True if an value should be extracted as a constant if possible
         """
@@ -30,7 +30,7 @@ class ToHdlAst_Value():
     def as_hdl_Value(self, val):
         """
         :param dst: is signal connected with value
-        :param val: value object, can be instance of Signal or HValue
+        :param val: value object, can be instance of Signal or HConst
         """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
@@ -45,19 +45,19 @@ class ToHdlAst_Value():
                     return self.as_hdl(c)
 
         if isinstance(t, HSlice):
-            return self.as_hdl_HSliceVal(val)
+            return self.as_hdl_HSliceConst(val)
         elif isinstance(t, HArray):
-            return self.as_hdl_HArrayVal(val)
-        elif isinstance(t, Bits):
-            return self.as_hdl_BitsVal(val)
+            return self.as_hdl_HArrayConst(val)
+        elif isinstance(t, HBits):
+            return self.as_hdl_HBitsConst(val)
         elif isinstance(t, HEnum):
-            return self.as_hdl_HEnumVal(val)
+            return self.as_hdl_HEnumConst(val)
         elif isinstance(t, HString):
-            return self.as_hdl_HStringVal(val)
+            return self.as_hdl_HStringConst(val)
         elif isinstance(t, HFloat):
-            return self.as_hdl_HFloatVal(val)
+            return self.as_hdl_HFloatConst(val)
         elif isinstance(t, HFunction):
-            return self.as_hdl_HFunctionVal(val)
+            return self.as_hdl_HFunctionConst(val)
         else:
             raise SerializerException(
                 "can not resolve value serialization for %r"
@@ -70,26 +70,26 @@ class ToHdlAst_Value():
     def Value_try_extract_as_const(self, val):
         return None
 
-    def as_hdl_IntegerVal(self, val: BitsVal):
+    def as_hdl_IntegerVal(self, val: HBitsConst):
         return self.as_hdl_int(int(val.val))
 
-    def as_hdl_BitsVal(self, val: BitsVal):
+    def as_hdl_HBitsConst(self, val: HBitsConst):
         t = val._dtype
         if t == INT:
             return self.as_hdl_IntegerVal(val)
         elif t == BOOL:
-            return self.as_hdl_BoolVal(val)
+            return self.as_hdl_HBoolConst(val)
         w = t.bit_length()
         return self.as_hdl_BitString(val.val, w, t.force_vector,
                                      val.vld_mask, t.signed)
 
-    def as_hdl_HStringVal(self, val: HStringVal):
+    def as_hdl_HStringConst(self, val: HStringConst):
         return val.val
 
-    def as_hdl_HFunctionVal(self, val: HFunctionVal):
+    def as_hdl_HFunctionConst(self, val: HFunctionConst):
         return val.val
 
-    def as_hdl_HFloatVal(self, val):
+    def as_hdl_HFloatConst(self, val):
         if val._dtype != FLOAT64:
             raise NotImplementedError(val._dtype)
         return float(val)
@@ -133,7 +133,7 @@ class ToHdlAst_Value():
                     # because it is not resolvable in compile time
                     var.value = None
                     pass
-            elif isinstance(v, HValue):
+            elif isinstance(v, HConst):
                 if v.vld_mask or var.is_const:
                     orig_const_cache = self.constCache
                     try:

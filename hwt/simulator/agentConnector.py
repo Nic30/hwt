@@ -1,38 +1,38 @@
 from hwt.doc_markers import internal
-from hwt.hdl.constants import INTF_DIRECTION
-from hwt.synthesizer.unit import Unit
+from hwt.constants import INTF_DIRECTION
+from hwt.hwModule import HwModule
 from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 @internal
-def autoAddAgents(unit: Unit, sim: HdlSimulator):
+def autoAddAgents(module: HwModule, sim: HdlSimulator):
     """
-    Walk all interfaces on unit and instantiate agent for every interface.
+    Walk all interfaces on module and instantiate agent for every interface.
 
     :return: all monitor/driver functions which should be added to simulation
          as processes
     """
-    for intf in unit._interfaces:
-        assert intf._isExtern, intf
+    for hio in module._hwIOs:
+        assert hio._isExtern, hio
 
-        intf._initSimAgent(sim)
-        assert intf._ag is not None, intf
+        hio._initSimAgent(sim)
+        assert hio._ag is not None, hio
 
 
 @internal
-def collect_processes_from_sim_agents(unit: Unit):
+def collect_processes_from_sim_agents(module: HwModule):
     proc = []
-    for intf in unit._interfaces:
-        a = intf._ag
-        if not intf._isExtern or a is None:
+    for hio in module._hwIOs:
+        a = hio._ag
+        if not hio._isExtern or a is None:
             continue
 
-        if intf._direction == INTF_DIRECTION.MASTER:
+        if hio._direction == INTF_DIRECTION.MASTER:
             agProcs = a.getMonitors()
-        elif intf._direction == INTF_DIRECTION.SLAVE:
+        elif hio._direction == INTF_DIRECTION.SLAVE:
             agProcs = a.getDrivers()
         else:
-            raise NotImplementedError(f"intf._direction {intf._direction} for {intf}")
+            raise NotImplementedError(f"hio._direction {hio._direction} for {hio}")
 
         proc.extend(agProcs)
 

@@ -5,7 +5,7 @@ from hwt.hdl.types.typeCast import toHVal
 
 
 @internal
-def slice_to_SLICE(sliceVals, width):
+def slice_to_HSlice(sliceVals: slice, width: int):
     """convert python slice to value of SLICE hdl type"""
     if sliceVals.step is None:
         step = -1
@@ -25,4 +25,4 @@ def slice_to_SLICE(sliceVals, width):
         stop = toHVal(stop)
 
     v = slice(start, stop, step)
-    return HSlice.getValueCls()(SLICE, v, 1)
+    return HSlice.getConstCls()(SLICE, v, 1)

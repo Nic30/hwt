@@ -1,7 +1,9 @@
 from hwt.doc_markers import internal
-from hwt.hdl.constants import DIRECTION
+from hwt.constants import DIRECTION
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HwtSyntaxError
+from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.variables import SignalItem
 
 
 class HdlPortItem():
@@ -13,18 +15,22 @@ class HdlPortItem():
         both dst and src can be parent/component signal, it depends on direction
     """
 
-    def __init__(self, name, direction, dtype, unit):
+    def __init__(self, name: str, direction: DIRECTION, dtype: HdlType, module: "HwModule"):
         self.name = name
-        self.unit = unit
+        self.module = module
         self._dtype = dtype
         self.direction = direction
         self.src = None
         self.dst = None
 
+    @classmethod
+    def fromSignal(cls, s: SignalItem, component, d: DIRECTION):
+        return cls(s.name, d, s._dtype, component)
+
     @internal
     def connectOuterSig(self, signal):
         """
-        Connect to port item on subunit
+        Connect to port item on submodule
         """
         if self.direction == DIRECTION.IN:
             if self.src is not None:
@@ -46,7 +52,7 @@ class HdlPortItem():
             raise NotImplementedError(self)
 
         signal.hidden = False
-        signal.ctx.subUnits.add(self.unit)
+        signal.ctx.subHwModules.add(self.module)
 
     @internal
     def connectInternSig(self, signal):
@@ -74,7 +80,7 @@ class HdlPortItem():
     @internal
     def getInternSig(self):
         """
-        return signal inside unit which has this port
+        return signal inside module which has this port
         """
         d = self.direction
         if d == DIRECTION.IN:
@@ -87,7 +93,7 @@ class HdlPortItem():
     @internal
     def getOuterSig(self):
         """
-        return signal inside unit which has this port
+        return signal inside module which has this port
         """
         d = self.direction
         if d == DIRECTION.OUT:

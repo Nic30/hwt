@@ -2,20 +2,20 @@ from copy import copy
 
 from hdlConvertorAst.hdlAst import HdlStmCase
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
+from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, BIT
-from hwt.hdl.types.sliceVal import HSliceVal
-from hwt.hdl.value import HValue
+from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 
 
 class ToHdlAstVhdl2008_statements():
@@ -27,7 +27,7 @@ class ToHdlAstVhdl2008_statements():
                 d = v.singleDriver()
             except SignalDriverErr:
                 d = None
-            if d is not None and isinstance(d, Operator) and d.operator is AllOps.INDEX and d.operands[0]._dtype == BOOL:
+            if d is not None and isinstance(d, HOperatorNode) and d.operator is HwtOps.INDEX and d.operands[0]._dtype == BOOL:
                 return BOOL
         return v._dtype
     
@@ -37,7 +37,7 @@ class ToHdlAstVhdl2008_statements():
 
         if a.indexes is not None:
             for i in a.indexes:
-                if isinstance(i, HSliceVal):
+                if isinstance(i, HSliceConst):
                     i = i.__copy__()
                 dst = dst[i]
 
@@ -50,7 +50,7 @@ class ToHdlAstVhdl2008_statements():
             correct = True
         else:
             src = a.src
-            if (isinstance(dst_t, Bits) and isinstance(src_t, Bits)):
+            if (isinstance(dst_t, HBits) and isinstance(src_t, HBits)):
                 # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
                 while not (dst_t == src_t):
                     # while is used because the casting could be required multiple times
@@ -66,7 +66,7 @@ class ToHdlAstVhdl2008_statements():
                             src = src._ternary(BIT.from_py(1), BIT.from_py(0))
                             correct = True
                     elif not src_t.strict_width:
-                        if isinstance(src, HValue):
+                        if isinstance(src, HConst):
                             src = copy(src)
                             if a.indexes:
                                 raise NotImplementedError()

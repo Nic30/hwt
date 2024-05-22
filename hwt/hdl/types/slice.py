@@ -9,10 +9,10 @@ class HSlice(HdlType):
 
     @internal
     @classmethod
-    def getValueCls(cls):
+    def getConstCls(cls):
         try:
-            return cls._valCls
+            return cls._constCls
         except AttributeError:
-            from hwt.hdl.types.sliceVal import HSliceVal
-            cls._valCls = HSliceVal
-            return cls._valCls
+            from hwt.hdl.types.sliceConst import HSliceConst
+            cls._constCls = HSliceConst
+            return cls._constCls

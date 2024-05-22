@@ -5,7 +5,7 @@ from math import inf
 from types import GeneratorType
 
 from hdlConvertorAst.to.hdlUtils import iter_with_last
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
+from hwt.constants import NOT_SPECIFIED
 
 
 class DuplicitValueExc(Exception):

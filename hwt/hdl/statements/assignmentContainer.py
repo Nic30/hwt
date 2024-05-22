@@ -1,14 +1,14 @@
 from typing import Tuple, List, Dict, Union, Optional, Generator
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
+from hwt.hdl.constUtils import isSameHConst, areSameHConsts
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.hdl.value import HValue
-from hwt.hdl.valueUtils import isSameHVal, areSameHVals
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
+from hwt.mainBases import RtlSignalBase
 
 
 class HdlAssignmentContainer(HdlStatement):
@@ -29,11 +29,11 @@ class HdlAssignmentContainer(HdlStatement):
 
     __instCntr = 0
 
-    def __init__(self, src: Union[RtlSignalBase, HValue], dst: RtlSignalBase,
-                 indexes: Optional[List[Union[RtlSignalBase, HValue]]]=None, virtual_only=False,
+    def __init__(self, src: Union[RtlSignalBase, HConst], dst: RtlSignalBase,
+                 indexes: Optional[List[Union[RtlSignalBase, HConst]]]=None, virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
                  parentStmList: Optional[ListOfHdlStatement]=None,
-                 sensitivity: Optional[UniqList]=None,
+                 sensitivity: Optional[SetList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         """
         :param dst: destination to assign to
@@ -168,9 +168,9 @@ class HdlAssignmentContainer(HdlStatement):
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`
         """
         if isinstance(other, self.__class__):
-            if isSameHVal(self.dst, other.dst)\
-                    and isSameHVal(self.src, other.src)\
-                    and areSameHVals(self.indexes, other.indexes):
+            if isSameHConst(self.dst, other.dst)\
+                    and isSameHConst(self.src, other.src)\
+                    and areSameHConsts(self.indexes, other.indexes):
                 return True
         return False
 

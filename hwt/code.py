@@ -3,22 +3,22 @@ from types import GeneratorType
 from typing import Union, Sequence, Optional, Tuple
 
 from hdlConvertorAst.to.hdlUtils import iter_with_last
-from hwt.code_utils import _mkOp, _intfToSig
+from hwt.code_utils import _mkOp, _HwIOToRtlSignal
+from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.statement import HwtSyntaxError, HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import HValue
+from hwt.mainBases import HwIOBase, HwModuleBase
+from hwt.mainBases import RtlSignalBase
 from hwt.math import log2ceil
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
+from hwt.synthesizer.rtlLevel.rtlSignalWalkers import \
     discoverEventDependency
 
 
@@ -42,13 +42,13 @@ class If(IfContainer):
     If statement generator
     """
 
-    def __init__(self, cond: Union[RtlSignalBase, InterfaceBase], *statements: Sequence[HdlStatement]):
+    def __init__(self, cond: Union[RtlSignalBase, HwIOBase], *statements: Sequence[HdlStatement]):
         """
         :param cond: condition in if statement
         :param statements: list of statements which should be active
             if condition is met
         """
-        cond_sig = _intfToSig(cond)
+        cond_sig = _HwIOToRtlSignal(cond)
         if not isinstance(cond_sig, RtlSignalBase):
             raise HwtSyntaxError("Condition is not signal, it is not certain"
                                  " if this is an error or desire ", cond_sig)
@@ -65,10 +65,10 @@ class If(IfContainer):
         self._register_stements(statements, self.ifTrue)
         self._get_rtl_context().statements.add(self)
 
-    def Elif(self, cond: Union[RtlSignalBase, InterfaceBase], *statements: Sequence[HdlStatement]):
+    def Elif(self, cond: Union[RtlSignalBase, HwIOBase], *statements: Sequence[HdlStatement]):
         assert self.parentStm is None
         self.rank += 1
-        cond_sig = _intfToSig(cond)
+        cond_sig = _HwIOToRtlSignal(cond)
 
         assert cond_sig._dtype.bit_length() == 1, cond_sig
         ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
@@ -101,8 +101,8 @@ class Switch(SwitchContainer):
     Switch statement generator
     """
 
-    def __init__(self, switchOn: Union[RtlSignalBase, InterfaceBase]):
-        switchOn = _intfToSig(switchOn)
+    def __init__(self, switchOn: Union[RtlSignalBase, HwIOBase]):
+        switchOn = _HwIOToRtlSignal(switchOn)
         if not isinstance(switchOn, RtlSignalBase):
             raise HwtSyntaxError("Select is not signal, it is not certain"
                                  " if this is an error or desire")
@@ -114,7 +114,7 @@ class Switch(SwitchContainer):
         self._inputs.append(switchOn)
         switchOn.endpoints.append(self)
 
-    def add_cases(self, tupesValStms: Sequence[Tuple[Union[HValue, int], Sequence[HdlStatement]]]):
+    def add_cases(self, tupesValStms: Sequence[Tuple[Union[HConst, int], Sequence[HdlStatement]]]):
         """
         Add multiple case statements from iterable of tuples
         (caseVal, statements)
@@ -124,12 +124,12 @@ class Switch(SwitchContainer):
             s = s.Case(val, statements)
         return s
 
-    def Case(self, caseVal: Union[HValue, int], *statements: Sequence[HdlStatement]):
+    def Case(self, caseVal: Union[HConst, int], *statements: Sequence[HdlStatement]):
         "c-like case of switch statement"
         assert self.parentStm is None
         caseVal = toHVal(caseVal, self.switchOn._dtype)
 
-        assert isinstance(caseVal, HValue), caseVal
+        assert isinstance(caseVal, HConst), caseVal
         assert caseVal._is_full_valid(), "Cmp with invalid value"
         assert caseVal not in self._case_value_index, (
             "Switch statement already has case for value ", caseVal)
@@ -152,7 +152,7 @@ class Switch(SwitchContainer):
         return self
 
 
-def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue, bool], Sequence[HdlStatement]]],
+def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, HwIOBase, HConst, bool], Sequence[HdlStatement]]],
                 default: Optional[Sequence[HdlStatement]]=None):
     """
     Generate if tree for cases like (syntax sugar for large generated elifs)
@@ -171,7 +171,7 @@ def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue
     assigTop = None
     hasElse = False
     for last, (cond, statements) in iter_with_last(cases):
-        if isinstance(cond, (RtlSignalBase, InterfaceBase)):
+        if isinstance(cond, (RtlSignalBase, HwIOBase)):
             if assigTop is None:
                 assigTop = If(cond,
                              statements
@@ -207,28 +207,28 @@ def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue
         return assigTop
 
 
-def In(sigOrVal: Union[RtlSignalBase, InterfaceBase, HValue], iterable: Sequence[Union[RtlSignalBase, InterfaceBase, HValue]]):
+def In(sigOrConst: Union[RtlSignalBase, HwIOBase, HConst], iterable: Sequence[Union[RtlSignalBase, HwIOBase, HConst]]):
     """
     HDL convertible "in" operator, check if any of items
-    in "iterable" equals "sigOrVal"
+    in "iterable" equals "sigOrConst"
     """
     res = None
     for i in iterable:
         i = toHVal(i)
         if res is None:
-            res = sigOrVal._eq(i)
+            res = sigOrConst._eq(i)
         else:
-            res = res | sigOrVal._eq(i)
+            res = res | sigOrConst._eq(i)
 
     assert res is not None, "argument iterable is empty"
     return res
 
 
-def StaticForEach(parentUnit: UnitBase, items, bodyFn, name=""):
+def StaticForEach(parentModule: HwModuleBase, items, bodyFn, name=""):
     """
     Generate for loop for static items
 
-    :param parentUnit: unit where this code should be instantiated
+    :param parentModule: HwModule where this code should be instantiated
     :param items: items which this "for" iterating on
     :param bodyFn: function which fn(item, index) or fn(item)
         returns (statementList, ack).
@@ -246,10 +246,10 @@ def StaticForEach(parentUnit: UnitBase, items, bodyFn, name=""):
         return bodyFn(items[0], 0)
     else:
         # if there is multiple items we have to generate counter logic
-        index = parentUnit._reg(name + "for_index",
-                                Bits(log2ceil(itemsCnt + 1), signed=False),
+        index = parentModule._reg(name + "for_index",
+                                HBits(log2ceil(itemsCnt + 1), signed=False),
                                 def_val=0)
-        ackSig = parentUnit._sig(name + "for_ack")
+        ackSig = parentModule._sig(name + "for_ack")
 
         statementLists = []
         for i, (statementList, ack) in [(i, bodyFn(item, i))
@@ -280,9 +280,9 @@ class FsmBuilder(Switch):
     :ivar ~.stateReg: register with state
     """
 
-    def __init__(self, parent, stateT, stateRegName="st"):
+    def __init__(self, parentModule: HwModuleBase, stateT, stateRegName="st"):
         """
-        :param parent: parent unit where fsm should be builded
+        :param parentModule: parent HwModule where FSM should be builded
         :param stateT: enum type of state
         :param stateRegName: name of register where sate is stored
         """
@@ -291,7 +291,7 @@ class FsmBuilder(Switch):
         else:
             beginVal = 0
 
-        self.stateReg = parent._reg(stateRegName, stateT, beginVal)
+        self.stateReg = parentModule._reg(stateRegName, stateT, beginVal)
         Switch.__init__(self, self.stateReg)
 
     def Trans(self, stateFrom, *condAndNextState):
@@ -346,18 +346,18 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def ror(sig:Union[RtlSignalBase, HValue], howMany: int) -> RtlSignalBase:
+def ror(sig:Union[RtlSignalBase, HConst], howMany: int) -> RtlSignalBase:
     "Rotate right"
     if sig._dtype.bit_length() == 1:
         return sig
 
     if isinstance(howMany, int):
         return sig[howMany:]._concat(sig[:howMany])
-    elif isinstance(howMany, HValue):
+    elif isinstance(howMany, HConst):
         return ror(sig, int(howMany))
     else:
         t = howMany._dtype
-        if not isinstance(t, Bits) or t.signed:
+        if not isinstance(t, HBits) or t.signed:
             raise NotImplementedError(t)
         res = sig
         for i in range(1, t.domain_size() - 1):
@@ -365,18 +365,18 @@ def ror(sig:Union[RtlSignalBase, HValue], howMany: int) -> RtlSignalBase:
         return  res
 
 
-def rol(sig:Union[RtlSignalBase, HValue], howMany:Union[RtlSignalBase, int]) -> RtlSignalBase:
+def rol(sig:Union[RtlSignalBase, HConst], howMany:Union[RtlSignalBase, int]) -> RtlSignalBase:
     "Rotate left"
     if isinstance(howMany, int):
         width = sig._dtype.bit_length()
         if width == 1:
             return sig
         return sig[(width - howMany):]._concat(sig[:(width - howMany)])
-    elif isinstance(howMany, HValue):
+    elif isinstance(howMany, HConst):
         return rol(sig, int(howMany))
     else:
         t = howMany._dtype
-        if not isinstance(t, Bits) or t.signed:
+        if not isinstance(t, HBits) or t.signed:
             raise NotImplementedError(t)
         res = sig
         for i in range(1, t.domain_size() - 1):
