@@ -4,9 +4,9 @@ from typing import List, Tuple, Union, Optional, Dict, Callable, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
+from hwt.mainBases import RtlSignalBase
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.pyUtils.setList import SetList
-from hwt.mainBases import RtlSignalBase
 
 
 class HwtSyntaxError(Exception):

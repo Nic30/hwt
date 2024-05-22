@@ -1,6 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.types.hdlType import HdlType
+from hwt.pyUtils.typingFuture import override
 
 
 class HFunction(HdlType):
@@ -12,6 +13,7 @@ class HFunction(HdlType):
         return 1
 
     @internal
+    @override
     @classmethod
     def getConstCls(cls):
         return HFunctionConst

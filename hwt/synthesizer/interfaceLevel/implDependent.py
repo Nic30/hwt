@@ -60,5 +60,5 @@ class HwIOImplDependentFns():
         Create new instance of interface of same type and configuration
         """
         hwIO = self.__class__()
-        hwIO._updateParamsFrom(self)
+        hwIO._updateHwParamsFrom(self)
         return hwIO

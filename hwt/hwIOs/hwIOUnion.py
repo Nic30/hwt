@@ -1,7 +1,8 @@
 from hwt.hwIOs.agents.union import HwIOUnionSourceAgent
-from hwt.hwIOs.std import HwIODataRdVld
 from hwt.hwIOs.hwIOStruct import HwIOStruct
+from hwt.hwIOs.std import HwIODataRdVld
 from hwt.math import log2ceil
+from hwt.pyUtils.typingFuture import override
 from hwtSimApi.hdlSimulator import HdlSimulator
 from ipCorePackager.constants import DIRECTION
 
@@ -13,8 +14,9 @@ class HwIOUnionSink(HwIOStruct):
     Used when consumer chooses which member of union should be used.
     """
 
-    def _declr(self):
-        HwIOStruct._declr(self)
+    @override
+    def hwDeclr(self):
+        HwIOStruct.hwDeclr(self)
         self._select = HwIODataRdVld()
         self._select.DATA_WIDTH = log2ceil(len(self._dtype.fields))
 
@@ -25,10 +27,12 @@ class HwIOUnionSource(HwIOUnionSink):
     which should be used.
     """
 
-    def _declr(self):
-        HwIOStruct._declr(self)
+    @override
+    def hwDeclr(self):
+        HwIOStruct.hwDeclr(self)
         self._select = HwIODataRdVld(masterDir=DIRECTION.IN)
         self._select.DATA_WIDTH = log2ceil(len(self._dtype.fields))
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOUnionSourceAgent(sim, self)

@@ -16,9 +16,10 @@ from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
     HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
+from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
-from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignalWalkers import discover_sensitivity_of_sig
 
 
@@ -63,6 +64,7 @@ class IfContainer(HdlStatement):
         self._elIfs_enclosed_for: Optional[Set[RtlSignalBase]] = None
         self._ifFalse_enclosed_for: Optional[Set[RtlSignalBase]] = None
 
+    @override
     def __deepcopy__(self, memo: dict):
         result = super(IfContainer, self).__deepcopy__(memo)
         result.cond = self.cond
@@ -70,6 +72,7 @@ class IfContainer(HdlStatement):
         return result
 
     @internal
+    @override
     def _collect_io(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_io`
@@ -82,6 +85,7 @@ class IfContainer(HdlStatement):
         super(IfContainer, self)._collect_io()
 
     @internal
+    @override
     def _collect_inputs(self) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_inputs`
@@ -94,6 +98,7 @@ class IfContainer(HdlStatement):
         super(IfContainer, self)._collect_inputs()
 
     @internal
+    @override
     def _clean_signal_meta(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._clean_signal_meta`
@@ -105,6 +110,7 @@ class IfContainer(HdlStatement):
         HdlStatement._clean_signal_meta(self)
 
     @internal
+    @override
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
@@ -167,6 +173,7 @@ class IfContainer(HdlStatement):
             return n
 
     @internal
+    @override
     def _discover_enclosure(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_enclosure`
@@ -199,6 +206,7 @@ class IfContainer(HdlStatement):
                 encl.add(s)
 
     @internal
+    @override
     def _discover_sensitivity(self, seen: set) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_sensitivity`
@@ -238,6 +246,7 @@ class IfContainer(HdlStatement):
                 ctx.extend(stm._sensitivity)
 
     @internal
+    @override
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Callable[[], HdlStatement]]) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._fill_enclosure`
@@ -262,6 +271,7 @@ class IfContainer(HdlStatement):
         self._enclosed_for.update(enc)
 
     @internal
+    @override
     def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
@@ -273,6 +283,7 @@ class IfContainer(HdlStatement):
             yield from self.ifFalse
 
     @internal
+    @override
     def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
@@ -289,6 +300,7 @@ class IfContainer(HdlStatement):
         yield from self.elIfs
 
     @internal
+    @override
     def _try_reduce(self) -> Tuple[bool, ListOfHdlStatement]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
@@ -346,6 +358,7 @@ class IfContainer(HdlStatement):
         self.ifFalse = ifStm.ifFalse
 
     @internal
+    @override
     def _is_mergable(self, other: HdlStatement) -> bool:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._is_mergable`
@@ -367,6 +380,7 @@ class IfContainer(HdlStatement):
         return is_mergable_statement_list(self.ifFalse, other.ifFalse)
 
     @internal
+    @override
     def _merge_with_other_stm(self, other: "IfContainer") -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._merge_with_other_stm`
@@ -404,6 +418,7 @@ class IfContainer(HdlStatement):
             return False
         return True
 
+    @override
     def isSame(self, other: HdlStatement) -> bool:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`
@@ -434,6 +449,7 @@ class IfContainer(HdlStatement):
         return False
     
     @internal
+    @override
     def _replace_input_nested(self, topStm: HdlStatement, toReplace: SignalReplaceSpecType) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
@@ -464,6 +480,7 @@ class IfContainer(HdlStatement):
         return didUpdate
 
     @internal
+    @override
     def _replace_child_statement(self, stm:HdlStatement,
             replacement:ListOfHdlStatement,
             update_io:bool) -> None:

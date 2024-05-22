@@ -18,12 +18,12 @@ class HwIOTristateSig(HwIO):
     """
 
     @override
-    def _config(self):
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(1)
         self.FORCE_VECTOR = False
 
     @override
-    def _declr(self):
+    def hwDeclr(self):
         t = HBits(self.DATA_WIDTH, force_vector=self.FORCE_VECTOR)
 
         # connect
@@ -42,9 +42,9 @@ class HwIOTristateSig(HwIO):
 class HwIOTristateClk(HwIOClk, HwIOTristateSig):
 
     @override
-    def _config(self):
-        HwIOClk._config(self)
-        HwIOTristateSig._config(self)
+    def hwConfig(self):
+        HwIOClk.hwConfig(self)
+        HwIOTristateSig.hwConfig(self)
 
     @override
     def _getIpCoreIntfClass(self):

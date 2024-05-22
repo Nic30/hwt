@@ -5,6 +5,8 @@ from operator import and_
 from typing import List, Tuple, Dict, Optional, Callable, Set, Generator
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
+from hwt.hdl.constUtils import isSameHConst
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError, SignalReplaceSpecType
@@ -15,11 +17,10 @@ from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_list
     HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.const import HConst
-from hwt.hdl.constUtils import isSameHConst
+from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
-from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -58,6 +59,7 @@ class SwitchContainer(HdlStatement):
         self._case_enclosed_for: Optional[List[Set[RtlSignal]]] = None
         self._default_enclosed_for: Optional[Set[RtlSignal]] = None
 
+    @override
     def __deepcopy__(self, memo: dict):
         result = super(SwitchContainer, self).__deepcopy__(memo)
         result.switchOn = self.switchOn
@@ -68,6 +70,7 @@ class SwitchContainer(HdlStatement):
         return result
 
     @internal
+    @override
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
@@ -137,6 +140,7 @@ class SwitchContainer(HdlStatement):
             return n
 
     @internal
+    @override
     def _clean_signal_meta(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._clean_signal_meta`
@@ -146,6 +150,7 @@ class SwitchContainer(HdlStatement):
         HdlStatement._clean_signal_meta(self)
 
     @internal
+    @override
     def _collect_io(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_io`
@@ -158,6 +163,7 @@ class SwitchContainer(HdlStatement):
         super(SwitchContainer, self)._collect_io()
 
     @internal
+    @override
     def _collect_inputs(self) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_inputs`
@@ -170,6 +176,7 @@ class SwitchContainer(HdlStatement):
         super(SwitchContainer, self)._collect_inputs()
 
     @internal
+    @override
     def _discover_enclosure(self) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_enclosure`
@@ -202,6 +209,7 @@ class SwitchContainer(HdlStatement):
                 enclosure.add(s)
 
     @internal
+    @override
     def _discover_sensitivity(self, seen) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_sensitivity`
@@ -221,6 +229,7 @@ class SwitchContainer(HdlStatement):
             ctx.extend(stm._sensitivity)
 
     @internal
+    @override
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Callable[[], HdlStatement]]) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._fill_enclosure`
@@ -246,6 +255,7 @@ class SwitchContainer(HdlStatement):
         self._enclosed_for.update(select)
 
     @internal
+    @override
     def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
@@ -257,6 +267,7 @@ class SwitchContainer(HdlStatement):
             yield from self.default
 
     @internal
+    @override
     def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
@@ -268,6 +279,7 @@ class SwitchContainer(HdlStatement):
             yield from self.default.iterStatementsWithOutput(output)
 
     @internal
+    @override
     def _is_mergable(self, other) -> bool:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._is_mergable`
@@ -287,6 +299,7 @@ class SwitchContainer(HdlStatement):
         return True
 
     @internal
+    @override
     def _merge_with_other_stm(self, other: "SwitchContainer") -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._merge_with_other_stm`
@@ -304,6 +317,7 @@ class SwitchContainer(HdlStatement):
         self._on_merge(other)
 
     @internal
+    @override
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
@@ -381,6 +395,7 @@ class SwitchContainer(HdlStatement):
         return True
 
     @internal
+    @override
     def _replace_input_nested(self, topStm: "HdlStatement", toReplace: SignalReplaceSpecType) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
@@ -403,6 +418,7 @@ class SwitchContainer(HdlStatement):
         return didUpdate
 
     @internal
+    @override
     def _replace_child_statement(self, stm: HdlStatement,
             replacement:ListOfHdlStatement,
             update_io:bool) -> None:
@@ -429,6 +445,7 @@ class SwitchContainer(HdlStatement):
 
         raise ValueError("Statement", stm, "not found in ", self)
 
+    @override
     def isSame(self, other: HdlStatement) -> bool:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`

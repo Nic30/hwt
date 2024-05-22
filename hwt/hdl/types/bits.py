@@ -2,6 +2,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
 from pyMathBitPrecise.bits3t import Bits3t
+from hwt.pyUtils.typingFuture import override
 
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
@@ -44,12 +45,14 @@ class HBits(HdlType, Bits3t):
         return convertBits
 
     @internal
+    @override
     @classmethod
     def get_reinterpret_cast_fn(cls):
         from hwt.hdl.types.bitsCast import reinterpretBits
         return reinterpretBits
 
     @internal
+    @override
     @classmethod
     def getConstCls(cls):
         try:

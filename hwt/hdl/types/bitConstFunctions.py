@@ -1,12 +1,12 @@
 from typing import Callable, Union
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps, HOperatorDef, CMP_OP_SWAP
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.const import HConst
 from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 from pyMathBitPrecise.bit_utils import mask

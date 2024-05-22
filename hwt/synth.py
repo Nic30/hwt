@@ -23,7 +23,7 @@ def to_rtl(hmodule_or_cls: HwModule, store_manager: StoreManager,
         form class name)
     :param target_platform: meta-informations about target platform, distributed
         on every unit under _target_platform attribute
-        before HwModule._impl() is called
+        before HwModule.hwImpl() is called
     """
     if isinstance(hmodule_or_cls, HwModule):
         m = hmodule_or_cls
@@ -32,7 +32,7 @@ def to_rtl(hmodule_or_cls: HwModule, store_manager: StoreManager,
 
     m._target_platform = target_platform
     m._store_manager = store_manager
-    m._loadDeclarations()
+    m._loadHwDeclarations()
     if name is not None:
         assert isinstance(name, str)
         m._hdl_module_name = m._name = name
@@ -111,7 +111,7 @@ def synthesised(m: HwModule, target_platform=DummyPlatform()):
     sm = StoreManager(DummySerializerConfig,
                       _filter=SerializerFilterDoNotExclude())
     if not hasattr(m, "_hwIOs"):
-        m._loadDeclarations()
+        m._loadHwDeclarations()
 
     for _ in m._to_rtl(target_platform, sm):
         pass

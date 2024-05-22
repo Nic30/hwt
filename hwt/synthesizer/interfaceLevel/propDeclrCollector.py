@@ -41,7 +41,7 @@ class MakeParamsShared(object):
 
         def MakeParamsSharedWrap(self, iName, i):
             if isinstance(i, (HwIOBase, HwModuleBase, HObjList)):
-                i._updateParamsFrom(self, exclude=exclude, prefix=prefix)
+                i._updateHwParamsFrom(self, exclude=exclude, prefix=prefix)
             return orig(iName, i)
 
         self.module._setAttrListener = MethodType(MakeParamsSharedWrap,
@@ -91,12 +91,12 @@ class PropDeclrCollector(object):
     in specified elaboration phases.
 
     It uses __setattr__ listeners to detect new properties and then calls
-    a litener function to process the registration.
+    a listener function to process the registration.
 
     Used for HwModule, HwIO classes to detect and load interfaces and components.
     """
 
-    def _config(self) -> None:
+    def hwConfig(self) -> None:
         """
         Configure object parameters
 
@@ -106,7 +106,7 @@ class PropDeclrCollector(object):
         """
         pass
 
-    def _declr(self) -> None:
+    def hwDeclr(self) -> None:
         """
         In this function user should specify the declaration of interfaces for communication with outside word.
         It is also better to declare sub components there as it allows for better parallelization during the build.
@@ -117,7 +117,7 @@ class PropDeclrCollector(object):
         """
         pass
 
-    def _impl(self) -> None:
+    def hwImpl(self) -> None:
         """
         Implementation - construct main body of the component in this function.
 
@@ -142,13 +142,13 @@ class PropDeclrCollector(object):
     @internal
     def _loadConfig(self) -> None:
         """
-        Load params in _config()
+        Load params in hwConfig()
         """
         if not hasattr(self, '_params'):
             self._hwParams = []
 
         self._setAttrListener = self._paramCollector
-        self._config()
+        self.hwConfig()
         self._setAttrListener = None
 
     @internal
@@ -216,7 +216,7 @@ class PropDeclrCollector(object):
         """
         return MakeClkRstAssociations(self, clk, rst)
 
-    def _updateParamsFrom(self,
+    def _updateHwParamsFrom(self,
                           otherObj: "PropDeclrCollector",
                           updater: Callable[["PropDeclrCollector", HwParam, HwParam], None],
                           exclude: Optional[Tuple[Set[str], Set[str]]],
@@ -327,7 +327,7 @@ class PropDeclrCollector(object):
     @internal
     def _loadImpl(self):
         self._setAttrListener = self._implCollector
-        self._impl()
+        self.hwImpl()
         self._setAttrListener = None
 
     @internal
@@ -337,7 +337,7 @@ class PropDeclrCollector(object):
             (some components can change interface by parametrization)
         """
         self._registerSubmodule(uName, u)
-        u._loadDeclarations()
+        u._loadHwDeclarations()
         sm = self._store_manager
         with WithNameScope(sm, sm.name_scope.parent):
             self._lazy_loaded.extend(u._to_rtl(
@@ -345,7 +345,7 @@ class PropDeclrCollector(object):
         u._signalsForSubHwModuleEntity(self._ctx, "sig_" + uName)
 
     @internal
-    def _registerHwIOInImpl(self, hwIOName, i):
+    def _registerHwIOInHwImpl(self, hwIOName, i):
         """
         Register interface in implementation phase
         """
@@ -367,7 +367,7 @@ class PropDeclrCollector(object):
         if isinstance(prop, HwIOBase):
             if prop._parent is self:
                 return prop
-            self._registerHwIOInImpl(name, prop)
+            self._registerHwIOInHwImpl(name, prop)
         elif isinstance(prop, HwModuleBase):
             if prop._parent is self:
                 return prop

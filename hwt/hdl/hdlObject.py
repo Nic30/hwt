@@ -1,4 +1,5 @@
 from io import StringIO
+
 from hdlConvertorAst.translate.common.name_scope import NameScope
 
 

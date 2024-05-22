@@ -58,7 +58,7 @@ class HwIOStruct(HwIO):
         self._fieldsToHwIOs = {}
 
     @override
-    def _declr(self):
+    def hwDeclr(self):
         _t = self._dtype
         if isinstance(_t, HStruct):
             fields = _t.fields
@@ -177,11 +177,11 @@ class HwIOStructRd(HwIODataRd):
     """
 
     @override
-    def _config(self):
+    def hwConfig(self):
         self.T: HdlType = HwParam(None)
 
     @override
-    def _declr(self):
+    def hwDeclr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
@@ -213,11 +213,11 @@ class HwIOStructVld(HwIODataVld):
     A handshaked interface which has a data signal of type specified in configuration of this interface
     """
 
-    def _config(self):
+    def hwConfig(self):
         self.T: HdlType = HwParam(None)
 
     @override
-    def _declr(self):
+    def hwDeclr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
@@ -250,15 +250,15 @@ class HwIOStructRdVld(HwIORdVldSync):
     """
 
     @override
-    def _config(self):
+    def hwConfig(self):
         self.T: HdlType = HwParam(None)
 
     @override
-    def _declr(self):
+    def hwDeclr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
-        HwIORdVldSync._declr(self)
+        HwIORdVldSync.hwDeclr(self)
 
     @override
     def _initSimAgent(self, sim:HdlSimulator):

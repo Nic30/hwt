@@ -126,7 +126,7 @@ def reinterpret_bits_to_hstruct(val: Union[RtlSignal, HConst], hStructT: HStruct
     Reinterpret signal of type HBits to signal of type HStruct
     """
     container = HdlType_to_HwIO().apply(hStructT)
-    container._loadDeclarations()
+    container._loadHwDeclarations()
     offset = 0
     for f in hStructT.fields:
         t = f.dtype

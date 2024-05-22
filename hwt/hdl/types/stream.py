@@ -4,6 +4,7 @@ from typing import List, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
+from hwt.pyUtils.typingFuture import override
 
 
 class HStream(HdlType):
@@ -56,6 +57,7 @@ class HStream(HdlType):
         return hash((self.start_offsets, self.len_min, self.len_max, self.element_t))
 
     @internal
+    @override
     @classmethod
     def getConstCls(cls):
         try:

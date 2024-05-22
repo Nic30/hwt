@@ -53,6 +53,7 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
                          loadConfig=loadConfig)
         self._dtype = dtype
 
+    @override
     def _cleanRtlSignals(self, lockNonExternal=True):
         """
         :see: :func:`HwIO._clean`
@@ -71,7 +72,7 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
         """
         hwIO = self.__class__(masterDir=self._masterDir,
                               dtype=self._dtype)
-        hwIO._updateParamsFrom(self)
+        hwIO._updateHwParamsFrom(self)
         return hwIO
 
     @override
@@ -100,7 +101,7 @@ class HwIOClk(HwIOSignal):
     DEFAULT_FREQ = int(100e6)
 
     @override
-    def _config(self):
+    def hwConfig(self):
         self.FREQ = HwParam(HwIOClk.DEFAULT_FREQ)
 
     @override
@@ -118,10 +119,12 @@ class HwIORst(HwIOSignal[HBits]):
     Basic :class:`.HwIOSignal` interface which is interpreted as reset signal
     """
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_Rst
         return IP_Rst
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         clk = self._getAssociatedClk()
         self._ag = PullDownAgent(sim, self,
@@ -144,10 +147,12 @@ class HwIORst_n(HwIOSignal[HBits]):
                                     hdlName=hdlName,
                                     loadConfig=loadConfig)
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_Rst_n
         return IP_Rst_n
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         clk = self._getAssociatedClk()
         self._ag = PullUpAgent(sim, self,
@@ -156,7 +161,8 @@ class HwIORst_n(HwIOSignal[HBits]):
 
 class HwIOVldSync(HwIO):
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.vld = HwIOSignal()
 
 
@@ -166,20 +172,24 @@ class HwIODataVld(HwIOVldSync):
     accept them
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(64)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.data = HwIOVectSignal(self.DATA_WIDTH)
-        HwIOVldSync._declr(self)
+        HwIOVldSync.hwDeclr(self)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIODataVldAgent(sim, self)
 
 
 class HwIORdSync(HwIO):
 
-    def _declr(self) -> None:
+    @override
+    def hwDeclr(self) -> None:
         self.rd = HwIOSignal(masterDir=DIRECTION.IN)
 
 
@@ -189,13 +199,16 @@ class HwIODataRd(HwIORdSync):
     should actualize data
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(64)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.data = HwIOVectSignal(self.DATA_WIDTH)
-        HwIORdSync._declr(self)
+        HwIORdSync.hwDeclr(self)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIODataRdAgent(sim, self)
 
@@ -211,10 +224,12 @@ class HwIORdVldSync(HwIO):
     transaction happens when both ready and valid are high
     """
 
-    def _declr(self):
-        HwIOVldSync._declr(self)
-        HwIORdSync._declr(self)
+    @override
+    def hwDeclr(self):
+        HwIOVldSync.hwDeclr(self)
+        HwIORdSync.hwDeclr(self)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIORdVldSyncAgent(sim, self)
 
@@ -229,13 +244,16 @@ class HwIODataRdVld(HwIORdVldSync):
     :attention: one rd/vld is set it must not go down until transaction is made
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(64)
 
-    def _declr(self):
-        HwIODataVld._declr(self)
-        HwIORdSync._declr(self)
+    @override
+    def hwDeclr(self):
+        HwIODataVld.hwDeclr(self)
+        HwIORdSync.hwDeclr(self)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIODataRdVldAgent(sim, self)
 
@@ -248,10 +266,12 @@ class HwIOReqDoneSync(HwIO):
     AMBA CXS Protocol Specification https://developer.arm.com/documentation/ihi0079/latest/  (req=CXSVALID, done=CXSCRDGNT)
     """
 
-    def _config(self) -> None:
+    @override
+    def hwConfig(self) -> None:
         self.CREDIT_CNT = HwParam(1)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.req = HwIOSignal()
         self.done = HwIOSignal(masterDir=DIRECTION.IN)
 
@@ -261,14 +281,16 @@ class HwIOBramPort_noClk(HwIO):
     Basic BRAM port
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.ADDR_WIDTH = HwParam(32)
         self.DATA_WIDTH = HwParam(64)
         self.HAS_R = HwParam(True)
         self.HAS_W = HwParam(True)
         self.HAS_BE = HwParam(False)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         assert self.HAS_R or self.HAS_W, "has to have at least read or write part"
 
         self.addr = HwIOVectSignal(self.ADDR_WIDTH)
@@ -301,10 +323,12 @@ class HwIOBramPort_noClk(HwIO):
         """
         return int(self.DATA_WIDTH)
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_BlockRamPort
         return IP_BlockRamPort
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOBramPort_noClkAgent(sim, self)
 
@@ -314,13 +338,15 @@ class HwIOBramPort(HwIOBramPort_noClk):
     BRAM port with it's own clk
     """
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.clk = HwIOSignal(masterDir=DIRECTION.OUT)
         with self._associated(clk=self.clk):
-            super()._declr()
+            super().hwDeclr()
 
         self._make_association(clk=self.clk)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOBramPortAgent(sim, self)
 
@@ -330,18 +356,22 @@ class HwIOFifoWriter(HwIO):
     FIFO write port interface
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(8)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         self.en = HwIOSignal()
         self.wait = HwIOSignal(masterDir=DIRECTION.IN)
         if self.DATA_WIDTH:
             self.data = HwIOVectSignal(self.DATA_WIDTH)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOFifoWriterAgent(sim, self)
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_FifoWriter
         return IP_FifoWriter
@@ -352,17 +382,21 @@ class HwIOFifoReader(HwIO):
     FIFO read port interface
     """
 
-    def _config(self):
-        HwIOFifoWriter._config(self)
+    @override
+    def hwConfig(self):
+        HwIOFifoWriter.hwConfig(self)
 
-    def _declr(self):
-        HwIOFifoWriter._declr(self)
+    @override
+    def hwDeclr(self):
+        HwIOFifoWriter.hwDeclr(self)
         self.en._masterDir = DIRECTION.IN
         self.wait._masterDir = DIRECTION.OUT
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOFifoReaderAgent(sim, self)
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_FifoReader
         return IP_FifoReader
@@ -374,17 +408,20 @@ class HwIORegCntrl(HwIO):
     for write
     """
 
-    def _config(self):
+    @override
+    def hwConfig(self):
         self.DATA_WIDTH = HwParam(8)
         self.USE_IN = HwParam(True)
         self.USE_OUT = HwParam(True)
 
-    def _declr(self):
+    @override
+    def hwDeclr(self):
         if self.USE_IN:
             self.din = HwIOVectSignal(self.DATA_WIDTH, masterDir=DIRECTION.IN)
         if self.USE_OUT:
             with self._hwParamsShared():
                 self.dout = HwIODataVld()
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIORegCntrlAgent(sim, self)

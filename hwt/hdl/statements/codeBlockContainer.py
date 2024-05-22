@@ -8,6 +8,7 @@ from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.mainBases import RtlSignalBase
 from hwt.pyUtils.setList import SetList
+from hwt.pyUtils.typingFuture import override
 
 
 class HdlStmCodeBlockContainer(HdlStatement):
@@ -43,6 +44,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
         return self
 
     @internal
+    @override
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
@@ -51,6 +53,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
         return new_statements, io_change
 
     @internal
+    @override
     def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
@@ -58,6 +61,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
         yield from self.statements
 
     @internal
+    @override
     def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
@@ -65,6 +69,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
         yield from self.statements.iterStatementsWithOutput(output)
 
     @internal
+    @override
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
@@ -98,6 +103,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
             return n
 
     @internal
+    @override
     def _replace_child_statement(self, stm:HdlStatement,
             replacement:ListOfHdlStatement,
             update_io:bool) -> None:

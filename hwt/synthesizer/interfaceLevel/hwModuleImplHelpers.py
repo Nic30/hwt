@@ -178,13 +178,13 @@ def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
 
 
 @internal
-def _loadDeclarations(intf_or_list: Union[HObjList, HwIOBase], suggested_name: str):
+def _loadHwDeclarations(intf_or_list: Union[HObjList, HwIOBase], suggested_name: str):
     if isinstance(intf_or_list, HObjList):
         for i, intf in enumerate(intf_or_list):
-            _loadDeclarations(intf, f"{suggested_name:s}_{i:d}")
+            _loadHwDeclarations(intf, f"{suggested_name:s}_{i:d}")
     else:
         intf_or_list._name = suggested_name
-        intf_or_list._loadDeclarations()
+        intf_or_list._loadHwDeclarations()
 
 
 def HwIO_without_registration(
@@ -198,7 +198,7 @@ def HwIO_without_registration(
     Load all parts of interface and construct signals in RtlNetlist context with an automatic name check,
     without need to explicitly add the HwIO into _hwIOs list.
     """
-    _loadDeclarations(container, suggested_name)
+    _loadHwDeclarations(container, suggested_name)
     _instantiate_signals(
         container, None, None, def_val, nop_val, nextSig,
         lambda name, dtype, clk, rst, def_val, nop_val, nextSig: parent._sig(name, dtype,
@@ -245,7 +245,7 @@ class HwModuleImplHelpers(HwModuleBase):
 
         if isinstance(dtype, (HStruct, HArray)):
             container = HdlType_to_HwIO().apply(dtype)
-            _loadDeclarations(container, name)
+            _loadHwDeclarations(container, name)
             _instantiate_signals(
                 container, clk, rst, def_val, nextSig, NOT_SPECIFIED,
                 lambda name, dtype, clk, rst, def_val, nop_val, nextSig: self._reg(name, dtype,

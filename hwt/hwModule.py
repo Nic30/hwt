@@ -1,6 +1,7 @@
 from copy import copy
 from typing import Optional, List, Dict, Tuple, Set, Union
 
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._structural import HdlCompInst, HdlModuleDec
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
@@ -12,7 +13,6 @@ from hwt.synthesizer.interfaceLevel.hwModuleImplHelpers import HwModuleImplHelpe
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from ipCorePackager.constants import DIRECTION
-from hdlConvertorAst.hdlAst._defs import HdlIdDef
 
 
 class HdlConstraintList(list):
@@ -84,12 +84,12 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         self._loadConfig()
 
     @internal
-    def _loadInterface(self, i, isExtern):
-        i._loadDeclarations()
-        i._setAsExtern(isExtern)
+    def _loadHwIODeclarations(self, hwIO: HwIOBase, isExtern: bool):
+        hwIO._loadHwDeclarations()
+        hwIO._setAsExtern(isExtern)
 
     @internal
-    def _loadDeclarations(self):
+    def _loadHwDeclarations(self):
         """
         Load all declarations from _decl() method, recursively
         for all interfaces/units.
@@ -101,22 +101,22 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         if not hasattr(self, "_subHwModules"):
             self._subHwModules = []
         self._setAttrListener = self._declrCollector
-        self._declr()
+        self.hwDeclr()
         self._setAttrListener = None
         for hio in self._hwIOs:
-            self._loadInterface(hio, True)
+            self._loadHwIODeclarations(hio, True)
 
         # if I am a unit load subunits
         for u in self._subHwModules:
-            u._loadDeclarations()
+            u._loadHwDeclarations()
 
     @internal
-    def _registerHwIOInImpl(self, hwIOName, hwIO):
+    def _registerHwIOInHwImpl(self, hwIOName, hwIO):
         """
         Register interface in implementation phase
         """
         self._registerHwIO(hwIOName, hwIO, isPrivate=True)
-        self._loadInterface(hwIO, False)
+        self._loadHwIODeclarations(hwIO, False)
         hwIO._signalsForHwIO(
             self._ctx, None, self._store_manager.name_scope)
 
@@ -148,7 +148,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         if replacement is not None:
             assert not do_serialize_this
             assert len(self._hwIOs) == len(replacement._hwIOs), \
-                "No lazy loaded interfaces declared in _impl()"
+                "No lazy loaded interfaces declared in hwImpl()"
             copy_HdlModuleDec(replacement, self)
             yield False, self
             self._cleanThisSubunitRtlSignals()
@@ -244,15 +244,15 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         finally:
             store_manager.hierarchy_pop(mdec)
 
-    def _updateParamsFrom(self, otherObj: PropDeclrCollector,
+    def _updateHwParamsFrom(self, otherObj: PropDeclrCollector,
                           updater=_default_param_updater,
                           exclude: Optional[Tuple[Set[str], Set[str]]]=None,
                           prefix=""):
         """
         :note: doc in
-            :func:`hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+            :func:`hwt.synthesizer.interfaceLevel.propDeclCollector._updateHwParamsFrom`
         """
-        return PropDeclrCollector._updateParamsFrom(self, otherObj,
+        return PropDeclrCollector._updateHwParamsFrom(self, otherObj,
                                                     updater, exclude, prefix)
 
     @internal

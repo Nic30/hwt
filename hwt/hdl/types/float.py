@@ -1,6 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from pyMathBitPrecise.floatt import Floatt
+from hwt.pyUtils.typingFuture import override
 
 
 class HFloat(HdlType, Floatt):
@@ -20,6 +21,7 @@ class HFloat(HdlType, Floatt):
         Floatt.__init__(self, exponent_w, mantisa_w, name=name)
 
     @internal
+    @override
     @classmethod
     def getConstCls(cls):
         from hwt.hdl.types.floatConst import HFloatConst

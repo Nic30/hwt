@@ -1,6 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.typingFuture import override
 
 
 class HArray(HdlType):
@@ -46,6 +47,7 @@ class HArray(HdlType):
         return s * itemSize()
 
     @internal
+    @override
     @classmethod
     def getConstCls(cls):
         try:
@@ -56,6 +58,7 @@ class HArray(HdlType):
             return cls._constCls
 
     @internal
+    @override
     @classmethod
     def get_reinterpret_cast_fn(cls):
         from hwt.hdl.types.arrayCast import reinterpret_cast_HArray

@@ -7,8 +7,9 @@ from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
-from hwt.pyUtils.setList import SetList
 from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
+from hwt.pyUtils.typingFuture import override
 
 
 class HdlAssignmentContainer(HdlStatement):
@@ -65,7 +66,8 @@ class HdlAssignmentContainer(HdlStatement):
             dst.ctx.statements.add(self)
 
         self._outputs.append(dst)
-
+    
+    @override
     def __deepcopy__(self, memo: dict):
         result = super(HdlAssignmentContainer, self).__deepcopy__(memo)
         result.src = self.src
@@ -74,6 +76,7 @@ class HdlAssignmentContainer(HdlStatement):
         return result
 
     @internal
+    @override
     def _collect_inputs(self) -> None:
         src = self.src
         if isinstance(src, RtlSignalBase):
@@ -86,6 +89,7 @@ class HdlAssignmentContainer(HdlStatement):
                     self._inputs.append(i)
         
     @internal
+    @override
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
@@ -94,6 +98,7 @@ class HdlAssignmentContainer(HdlStatement):
             return self
 
     @internal
+    @override
     def _discover_enclosure(self) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_enclosure`
@@ -103,6 +108,7 @@ class HdlAssignmentContainer(HdlStatement):
         self._enclosed_for.update(self._outputs)
 
     @internal
+    @override
     def _discover_sensitivity(self, seen: set) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_sensitivity`
@@ -118,6 +124,7 @@ class HdlAssignmentContainer(HdlStatement):
         ctx.extend(casualSensitivity)
 
     @internal
+    @override
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
         """
         The assignment does not have any uncovered code branches
@@ -127,6 +134,7 @@ class HdlAssignmentContainer(HdlStatement):
         pass
 
     @internal
+    @override
     def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
@@ -135,6 +143,7 @@ class HdlAssignmentContainer(HdlStatement):
         yield
 
     @internal
+    @override
     def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
@@ -143,6 +152,7 @@ class HdlAssignmentContainer(HdlStatement):
         yield
 
     @internal
+    @override
     def _on_parent_event_dependent(self):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._on_parent_event_dependent`
@@ -150,6 +160,7 @@ class HdlAssignmentContainer(HdlStatement):
         self._event_dependent_from_branch = 0
 
     @internal
+    @override
     def _try_reduce(self) -> Tuple[ListOfHdlStatement, bool]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
@@ -157,12 +168,14 @@ class HdlAssignmentContainer(HdlStatement):
         return ListOfHdlStatement((self,)), False
 
     @internal
+    @override
     def _is_mergable(self, other: HdlStatement) -> bool:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._is_mergable`
         """
         return isinstance(other, self.__class__)
 
+    @override
     def isSame(self, other):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`
@@ -175,6 +188,7 @@ class HdlAssignmentContainer(HdlStatement):
         return False
 
     @internal
+    @override
     @classmethod
     def _nextInstId(cls):
         """
@@ -185,6 +199,7 @@ class HdlAssignmentContainer(HdlStatement):
         return i
     
     @internal
+    @override
     def _replace_input_nested(self, topStm: HdlStatement, toReplace: SignalReplaceSpecType) -> None:
        
         """

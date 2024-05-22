@@ -127,7 +127,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             raise e_simplified
 
     @internal
-    def _loadDeclarations(self):
+    def _loadHwDeclarations(self):
         """
         load declarations from _declr method
         This function is called first for parent and then for children
@@ -135,11 +135,11 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         if not hasattr(self, "_hwIOs"):
             self._hwIOs = []
         self._setAttrListener = self._declrCollector
-        self._declr()
+        self.hwDeclr()
         self._setAttrListener = None
 
         for sHwIO in self._hwIOs:
-            sHwIO._loadDeclarations()
+            sHwIO._loadHwDeclarations()
             sHwIO._setAsExtern(self._isExtern)
 
         if self._isExtern:
@@ -320,12 +320,12 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         """get all name hierarchy separated by '.' """
         return HObjList._getFullName(self)
 
-    def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
+    def _updateHwParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude:Optional[Tuple[Set[str], Set[str]]]=None, prefix=""):
         """
-        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateHwParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(
+        PropDeclrCollector._updateHwParamsFrom(
             self, otherObj, updater, exclude, prefix)
         return self
 
@@ -339,7 +339,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         if hwIOs is None:
             # not loaded interface
             _hwIO = self.__copy__()
-            _hwIO._loadDeclarations()
+            _hwIO._loadHwDeclarations()
             hwIOs = _hwIO._hwIOs
 
         if hwIOs:

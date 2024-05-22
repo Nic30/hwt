@@ -157,13 +157,13 @@ class HObjList(list, Generic[T]):
             o._make_association(*args, **kwargs)
         return self
 
-    def _updateParamsFrom(self, *args, **kwargs):
+    def _updateHwParamsFrom(self, *args, **kwargs):
         """
-        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateHwParamsFrom`
         """
         for o in self:
             if isinstance(o, (HwIOBase, HwModuleBase, HObjList)):
-                o._updateParamsFrom(*args, **kwargs)
+                o._updateHwParamsFrom(*args, **kwargs)
         return self
 
     def __call__(self, other: List[T], exclude=None, fit=False):

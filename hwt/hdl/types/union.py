@@ -6,6 +6,7 @@ from hwt.hdl.const import HConst
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.serializer.generic.indent import getIndent
+from hwt.pyUtils.typingFuture import override
 
 
 _protectedNames = {"clone", "staticEval",
@@ -43,6 +44,7 @@ class HUnionConstBase(HConst):
         self._val = v
         self._usedField = f
 
+    @override
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         """
@@ -178,6 +180,7 @@ class HUnion(HdlType):
             return self.__bit_length_val
 
     @internal
+    @override
     def getConstCls(self):
         return self._constCls
 
