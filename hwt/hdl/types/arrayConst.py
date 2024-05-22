@@ -88,7 +88,7 @@ class HArrayConst(HConst):
     @internal
     def _getitem__const(self, key):
         """
-        :atention: this will clone item from array, iterate over .val
+        :attention: this will clone item from array, iterate over .val
             if you need to modify items
         """
         try:
