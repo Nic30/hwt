@@ -9,6 +9,7 @@ from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import HwtOps
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
@@ -17,11 +18,11 @@ from hwt.mainBases import HwIOBase
 from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
+from hwt.synthesizer.rtlLevel.rtlNetlistPass import RtlNetlistPass
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import statements_to_HdlStmCodeBlockContainers
 from ipCorePackager.constants import DIRECTION
-from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 
 
 class RtlNetlist():
@@ -149,8 +150,9 @@ class RtlNetlist():
         * Remove unconnected
         * Mark visibility of signals
         """
-        for proc in target_platform.beforeHdlArchGeneration:
-            proc(self)
+        for optPass in target_platform.beforeHdlArchGeneration:
+            optPass: RtlNetlistPass
+            optPass.runOnRtlNetlist(self)
 
         ns = store_manager.name_scope
         mdef = HdlModuleDef()

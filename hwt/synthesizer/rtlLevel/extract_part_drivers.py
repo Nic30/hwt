@@ -17,6 +17,7 @@ from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.pyUtils.setList import SetList
 from hwt.serializer.utils import RtlSignal_sort_key, HdlStatement_sort_key
+from hwt.synthesizer.rtlLevel.rtlNetlistPass import RtlNetlistPass
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -104,7 +105,7 @@ def resolve_splitpoints(s: RtlSignal, parts):
     return split_points
 
 
-class RtlNetlistPassExtractPartDrivers():
+class RtlNetlistPassExtractPartDrivers(RtlNetlistPass):
     """
     Split parts of bit vectors so each segment has an unique variable.
 
@@ -387,7 +388,7 @@ class RtlNetlistPassExtractPartDrivers():
 
         return False
 
-    def apply(self, netlist: "RtlNetlist"):
+    def runOnRtlNetlist(self, netlist: "RtlNetlist"):
         signal_parts = self._collect_indexes_on_variables(netlist.statements)
         if not signal_parts:
             return
@@ -395,8 +396,3 @@ class RtlNetlistPassExtractPartDrivers():
         final_signal_parts = self.resolve_final_parts_from_splitpoints_and_parts(signal_parts)
         for stm in sorted(netlist.statements, key=HdlStatement_sort_key):
             self.extract_part_drivers_stm(stm, final_signal_parts)
-
-
-@internal
-def extract_part_drivers(netlist: "RtlNetlist"):
-    RtlNetlistPassExtractPartDrivers().apply(netlist)
