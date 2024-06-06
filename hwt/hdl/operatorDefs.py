@@ -110,7 +110,7 @@ def bitsAsVec(a):
 
 class HwtOps():
     """
-    :attention: Remember that and operator "and" is & and "or" is \|, "and"
+    :attention: Remember that and operator "and" is & and "or" is \\|, "and"
         and "or" can not be used because they can not be overloaded
     :attention: These are operators of internal AST,
         they are not equal to verilog or vhdl operators
