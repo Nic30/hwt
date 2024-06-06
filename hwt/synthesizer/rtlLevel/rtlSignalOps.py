@@ -53,7 +53,7 @@ class RtlSignalOps():
         if not found create new one and stored it in _usedOps
 
         :param operator: instance of HOperatorDef
-        :param opCreateDelegate: function (\*ops) to create operator
+        :param opCreateDelegate: function (\\*ops) to create operator
         :param otherOps: other operands (ops = self + otherOps)
 
         :return: RtlSignal which is result of newly created operator
