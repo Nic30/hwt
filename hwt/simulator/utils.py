@@ -4,24 +4,24 @@ import sys
 from typing import Union, Sequence
 
 from hwt.doc_markers import internal
-from hwt.hwModule import HwModule
 from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.types.arrayConst import HArrayConst
+from hwt.hwModule import HwModule
 from hwt.mainBases import HwIOBase, HwModuleOrHwIOBase
 from hwt.serializer.generic.indent import getIndent
-from pyMathBitPrecise.bit_utils import ValidityError
-from pyMathBitPrecise.bits3t import Bits3val
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from pyMathBitPrecise.bit_utils import ValidityError
+from pyMathBitPrecise.bits3t import Bits3val
 
 
-def pprintHwIO(hio: Union[HwModule, HwIOBase], indent:int=0, prefix:str="", file=sys.stdout):
+def pprintHwIO(hwio: Union[HwModule, HwIOBase], indent:int=0, prefix:str="", file=sys.stdout):
     """
     Pretty print interface
     """
     try:
-        s = hio._sig
+        s = hwio._sig
     except AttributeError:
         s = None
     if s is None:
@@ -29,16 +29,16 @@ def pprintHwIO(hio: Union[HwModule, HwIOBase], indent:int=0, prefix:str="", file
     else:
         s = " " + repr(s)
 
-    file.write("".join([getIndent(indent), prefix, repr(hio._getFullName()),
+    file.write("".join([getIndent(indent), prefix, repr(hwio._getFullName()),
                         s]))
     file.write("\n")
 
-    if isinstance(hio, HObjList):
-        for chHwIO, p in enumerate(hio):
+    if isinstance(hwio, HObjList):
+        for chHwIO, p in enumerate(hwio):
             # interfaces have already name of this array and index in it's name
             pprintHwIO(p, indent=indent + 1, prefix=prefix, file=file)
     else:
-        for chHwIO in hio._hwIOs:
+        for chHwIO in hwio._hwIOs:
             pprintHwIO(chHwIO, indent=indent + 1, file=file)
 
 
