@@ -73,11 +73,11 @@ class IpPackager(IpCorePackager):
     @internal
     def toHdlConversion(self, top, topName: str, saveTo: str) -> List[str]:
         """
-        :param top: object which is represenation of design
+        :param top: object which is representation of design
         :param topName: name which should be used for ipcore
         :param saveTo: path of directory where generated files should be stored
 
-        :return: list of file namens in correct compile order
+        :return: list of file names in correct compile order
         """
         ser = self.serializer
         store = SaveToFilesFlat(ser, saveTo)
