@@ -202,7 +202,8 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         if obj in empty_hiearchy_containers:
             return
         if obj._hwIOs:
-            name = obj._name
+            # if HwModules may be shared components, for them the top name is the one of shared and not this module name
+            name = model._name if isinstance(obj, HwModule) else obj._name
             parent_ = self.wave_writer if parent is None else parent
 
             subScope = parent_.varScope(name)
