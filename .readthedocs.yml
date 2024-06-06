@@ -1,5 +1,11 @@
+version: 2
+build:
+  os: ubuntu-lts-latest
+  tools:
+    python: "3.12"
+  apt_packages:
+    - graphviz
 python:
-  version: 3.8
-formats: []
+  install:
+    - requirements: doc/requirements.doc.txt
 
-requirements_file: doc/requirements.doc.txt
