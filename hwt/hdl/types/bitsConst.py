@@ -2,6 +2,7 @@ from copy import copy
 from operator import eq
 from typing import Union
 
+from hdlConvertorAst.to.hdlUtils import bit_string
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst, areHConsts
 from hwt.hdl.operator import HOperatorNode
@@ -579,3 +580,23 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
 
     def __len__(self):
         return self._dtype.bit_length()
+    
+    def prettyRepr(self):
+        t = self._dtype
+        bs = bit_string(self.val, t.bit_length(), self.vld_mask)
+        signChar = ('i' if t.signed else 'b' if t.signed is None else 'u')
+        b = bs.base
+        if b == 2:
+            if bs.bits == 1:
+                base_char = ""
+            else:
+                base_char = 'b'
+        elif b == 8:
+            base_char = 'O'
+        elif b == 10:
+            base_char = 'd'
+        elif b == 16:
+            base_char = 'h'
+        else:
+            raise NotImplementedError(b)
+        return f"{signChar:s}{t.bit_length()}'{base_char}{bs.val}"
