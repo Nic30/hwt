@@ -57,7 +57,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem, RtlSignalOps):
         "_usedOps",
         "_usedOpsAlias",
         "hidden",
-        "_hdlName"
+        "_hdlName",
         "hasGenericName",
         "_instId",
         "_nop_val",
