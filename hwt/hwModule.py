@@ -24,8 +24,9 @@ class HdlConstraintList(list):
 
 class HwModule(PropDeclrCollector, HwModuleImplHelpers):
     """
-    Container of the netlist with interfaces
-    and internal hierarchical structure
+    Objects of this class are representation of design in hwt HCL.
+    This object is a container of the netlist with interfaces
+    and internal hierarchical structure.
 
     :cvar ~._serializeDecision: function to decide if HDL object derived from
         this unit should be serialized or not, if None all is always serialized
