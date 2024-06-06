@@ -7,17 +7,23 @@ from types import ModuleType
 from typing import Union, Optional, Set, Tuple, Callable
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.const import HConst
+from hwt.hwIO import HwIO
+from hwt.hwModule import HwModule
+from hwt.mainBases import RtlSignalBase
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 from hwt.serializer.simModel import SimModelSerializer
 from hwt.serializer.store_manager import SaveToStream, SaveToFilesFlat
-from hwt.synthesizer.dummyPlatform import DummyPlatform
-from hwt.hwIO import HwIO
-from hwt.mainBases import RtlSignalBase
-from hwt.hwModule import HwModule
 from hwt.synth import to_rtl
+from hwt.synthesizer.dummyPlatform import DummyPlatform
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwtSimApi.basic_hdl_simulator.model import BasicRtlSimModel
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from hwtSimApi.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
+from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
+    ArrayValueUpdater
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
 from pyDigitalWaveTools.vcd.value_format import VcdBitsFormatter, \
     VcdEnumFormatter
@@ -25,11 +31,6 @@ from pyDigitalWaveTools.vcd.writer import VcdVarWritingScope, \
     VarAlreadyRegistered
 from pyMathBitPrecise.bits3t import Bits3t
 from pyMathBitPrecise.enum3t import Enum3t
-from hwtSimApi.basic_hdl_simulator.model import BasicRtlSimModel
-from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from hwtSimApi.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
-from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
-    ArrayValueUpdater
 
 
 class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
@@ -159,10 +160,10 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                                    obj: Union[HwIO, HwModule],
                                    model: BasicRtlSimModel,
                                    res: Set[Union[HwModule, HwIO]]):
-        hIOs = getattr(obj, "_hwIOs", None)
+        hwIOs = getattr(obj, "_hwIOs", None)
         isEmpty = True
-        if hIOs:
-            for chHwIO in hIOs:
+        if hwIOs:
+            for chHwIO in hwIOs:
                 isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 
             if isinstance(obj, HwModule):
@@ -184,7 +185,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             s = obj._sigInside
             if s is not None:
                 # _sigInside is None if the signal was optimized out
-                sig_name = s._name
+                sig_name = s._name if isinstance(s, RtlSignal) else s._hdlName
                 s = getattr(model.io, sig_name, None)
                 if s is not None:
                     return False
@@ -201,10 +202,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         if obj in empty_hiearchy_containers:
             return
         if obj._hwIOs:
-            if isinstance(obj, HwModule):
-                name = model._name
-            else:
-                name = obj._name
+            name = obj._name
             parent_ = self.wave_writer if parent is None else parent
 
             subScope = parent_.varScope(name)
@@ -232,8 +230,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             t = obj._dtype
             if obj._sigInside is not None and isinstance(t, self.supported_type_classes):
                 s = obj._sigInside
-                #if isinstance(s, BasicRtlSimProxy):
-                sig_name = s._name
+                sig_name = s._name if isinstance(s, RtlSignal) else s._hdlName
                 s = getattr(model.io, sig_name, None)
                 if s is not None:
                     tName, width, formatter = self.get_trace_formatter(t)
@@ -251,7 +248,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                 if isinstance(t, self.supported_type_classes):
                     tName, width, formatter = self.get_trace_formatter(t)
                     try:
-                        unitScope.addVar(s, s._name, tName, width, formatter)
+                        unitScope.addVar(s, s._hdlName, tName, width, formatter)
                     except VarAlreadyRegistered:
                         pass
 
