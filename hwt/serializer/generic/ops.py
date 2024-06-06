@@ -21,6 +21,7 @@ HWT_TO_HDLCONVERTOR_OPS = {
         HwtOps.MUL,
         HwtOps.NE,
         HwtOps.ADD,
+        HwtOps.TERNARY,
     ]},
     HwtOps.UDIV: HdlOpType.DIV,
     HwtOps.SDIV: HdlOpType.DIV,
