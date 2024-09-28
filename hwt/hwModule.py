@@ -1,4 +1,5 @@
 from copy import copy
+from natsort.natsort import natsorted
 from typing import Optional, List, Dict, Tuple, Set, Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
@@ -213,8 +214,8 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
             for proc in target_platform.afterToRtlImpl:
                 proc(self)
 
-            mdec.params.sort(key=lambda x: x.name)
-            mdec.ports.sort(key=lambda x: x.name)
+            mdec.params[:] = natsorted(mdec.params, key=lambda x: x.name)
+            mdec.ports[:] = natsorted(mdec.ports, key=lambda x: x.name)
             if do_serialize_this:
                 # synthesize signal level context
                 mdef = self._ctx.create_HdlModuleDef(
@@ -333,8 +334,8 @@ def copy_HdlModuleDec(orig_m: HwModule, new_m: HwModule):
             copy_HdlModuleDec_HwIO(hwO, hwI, hwModDec.ports, new_m)
 
     # params should be already sorted
-    # hwModDec.params.sort(key=lambda x: x.name)
-    hwModDec.ports.sort(key=lambda x: x.name)
+    # hwModDec.params[:] = natsorted(hwModDec.params, key=lambda x: x.name)
+    hwModDec.ports[:] = natsorted(hwModDec.ports, key=lambda x: x.name)
 
 
 def _sharedCompBuildHwIOMapList(replacement: List[HwIOBase],

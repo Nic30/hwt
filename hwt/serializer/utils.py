@@ -1,3 +1,5 @@
+from natsort.natsort import natsort_keygen
+
 from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
@@ -20,12 +22,15 @@ def getMaxStmIdForStm(stm: HdlStatement):
         return maxId
 
 
+_natsort_key = natsort_keygen()
+
+
 def RtlSignal_sort_key(s: RtlSignalBase):
-    return (s._name, s._instId)
+    return (_natsort_key(s._name), s._instId)
 
 
 def HdlStatement_sort_key(stm: HdlStatement):
     if isinstance(stm, HdlStmCodeBlockContainer) and stm.name is not None:
-        return (stm.name, getMaxStmIdForStm(stm))
+        return (_natsort_key(stm.name), getMaxStmIdForStm(stm))
     else:
-        return ("", getMaxStmIdForStm(stm))
+        return (_natsort_key(""), getMaxStmIdForStm(stm))

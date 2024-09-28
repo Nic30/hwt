@@ -10,6 +10,7 @@ from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
+from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
@@ -23,6 +24,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.hdl.types.slice import HSlice
+from hwt.mainBases import RtlSignalBase
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -30,9 +32,7 @@ from hwt.serializer.generic.tmpVarConstructor import TmpVarConstructor, \
     NoTmpVars
 from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     TmpVarsSwap
-from hwt.serializer.utils import HdlStatement_sort_key
-from hwt.mainBases import RtlSignalBase
-from hwt.hdl.const import HConst
+from hwt.serializer.utils import HdlStatement_sort_key, _natsort_key
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -345,13 +345,12 @@ class ToHdlAst():
         # self.name_scope.get_child(o.module_name.val)):
         hdl_types, hdl_variables, processes, component_insts, others = \
             ToBasicHdlSimModel.split_HdlModuleDefObjs(self, new_m.objs)
-        # [TODO] sorting not required as it should be done in _to_rtl()
         if len(hdl_variables) > 1:
-            hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
+            hdl_variables.sort(key=lambda x: (_natsort_key(x.name), x.origin._instId))
         if len(processes) > 1:
             processes.sort(key=HdlStatement_sort_key)
         if len(component_insts) > 1:
-            component_insts.sort(key=lambda x: x.name)
+            component_insts.sort(key=lambda x: _natsort_key(x.name))
 
         types = set()
 

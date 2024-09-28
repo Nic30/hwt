@@ -1,3 +1,4 @@
+from natsort.natsort import natsorted
 import re
 from typing import List
 
@@ -106,7 +107,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
             x[1][0] for x in
             groupedby(component_insts, lambda c: c.module_name)
         ]
-        components.sort(key=lambda c: c.module_name)
+        components = natsorted(components, key=lambda c: c.module_name)
         components = [self.as_hdl_HldComponent(c)
                       for c in components]
         if components:

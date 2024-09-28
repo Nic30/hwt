@@ -34,6 +34,7 @@ setup(name="hwt",
         "Topic :: System :: Emulators",
         "Topic :: Utilities"],
       install_requires=[
+          "natsort>=8.4.0",  # natural sorting for HDL objects with name
           "hdlConvertorAst>=1.0", # conversions to SystemVerilog, VHDL
           "ipCorePackager>=0.6",  # generator of IPcore packages (IP-xact, ...)
           "hwtSimApi>=1.3",  # simulator API

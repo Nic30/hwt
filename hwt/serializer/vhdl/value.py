@@ -9,8 +9,8 @@ from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.types.sliceConst import HSliceConst
-from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.mainBases import RtlSignalBase
+from hwt.serializer.generic.value import ToHdlAst_Value
 
 
 class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
