@@ -39,6 +39,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
     :attention: operator on signals are using value operator functions as well
     """
     _BOOL = HBits(1, name="bool")
+    _SIGNED_FOR_SLICE_CONCAT_RESULT = None
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
@@ -52,7 +53,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
             if v._dtype is self._dtype:
                 # can modify shared type instance
                 v._dtype = copy(v._dtype)
-            v._dtype.force_vector = True
+            v._dtype.force_vector = v._dtype.bit_length() == 1
         return v
 
     @internal
@@ -72,7 +73,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
                 return self
             t = copy(self._dtype)
             t.signed = signed
-            if t.signed is not None:
+            if t.signed is not None and t.bit_length() == 1:
                 t.force_vector = True
 
             if signed is None:
@@ -118,7 +119,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
             HBits = self._dtype.__class__
-            resT = HBits(resWidth, signed=self._dtype.signed, force_vector=True)
+            resT = HBits(resWidth, signed=self._dtype.signed, force_vector=resWidth == 1)
             # is instance of signal
             if isinstance(other, HwIOBase):
                 other = other._sig
@@ -278,7 +279,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
             else:
                 key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
-                resT = HBits(bit_length=_resWidth, force_vector=True,
+                resT = HBits(bit_length=_resWidth, force_vector=_resWidth == 1,
                             signed=st.signed, negated=st.negated)
 
         elif isinstance(key, HBits.getConstCls()):
@@ -322,8 +323,9 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
             if isinstance(t, HSlice):
-                resT = HBits(bit_length=key.staticEval()._size(),
-                            force_vector=True,
+                bit_length = key.staticEval()._size()
+                resT = HBits(bit_length,
+                            force_vector=bit_length == 1,
                             signed=st.signed,
                             negated=st.negated)
             elif isinstance(t, HBits):
@@ -503,29 +505,29 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
     def __mod__(self, other):
         raise TypeError(f"% operator not implemented for instance of {self.__class__}")
 
-    def _ternary(self, a, b):
+    def _ternary(self, vTrue, vFalse):
         if isinstance(self, HConst):
             if self:
-                return a
+                return vTrue
             else:
-                return b
+                return vFalse
         else:
-            a = toHVal(a)
-            b = toHVal(b, suggestedType=a._dtype)
+            vTrue = toHVal(vTrue)
+            vFalse = toHVal(vFalse, suggestedType=vTrue._dtype)
             try:
-                if a == b:
-                    return a
+                if vTrue == vFalse:
+                    return vTrue
             except ValidityError:
                 pass
 
-            if not (a._dtype == b._dtype):
+            if not (vTrue._dtype == vFalse._dtype):
                 # all case values of ternary has to have same type
-                b = b._auto_cast(a._dtype)
+                vFalse = vFalse._auto_cast(vTrue._dtype)
 
             return HOperatorNode.withRes(
                 HwtOps.TERNARY,
-                [self, a, b],
-                a._dtype.__copy__())
+                [self, vTrue, vFalse],
+                vTrue._dtype.__copy__())
 
     def __mul__(self, other):
         HBits = self._dtype.__class__
@@ -580,7 +582,7 @@ class HBitsConst(Bits3val, EventCapableVal, HConst):
 
     def __len__(self):
         return self._dtype.bit_length()
-    
+
     def prettyRepr(self):
         t = self._dtype
         bs = bit_string(self.val, t.bit_length(), self.vld_mask)

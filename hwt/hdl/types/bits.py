@@ -1,8 +1,8 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.indent import getIndent
 from pyMathBitPrecise.bits3t import Bits3t
-from hwt.pyUtils.typingFuture import override
 
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
@@ -28,7 +28,7 @@ class HBits(HdlType, Bits3t):
         bit_length = int(bit_length)
         assert bit_length > 0, bit_length
         Bits3t.__init__(self, bit_length, signed, name=name,
-                        force_vector=force_vector or signed is not None,
+                        force_vector=force_vector or bit_length == 1 and signed is not None,
                         strict_sign=strict_sign, strict_width=strict_width)
 
     @internal
@@ -66,7 +66,9 @@ class HBits(HdlType, Bits3t):
         return hash((Bits3t.__hash__(self), self.const))
 
     def __eq__(self, other):
-        return  Bits3t.__eq__(self, other) and self.const == other.const
+        return Bits3t.__eq__(self, other) and \
+             isinstance(other, self.__class__) and \
+             self.const == other.const
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
