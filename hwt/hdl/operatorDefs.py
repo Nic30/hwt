@@ -80,8 +80,8 @@ def eqFn(a, b):
     return a._eq(b)
 
 
-def ternaryFn(a, b, c):
-    return a._ternary(b, c)
+def ternaryFn(cond, vTrue, vFalse):
+    return cond._ternary(vTrue, vFalse)
 
 
 def callFn(fn, *operands, **kwargs):
@@ -229,7 +229,6 @@ CMP_OPS_NEG = {
     HwtOps.SGE: HwtOps.SLT,
     HwtOps.SLT: HwtOps.SGE,
     HwtOps.SLE: HwtOps.SGT,
-
 }
 
 # always commutative operators for which order of operands does not matter

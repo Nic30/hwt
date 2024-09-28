@@ -1,5 +1,6 @@
 from copy import copy
-from typing import Dict, Optional, Union, List, Generator, Callable, Tuple, Set
+from typing import Dict, Optional, Union, List, Generator, Callable, Tuple, Set,\
+    Self
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -102,7 +103,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         self._hdlPort: Optional[HdlPortItem] = None
         self._hdlNameOverride = hdlName
 
-    def _m(self):
+    def _m(self) -> Self:
         """
         Note that this interface will be master
 

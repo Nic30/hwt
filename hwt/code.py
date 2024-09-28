@@ -189,7 +189,7 @@ def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, HwIOBase, HConst, boo
                 if last or isinstance(cases, GeneratorType):
                     # allow True as a condition for default
                     break
-            
+
             raise HwtSyntaxError("Condition is not a signal, it is not certain"
                                  " if this is an error or desire ", cond, cases)
 
@@ -384,5 +384,9 @@ def rol(sig:Union[RtlSignalBase, HConst], howMany:Union[RtlSignalBase, int]) -> 
         return  res
 
 
-def replicate(n, v):
+def replicate(n:int, v:Union[RtlSignalBase, HConst]):
     return Concat(*(v for _ in range(n)))
+
+
+def segment_get(n:Union[RtlSignalBase, HConst], segmentWidth:int, segmentIndex:Union[RtlSignalBase, HConst, int]):
+    return n[segmentWidth * (segmentIndex + 1): segmentWidth * segmentIndex]
