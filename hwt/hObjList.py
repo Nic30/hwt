@@ -68,11 +68,11 @@ class HObjList(list, Generic[T]):
 
     def reverse(self, *args, **kwargs):
         assert self._parent is None
-        return list.remove(self, *args, **kwargs)
+        return list.reverse(self, *args, **kwargs)
 
     def sort(self, *args, **kwargs):
         assert self._parent is None
-        return list.remove(self, *args, **kwargs)
+        return list.sort(self, *args, **kwargs)
 
     def _getHdlName(self):
         """Get name in HDL """
