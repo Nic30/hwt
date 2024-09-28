@@ -88,7 +88,7 @@ def HwIOVectSignal(width: int,
     """
     Create basic :class:`.HwIOSignal` interface where type is vector
     """
-    return HwIOSignal(HBits(width, signed, force_vector=True),
+    return HwIOSignal(HBits(width, signed, force_vector=width==1),
                   masterDir,
                   hdlName,
                   loadConfig)
