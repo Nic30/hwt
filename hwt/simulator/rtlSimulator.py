@@ -175,7 +175,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                         isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 
                 for sm in obj._subHwModules:
-                    m = getattr(model, sm._name + "_inst")
+                    m = getattr(model, sm._name.replace(".", "_") + "_inst")
                     if sm._shared_component_with is not None:
                         sm, _, _ = sm._shared_component_with
                     isEmpty &= self._collect_empty_hiearchy_containers(sm, m, res)
@@ -221,7 +221,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
                     # register interfaces from all subunits
                     for sm in obj._subHwModules:
-                        m = getattr(model, sm._name + "_inst")
+                        m = getattr(model, sm._name.replace(".", "_") + "_inst")
                         if sm._shared_component_with is not None:
                             sm, _, _ = sm._shared_component_with
                         self._wave_register_signals(sm, m, subScope, empty_hiearchy_containers)
