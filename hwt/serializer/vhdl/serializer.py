@@ -102,7 +102,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         for c in _o.objs:
             component_insts.extend(self._find_HdlCompInst(c))
 
-        # select comonent instances whith an unique module_name
+        # select component instances with an unique module_name
         components = [
             x[1][0] for x in
             groupedby(component_insts, lambda c: c.module_name)
@@ -112,7 +112,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
                       for c in components]
         if components:
             # :note: it is important that the asserts are at the end because
-            # we are detecting the declarations from the beginnig and assert there would
+            # we are detecting the declarations from the beginning and assert there would
             # disturb that
             objs = [*components, *_o.objs]
             _o.objs = objs

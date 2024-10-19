@@ -11,11 +11,11 @@ from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.types.sliceConst import HSliceConst
+from hwt.mainBases import RtlSignalBase
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.utils import verilogTypeOfSig
-from hwt.mainBases import RtlSignalBase
 
 
 class ToHdlAstVerilog_Value(ToHdlAst_Value):
