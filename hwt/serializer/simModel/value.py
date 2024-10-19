@@ -9,6 +9,7 @@ from hwt.code import Concat
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
@@ -19,7 +20,7 @@ from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t, bitsBitOp__lshr
-from hwt.hdl.types.bits import HBits
+
 
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
