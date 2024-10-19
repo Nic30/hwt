@@ -119,6 +119,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [rogue](https://github.com/slaclab/rogue) , C++/Python - Hardware Abstraction & Data Acquisition System
 * [rohd](https://github.com/intel/rohd), 2023-?, dart, HCL
 * [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language
+* :skull: [SFGen](https://github.com/dillonhuff/SFGen) - Python, arithmetic function generator
 * [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
 * [Silice](https://github.com/sylefeb/Silice) - ?, C++, Custom HDL
