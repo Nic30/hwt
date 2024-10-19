@@ -14,11 +14,12 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.variables import HdlSignalItem
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
-from pyMathBitPrecise.bits3t import Bits3val, Bits3t
-from hwt.pyUtils.typingFuture import override
+from pyMathBitPrecise.bits3t import Bits3val, Bits3t, bitsBitOp__lshr
+from hwt.hdl.types.bits import HBits
 
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
@@ -35,6 +36,8 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     ABits3t = HdlValueId("Bits3t", obj=Bits3t)
     SELF_IO = hdl_getattr(HdlValueId("self", obj=LanguageKeyword()), "io")
     CONCAT = HdlValueId("Concat", obj=Concat)
+    FN_bitsBitOp__lshr = HdlValueId("bitsBitOp__lshr", obj=bitsBitOp__lshr)
+
     op_transl_dict = {
         **HWT_TO_HDLCONVERTOR_OPS,
         HwtOps.INDEX: HdlOpType.INDEX,
@@ -150,6 +153,19 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_eq"),
                             [self.as_hdl_Value(ops[1]), ])
         else:
-            o = self.op_transl_dict[o]
+            _o = o.hdlConvertoAstOp
+            if _o is None:
+                try:
+                    o = self.op_transl_dict[o]
+                except:
+                    raise
+            else:
+                o = _o
+
+            if o == HdlOpType.SRL and isinstance(ops[0]._dtype, HBits) and ops[0]._dtype.signed:
+                return hdl_call(self.FN_bitsBitOp__lshr,
+                            [self.as_hdl_Value(o2)
+                               for o2 in ops])
+
             return HdlOp(o, [self.as_hdl_Value(o2)
                                for o2 in ops])

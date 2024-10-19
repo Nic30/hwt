@@ -1,7 +1,8 @@
 from typing import Union
 
 from hdlConvertorAst.hdlAst import HdlValueInt
-from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType, \
+    HDLCONVERTAST_OPS_SHIFT_AND_ROT
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.code import If
@@ -13,10 +14,11 @@ from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT
-from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
+from hwt.hdl.types.hdlType import HdlType
 from hwt.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 @internal
@@ -205,7 +207,12 @@ class ToHdlAstVhdl2008_ops():
                     _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
 
-            o = self.op_transl_dict[o]
+            _o = o.hdlConvertoAstOp
+            if _o is None:
+                o = self.op_transl_dict[o]
+            else:
+                o = _o
+
             if len(ops) == 2:
                 res_t = op.result._dtype
                 op0, op1 = ops
@@ -227,6 +234,14 @@ class ToHdlAstVhdl2008_ops():
                     # drop unnecessary casts
                     return _op0
                 else:
+                    if o in HDLCONVERTAST_OPS_SHIFT_AND_ROT:
+                        # add to integer cast for "shift amount" operand if required
+                        shOp = ops[1]
+                        shTy: HdlType = shOp._dtype
+                        if shTy != INT:
+                            if shTy.signed is None:
+                                _op1 = self.apply_cast("UNSIGNED", _op1)
+                            _op1 = self.apply_cast("TO_INTEGER", _op1)
                     return HdlOp(o, [_op0, _op1])
 
             return HdlOp(o, [self.as_hdl_operand(o2)

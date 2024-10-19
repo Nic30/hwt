@@ -1,11 +1,11 @@
 """
 Hwt serializer converts  HDL objects back to code in python for hwt.
 """
+from hdlConvertorAst.hdlAst import iHdlObj
 from hdlConvertorAst.to.hwt._main import ToHwt
+from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.hwt.serializer import ToHdlAstHwt
 from hwt.serializer.serializer_config import DummySerializerConfig
-from hdlConvertorAst.hdlAst import iHdlObj
-from hwt.serializer.exceptions import SerializerException
 
 
 class HwtSerializer(DummySerializerConfig):
@@ -15,6 +15,7 @@ class HwtSerializer(DummySerializerConfig):
 
 
 class ToHdlAstDebugHwt(ToHdlAstHwt):
+    CONVERT_UNKNOWN_OPS_TO_FN_CALL = True
 
     def as_hdl(self, obj) -> iHdlObj:
         try:

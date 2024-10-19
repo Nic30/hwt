@@ -1,9 +1,11 @@
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
+from typing import Optional
 
+from hdlConvertorAst.hdlAst._expr import HdlOpType
 from hwt.doc_markers import internal
-from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.const import HConst
+from hwt.hdl.types.defs import INT, SLICE
 
 
 def _getVal(v):
@@ -19,12 +21,14 @@ class HOperatorDef():
 
     :ivar ~.id: name of operator
     :ivar ~._evalFn: function which evaluates operands
+    :ivar ~.hdlConvertoAstOp: an operator which is used for export to hdlConvertoAst library
     """
 
-    def __init__(self, evalFn, allowsAssignTo=False, idStr=None):
+    def __init__(self, evalFn, allowsAssignTo=False, idStr:Optional[str]=None, hdlConvertoAstOp: Optional[HdlOpType]=None):
         self.id = idStr  # assigned automatically in HwtOps
         self._evalFn = evalFn
         self.allowsAssignTo = allowsAssignTo
+        self.hdlConvertoAstOp = hdlConvertoAstOp
 
     def __eq__(self, other):
         return type(self) == type(other) and self.id == other.id
@@ -191,13 +195,13 @@ COMPARE_OPS = (
 
 # change of compare operator on operand order swap
 CMP_OP_SWAP = {
-    HwtOps.EQ: HwtOps.EQ,   # (a == b) == (b == a) 
-    HwtOps.NE: HwtOps.NE,   # (a != b) == (b != a) 
-    
-    HwtOps.GT: HwtOps.LT,   # (a > b)  == (b < a) 
-    HwtOps.GE: HwtOps.LE,   # (a >= b) == (b <= a)
-    HwtOps.LT: HwtOps.GT,   # (a < b)  == (b > a)
-    HwtOps.LE: HwtOps.GE,   # (a <= b) == (b >= a)
+    HwtOps.EQ: HwtOps.EQ,  # (a == b) == (b == a)
+    HwtOps.NE: HwtOps.NE,  # (a != b) == (b != a)
+
+    HwtOps.GT: HwtOps.LT,  # (a > b)  == (b < a)
+    HwtOps.GE: HwtOps.LE,  # (a >= b) == (b <= a)
+    HwtOps.LT: HwtOps.GT,  # (a < b)  == (b > a)
+    HwtOps.LE: HwtOps.GE,  # (a <= b) == (b >= a)
 
     HwtOps.UGT: HwtOps.ULT,
     HwtOps.UGE: HwtOps.ULE,
