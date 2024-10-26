@@ -38,7 +38,7 @@ class TmpVarConstructor():
                def_val: Optional[Union[RtlSignalBase, HConst]]=None,
                postponed_init=False) -> RtlSignal:
         # create a new tmp variable in current process
-        s = RtlSignal(None, None, dtype, virtual_only=True)
+        s: RtlSignal = dtype.getRtlSignalCls()(None, None, dtype, virtual_only=True)
         s._name = self.name_scope.checked_name(suggestedName, s)
         s.hidden = False
         s._const = const

@@ -12,13 +12,6 @@ class RtlSignalBase(Generic[T]):
     pass
 
 
-class RtlMemoryBase(RtlSignalBase):
-    """
-    Main base class for all rtl memories
-    """
-    pass
-
-
 class HwIOBase():
     """
     Main base class for all interfaces

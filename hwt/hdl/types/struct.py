@@ -1,6 +1,9 @@
+from typing import Self
+
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.structValBase import HStructConstBase
+from hwt.hdl.types.structValBase import HStructConstBase, HStructRtlSignalBase
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.indent import getIndent
 
 
@@ -51,7 +54,7 @@ class HStructField(object):
         return f"<HStructField {self.dtype}, {name:s}>"
 
 
-protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
+_protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
 
 
 class HStruct(HdlType):
@@ -105,18 +108,23 @@ class HStruct(HdlType):
         self.__bit_length_val = bit_length
 
         usedNames = set(field_by_name.keys())
-        assert not protectedNames.intersection(usedNames), \
-            protectedNames.intersection(usedNames)
+        assert not _protectedNames.intersection(usedNames), \
+            _protectedNames.intersection(usedNames)
 
-        class StructConst(HStructConstBase):
+        class HStructConst(HStructConstBase):
+            __slots__ = list(usedNames)
+
+        class HStructRtlSignal(HStructRtlSignalBase):
             __slots__ = list(usedNames)
 
         if name is not None:
-            StructConst.__name__ = name + "Val"
+            HStructConst.__name__ = name + "Const"
+            HStructRtlSignal.__name__ = name + "RtlSignal"
 
-        self._constCls = StructConst
+        self._constCls = HStructConst
+        self._rtlSignalCls = HStructRtlSignal
 
-    def bit_length(self):
+    def bit_length(self) -> int:
         bl = self.__bit_length_val
         if bl is None:
             raise TypeError("Can not request bit_lenght on type"
@@ -125,17 +133,29 @@ class HStruct(HdlType):
             return self.__bit_length_val
 
     @internal
+    @override
     def getConstCls(self):
         return self._constCls
 
     @internal
+    @override
+    def getRtlSignalCls(self):
+        return self._rtlSignalCls
+
+    @internal
     @classmethod
-    def get_reinterpret_cast_fn(cls):
+    def get_reinterpret_cast_HConst_fn(cls):
         from hwt.hdl.types.structCast import hstruct_reinterpret
         return hstruct_reinterpret
 
     @internal
-    def __fields__eq__(self, other):
+    @classmethod
+    def get_reinterpret_cast_RtlSignal_fn(cls):
+        from hwt.hdl.types.structCast import hstruct_reinterpret
+        return hstruct_reinterpret
+
+    @internal
+    def __fields__eq__(self, other: Self) -> bool:
         if len(self.fields) != len(other.fields):
             return False
         for sf, of in zip(self.fields, other.fields):
@@ -145,7 +165,7 @@ class HStruct(HdlType):
                 return False
         return True
 
-    def __eq__(self, other):
+    def __eq__(self, other: HdlType) -> bool:
         if self is other:
             return True
         if (type(self) is type(other)):

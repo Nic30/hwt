@@ -40,16 +40,29 @@ class HBits(HdlType, Bits3t):
 
     @internal
     @classmethod
-    def get_auto_cast_fn(cls):
-        from hwt.hdl.types.bitsCast import convertBits
-        return convertBits
+    def get_auto_cast_HConst_fn(cls):
+        from hwt.hdl.types.bitsCast import convertBits__HConst
+        return convertBits__HConst
 
     @internal
     @override
     @classmethod
-    def get_reinterpret_cast_fn(cls):
-        from hwt.hdl.types.bitsCast import reinterpretBits
-        return reinterpretBits
+    def get_reinterpret_cast_HConst_fn(cls):
+        from hwt.hdl.types.bitsCast import reinterpretBits__HConst
+        return reinterpretBits__HConst
+
+    @internal
+    @classmethod
+    def get_auto_cast_RtlSignal_fn(cls):
+        from hwt.hdl.types.bitsCast import convertBits__RtlSignal
+        return convertBits__RtlSignal
+
+    @internal
+    @override
+    @classmethod
+    def get_reinterpret_cast_RtlSignal_fn(cls):
+        from hwt.hdl.types.bitsCast import reinterpretBits__RtlSignal
+        return reinterpretBits__RtlSignal
 
     @internal
     @override
@@ -61,6 +74,17 @@ class HBits(HdlType, Bits3t):
             from hwt.hdl.types.bitsConst import HBitsConst
             cls._constCls = HBitsConst
             return cls._constCls
+
+    @internal
+    @override
+    @classmethod
+    def getRtlSignalCls(cls):
+        try:
+            return cls._rtlSignalCls
+        except AttributeError:
+            from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
+            cls._rtlSignalCls = HBitsRtlSignal
+            return cls._rtlSignalCls
 
     def __hash__(self):
         return hash((Bits3t.__hash__(self), self.const))

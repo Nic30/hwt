@@ -1,7 +1,5 @@
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
-from hwt.hdl.operator import HOperatorNode
-from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.slice import HSlice
@@ -74,7 +72,6 @@ class HStreamConst(HConst):
         return self.val[kv].__copy__()
 
     def __getitem__(self, key):
-        iamVal = isinstance(self, HConst)
         key = toHVal(key)
         isSLICE = isinstance(key, HSlice.getConstCls())
 
@@ -86,17 +83,11 @@ class HStreamConst(HConst):
             raise NotImplementedError(
                 f"Index operation not implemented for index {key}")
 
-        if iamVal and isinstance(key, HConst):
-            return self._getitem__const(key)
+        kv = key.val
+        if not key._is_full_valid():
+            raise KeyError()
 
-        return HOperatorNode.withRes(HwtOps.INDEX, [self, key], self._dtype.element_t)
-
-    @internal
-    def _setitem__const(self, index, value):
-        if index._is_full_valid():
-            self.val[index.val] = value.__copy__()
-        else:
-            self.val = {}
+        return self.val[kv].__copy__()
 
     def __setitem__(self, index, value):
         """
@@ -104,13 +95,10 @@ class HStreamConst(HConst):
 
         * In HW design is not used (__getitem__ returns "reference"
             and it is used)
-
-        * In simulator is used _setitem__const directly
         """
         if isinstance(index, int):
             index = INT.from_py(index)
         else:
-            assert isinstance(self, HConst)
             assert isinstance(index._dtype, HBits), index._dtype
 
         if not isinstance(value, HConst):
@@ -119,7 +107,11 @@ class HStreamConst(HConst):
             assert value._dtype == self._dtype.element_t, (
                 value._dtype, self._dtype.element_t)
 
-        return self._setitem__const(index, value)
+        if index._is_full_valid():
+            self.val[index.val] = value.__copy__()
+        else:
+            self.val = {}
+        return self
 
     def __iter__(self):
         return iter(self.val)
@@ -127,8 +119,8 @@ class HStreamConst(HConst):
     def __len__(self):
         return len(self.val)
 
-    @internal
-    def _eq__const(self, other):
+    def _eq(self, other):
+        assert isinstance(other, HStreamConst)
         assert self._dtype.element_t == other._dtype.element_t
 
         eq = True
@@ -145,7 +137,3 @@ class HStreamConst(HConst):
             vld = 0
 
         return BOOL.getConstCls()(BOOL, int(eq), vld)
-
-    def _eq(self, other):
-        assert isinstance(other, HStreamConst)
-        return self._eq__const(other)

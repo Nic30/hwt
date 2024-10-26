@@ -1,12 +1,14 @@
 from enum import Enum
-from typing import Union
+from typing import Union, Type, Self
 
 from hwt.doc_markers import internal
-from hwt.hdl.const import HConst
 from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 class MethodNotOverloaded(NotImplementedError):
+    """
+    Method is missing overload of abstract parent method.
+    """
     pass
 
 
@@ -18,6 +20,8 @@ class HdlType():
         function call)
     :ivar ~._reinterpret_cast_fn: reinterpret function (attribute set
         on first convert function call)
+        
+    :note: Cast functions are linked trough HldType class because Python lacks forward declarations.
     """
 
     def __init__(self, const=False):
@@ -38,47 +42,85 @@ class HdlType():
             v = v.value
         return self.getConstCls().from_py(self, v, vld_mask=vld_mask)
 
-    def auto_cast(self, sigOrConst, toType):
+    def auto_cast_HConst(self, const: "HConst", toType: Self) -> Union["RtlSignal", "HConst"]:
         """
-        Cast value or signal of this type to another compatible type.
+        Cast constant of this type to another compatible type.
 
-        :param sigOrConst: instance of signal or value to cast
+        :param const: constant to cast
         :param toType: instance of HdlType to cast into
         """
-        if sigOrConst._dtype == toType:
-            return sigOrConst
+        if const._dtype == toType:
+            return const
 
         try:
-            c = self._auto_cast_fn
+            c = self._auto_cast_HConst_fn
         except AttributeError:
-            c = self.get_auto_cast_fn()
-            self._auto_cast_fn = c
+            c = self.get_auto_cast_HConst_fn()
+            self._auto_cast_HConst_fn = c
 
-        return c(self, sigOrConst, toType)
+        return c(self, const, toType)
 
-    def reinterpret_cast(self, sigOrConst, toType):
+    def auto_cast_RtlSignal(self, sig: "RtlSignal", toType: Self) -> Union["RtlSignal", "HConst"]:
         """
-        Cast value or signal of this type to another type of same size.
+        Cast signal of this type to another compatible type.
 
-        :param sigOrConst: instance of signal or value to cast
+        :param sig: signal to cast
+        :param toType: instance of HdlType to cast into
+        """
+        if sig._dtype == toType:
+            return sig
+
+        try:
+            c = self._auto_cast_RtlSignal_fn
+        except AttributeError:
+            c = self.get_auto_cast_RtlSignal_fn()
+            self._auto_cast_RtlSignal_fn = c
+
+        return c(self, sig, toType)
+
+    def reinterpret_cast_HConst(self, const: "HConst", toType):
+        """
+        Cast constant of this type to another type of same size.
+
+        :param const: constant to cast
         :param toType: instance of HdlType to cast into
         """
         try:
-            return self.auto_cast(sigOrConst, toType)
+            return self.auto_cast_HConst(const, toType)
         except TypeConversionErr:
             pass
 
         try:
-            r = self._reinterpret_cast_fn
+            r = self._reinterpret_cast_HConst_fn
         except AttributeError:
-            r = self.get_reinterpret_cast_fn()
-            self._reinterpret_cast_fn = r
+            r = self.get_reinterpret_cast_HConst_fn()
+            self._reinterpret_cast_HConst_fn = r
 
-        return r(self, sigOrConst, toType)
+        return r(self, const, toType)
+
+    def reinterpret_cast_RtlSignal(self, sig: "RtlSignal", toType):
+        """
+        Cast value or signal of this type to another type of same size.
+
+        :param sig: signal to cast
+        :param toType: instance of HdlType to cast into
+        """
+        try:
+            return self.auto_cast_RtlSignal(sig, toType)
+        except TypeConversionErr:
+            pass
+
+        try:
+            r = self._reinterpret_cast_RtlSignal_fn
+        except AttributeError:
+            r = self.get_reinterpret_cast_RtlSignal_fn()
+            self._reinterpret_cast_RtlSignal_fn = r
+
+        return r(self, sig, toType)
 
     @internal
     @classmethod
-    def get_auto_cast_fn(cls):
+    def get_auto_cast_HConst_fn(cls):
         """
         Get method for converting type
         """
@@ -86,7 +128,15 @@ class HdlType():
 
     @internal
     @classmethod
-    def get_reinterpret_cast_fn(cls):
+    def get_auto_cast_RtlSignal_fn(cls):
+        """
+        Get method for converting type
+        """
+        return default_auto_cast_fn
+
+    @internal
+    @classmethod
+    def get_reinterpret_cast_HConst_fn(cls):
         """
         Get method for converting type
         """
@@ -94,13 +144,31 @@ class HdlType():
 
     @internal
     @classmethod
-    def getConstCls(cls):
+    def get_reinterpret_cast_RtlSignal_fn(cls):
+        """
+        Get method for converting type
+        """
+        return default_reinterpret_cast_fn
+
+    @internal
+    @classmethod
+    def getConstCls(cls) -> Type["HConst"]:
         """
         :attention: Overrode in implementation of concrete HdlType.
 
         :return: class for value derived from this type
         """
-        raise NotImplementedError()
+        raise NotImplementedError(cls)
+
+    @internal
+    @classmethod
+    def getRtlSignalCls(cls) -> Type["RtlSignal"]:
+        """
+        :attention: Overrode in implementation of concrete HdlType.
+
+        :return: class for value derived from this type
+        """
+        raise NotImplementedError(cls)
 
     def _as_hdl(self, to_Hdl: "ToHdlAst", declaration):
         raise MethodNotOverloaded()
@@ -129,14 +197,14 @@ class HdlType():
 
 
 @internal
-def default_reinterpret_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignalBase", HConst], toType: HdlType):
+def default_reinterpret_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
     raise TypeConversionErr(
         "Reinterpretation of %r of type \n%r to type %r is not implemented",
         (sigOrConst, typeFrom, toType))
 
 
 @internal
-def default_auto_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignalBase", HConst], toType: HdlType):
+def default_auto_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
     raise TypeConversionErr(
         "Conversion of %r of type \n%r to type %r is not implemented",
         (sigOrConst, typeFrom, toType))

@@ -1,10 +1,10 @@
 from typing import Generator, Union, Tuple, Optional, Set, Sequence
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp, HOperatorDef
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.const import HConst
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase, \
     OperatorCaheKeyType
@@ -104,7 +104,7 @@ class HOperatorNode(HdlObject):
 
         # instantiate new HOperatorNode
         op = HOperatorNode(opDef, operands)
-        out = RtlSignal(getCtxFromOps(operands), None, resT)
+        out: RtlSignal = resT.getRtlSignalCls()(getCtxFromOps(operands), None, resT)
         out._const = arr_all(op.operands, isConst)
         out.drivers.append(op)
         out.origin = op

@@ -1,39 +1,45 @@
 from typing import Union
 
 from hwt.doc_markers import internal
+from hwt.hObjList import HObjList
+from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitsCastUtils import fitTo_t
 from hwt.hdl.types.defs import INT, BOOL
-from hwt.hdl.types.hdlType import default_auto_cast_fn, HdlType
+from hwt.hdl.types.hdlType import HdlType, default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
-from hwt.hdl.const import HConst
 from hwt.hwIOs.hwIOStruct import HdlType_to_HwIO
-from hwt.synthesizer.exceptions import TypeConversionErr
-from hwt.hObjList import HObjList
 from hwt.mainBases import HwIOBase
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
-from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.vectorUtils import iterBits
 from pyMathBitPrecise.bit_utils import set_bit_range, mask
 
 
 @internal
-def convertBits__val(self: HBits, val: "BitVal", toType: HdlType):
+def convertBits__HConst(curType: HBits, val: "HBitsConst", toType: HdlType):
+    """
+    :param curType: current type
+    :param val: constant object to cast into toType
+    :param toType: type to cast val to
+    """
     if toType == BOOL:
-        return val != self.getConstCls().from_py(self, 0)
+        return val != curType.getConstCls().from_py(curType, 0)
     elif isinstance(toType, HBits):
-        if self.signed != toType.signed:
-            if self.strict_sign and bool(self.signed) != bool(toType.signed):
-                raise TypeConversionErr(self, toType)
-            val = val._convSign__const(toType.signed)
+        if curType.signed != toType.signed:
+            if curType.strict_sign and bool(curType.signed) != bool(toType.signed):
+                raise TypeConversionErr(curType, toType)
+            val = val._convSign(toType.signed)
 
-        w_from, w_to = self.bit_length(), toType.bit_length()
+        w_from, w_to = curType.bit_length(), toType.bit_length()
         if w_from != w_to:
-            if self.strict_width:
-                raise TypeConversionErr(self, toType)
+            if curType.strict_width:
+                raise TypeConversionErr(curType, toType)
             if w_from > w_to:
                 # cut off some bits from value
                 new_m = val.vld_mask & toType.all_mask()
@@ -51,45 +57,43 @@ def convertBits__val(self: HBits, val: "BitVal", toType: HdlType):
         return INT.getConstCls()(INT, val.val,
                                  int(val._is_full_valid()))
 
-    return default_auto_cast_fn(self, val, toType)
+    return default_auto_cast_fn(curType, val, toType)
 
 
 @internal
-def convertBits(self: HBits, sigOrConst, toType: HdlType):
+def convertBits__RtlSignal(curType: HBits, sig: RtlSignal, toType: HdlType):
     """
     Cast Bit subtypes, (integers, bool, ...)
     """
-    if isinstance(sigOrConst, HConst):
-        return convertBits__val(self, sigOrConst, toType)
-    elif toType == BOOL:
-        if self.bit_length() == 1:
-            v = 0 if sigOrConst._dtype.negated else 1
-            if isinstance(sigOrConst, RtlSignal):
-                sigOrConst: RtlSignal
+    if toType == BOOL:
+        if curType.bit_length() == 1:
+            v = 0 if sig._dtype.negated else 1
+            if isinstance(sig, RtlSignal):
+                sig: RtlSignal
                 try:
-                    d = sigOrConst.singleDriver()
+                    d = sig.singleDriver()
                 except SignalDriverErr:
                     d = None
 
                 if d is not None and isinstance(d, HOperatorNode) and d.operator == HwtOps.NOT:
                     # signal itself is negated, ~a = 1 to a = 0
                     v = int(not bool(v))
-                    sigOrConst = d.operands[0]
+                    sig = d.operands[0]
 
-            return sigOrConst._eq(self.getConstCls().from_py(self, v))
+            return sig._eq(curType.getConstCls().from_py(curType, v))
     elif isinstance(toType, HBits):
-        if self.bit_length() == toType.bit_length():
-            #if self.force_vector != toType.force_vector:
-            #    raise NotImplementedError(self, toType)
+        if curType.bit_length() == toType.bit_length():
+            # if curType.force_vector != toType.force_vector:
+            #    raise NotImplementedError(curType, toType)
 
-            if self.const == toType.const:
-                return sigOrConst._convSign(toType.signed)
-            
-    return default_auto_cast_fn(self, sigOrConst, toType)
+            if curType.const == toType.const:
+                return sig._convSign(toType.signed)
+
+    return default_auto_cast_fn(curType, sig, toType)
 
 
 @internal
-def reinterpret_bits_to_hstruct__val(val: HConst, hStructT: HStruct):
+def reinterpret_bits_to_hstruct__HConst(val: HConst, hStructT: HStruct):
     """
     Reinterpret signal of type HBits to signal of type HStruct
     """
@@ -121,7 +125,7 @@ def transfer_signals(src: HwIOBase, dst: HwIOBase):
 
 
 @internal
-def reinterpret_bits_to_hstruct(val: Union[RtlSignal, HConst], hStructT: HStruct):
+def reinterpret_bits_to_hstruct__RtlSignal(val: RtlSignal, hStructT: HStruct):
     """
     Reinterpret signal of type HBits to signal of type HStruct
     """
@@ -169,39 +173,37 @@ def reinterpret_bits_to_harray(sigOrConst: Union[RtlSignal, HConst], hArrayT: HA
 
 
 @internal
-def reinterpretBits__val(self: HBits, val: HConst, toType: HdlType):
+def reinterpretBits__HConst(curType: HBits, val: HConst, toType: HdlType):
     if isinstance(toType, HBits):
-        if self.signed != toType.signed:
-            val = val._convSign__const(toType.signed)
+        if curType.signed != toType.signed:
+            val = val._convSign(toType.signed)
         return fitTo_t(val, toType)
     elif isinstance(toType, HStruct):
-        return reinterpret_bits_to_hstruct__val(val, toType)
+        return reinterpret_bits_to_hstruct__HConst(val, toType)
     elif isinstance(toType, HUnion):
         raise NotImplementedError()
     elif isinstance(toType, HArray):
         return reinterpret_bits_to_harray(val, toType)
 
-    return default_auto_cast_fn(self, val, toType)
+    return default_auto_cast_fn(curType, val, toType)
 
 
 @internal
-def reinterpretBits(self: HBits, sigOrConst: Union[RtlSignal, HConst], toType: HdlType):
+def reinterpretBits__RtlSignal(curType: HBits, sig: RtlSignal, toType: HdlType):
     """
     Cast object of same bit size between to other type
     (f.e. bits to struct, union or array)
     """
-    if isinstance(sigOrConst, HConst):
-        return reinterpretBits__val(self, sigOrConst, toType)
-    elif isinstance(toType, HBits):
-        if self.signed != toType.signed:
-            sigOrConst = sigOrConst._convSign(toType.signed)
-        return fitTo_t(sigOrConst, toType)
-    elif sigOrConst._dtype.bit_length() == toType.bit_length():
+    if isinstance(toType, HBits):
+        if curType.signed != toType.signed:
+            sig = sig._convSign(toType.signed)
+        return fitTo_t(sig, toType)
+    elif sig._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):
-            return reinterpret_bits_to_hstruct(sigOrConst, toType)
+            return reinterpret_bits_to_hstruct__RtlSignal(sig, toType)
         elif isinstance(toType, HUnion):
             raise NotImplementedError()
         elif isinstance(toType, HArray):
-            return reinterpret_bits_to_harray(sigOrConst, toType)
+            return reinterpret_bits_to_harray(sig, toType)
 
-    return default_auto_cast_fn(self, sigOrConst, toType)
+    return default_auto_cast_fn(curType, sig, toType)

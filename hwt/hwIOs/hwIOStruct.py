@@ -11,18 +11,18 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.structCast import hstruct_reinterpret
 from hwt.hdl.types.structValBase import HStructConstBase
-from hwt.hwParam import HwParam
 from hwt.hwIO import HwIO
 from hwt.hwIOs.agents.rdSync import HwIODataRdAgent
 from hwt.hwIOs.agents.rdVldSync import HwIODataRdVldAgent
 from hwt.hwIOs.agents.struct import HwIOStructAgent
 from hwt.hwIOs.agents.vldSync import HwIODataVldAgent
 from hwt.hwIOs.std import HwIODataVld, HwIODataRd, HwIOSignal, HwIORdVldSync
+from hwt.hwParam import HwParam
+from hwt.pyUtils.typingFuture import override
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.typePath import TypePath
 from hwtSimApi.hdlSimulator import HdlSimulator
 from ipCorePackager.constants import DIRECTION
-from hwt.pyUtils.typingFuture import override
 
 
 class HwIOStruct(HwIO):

@@ -16,7 +16,6 @@ from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from ipCorePackager.constants import INTF_DIRECTION
 
 
@@ -217,7 +216,7 @@ class HwModuleImplHelpers(HwModuleBase):
              def_val: Union[int, None, dict, list]=None,
              clk: Union[RtlSignalBase, None, Tuple[RtlSignalBase, HOperatorDef]]=None,
              rst: Optional[RtlSignalBase]=None,
-             nextSig:Optional[RtlSignalBase]=NOT_SPECIFIED) -> RtlSyncSignal:
+             nextSig:Optional[RtlSignalBase]=NOT_SPECIFIED) -> RtlSignal:
         """
         Create RTL FF register in this unit
 

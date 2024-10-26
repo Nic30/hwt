@@ -1,17 +1,21 @@
+from typing import Union, Optional
+
 from hwt.code import Concat
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bitConstFunctions import AnyHValue
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
+from hwt.hdl.types.hdlType import default_reinterpret_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import TypeConversionErr
 from pyMathBitPrecise.bit_utils import get_bit_range, mask
 
 
+HArrayAnyValue = Union["HArrayConst", "HArrayRtlSignal"]
+
+
 @internal
-def getBits_from_array(array, wordWidth, start, end,
-                       reinterpretElmToType=None):
+def getBits_from_array(array: HArrayAnyValue, wordWidth: int, start: int, end: int,
+                       reinterpretElmToType: Optional[HdlType]=None):
     """
     Gets value of bits between selected range from memory
 
@@ -50,7 +54,7 @@ def getBits_from_array(array, wordWidth, start, end,
 
 
 @internal
-def reinterptet_HArray_to_HBits(typeFrom: HArray, sigOrConst: AnyHValue, bitsT: HBits):
+def reinterptet_HArray_to_HBits(typeFrom: HArray, sigOrConst: HArrayAnyValue, bitsT: HBits):
     """
     Cast HArray signal or value to signal or value of type HBits
     """
@@ -68,7 +72,7 @@ def reinterptet_HArray_to_HBits(typeFrom: HArray, sigOrConst: AnyHValue, bitsT: 
 
 
 @internal
-def reinterpret_HArray_to_HArray(typeFrom: HArray, sigOrConst: AnyHValue, arrayT: HArray):
+def reinterpret_HArray_to_HArray(typeFrom: HArray, sigOrConst: HArrayAnyValue, arrayT: HArray):
     mySize = int(typeFrom.size)
     myWidthOfElm = typeFrom.element_t.bit_length()
     size = int(arrayT.size)
@@ -96,13 +100,13 @@ def reinterpret_HArray_to_HArray(typeFrom: HArray, sigOrConst: AnyHValue, arrayT
 
 
 @internal
-def reinterpret_HArray_to_HStruct(typeFrom: HArray, sigOrConst: AnyHValue, structT):
+def reinterpret_HArray_to_HStruct(typeFrom: HArray, sigOrConst: HArrayAnyValue, structT):
     as_bits = sigOrConst._reinterpret_cast(HBits(typeFrom.bit_length()))
     return as_bits._reinterpret_cast(structT)
 
 
 @internal
-def reinterpret_cast_HArray(typeFrom: HArray, sigOrConst: AnyHValue, toType):
+def reinterpret_cast_HArray(typeFrom: HArray, sigOrConst: HArrayAnyValue, toType):
     if isinstance(toType, HBits):
         return reinterptet_HArray_to_HBits(typeFrom, sigOrConst, toType)
     elif isinstance(toType, HArray):

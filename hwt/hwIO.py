@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Optional, Union, List, Generator, Callable, Tuple, Set,\
+from typing import Dict, Optional, Union, List, Generator, Callable, Tuple, Set, \
     Self
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
@@ -8,6 +8,7 @@ from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.types.bitsCastUtils import fitTo
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import HwIOBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr, InterfaceStructureErr
@@ -15,7 +16,6 @@ from hwt.synthesizer.interfaceLevel.directionFns import \
     HwIODirectionFns
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.vectorUtils import fitTo
 from hwtSimApi.agents.base import AgentBase
 from ipCorePackager.constants import DIRECTION, INTF_DIRECTION
 

@@ -3,15 +3,15 @@ from typing import List, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
-from hwt.serializer.generic.indent import getIndent
 from hwt.pyUtils.typingFuture import override
+from hwt.serializer.generic.indent import getIndent
 
 
 class HStream(HdlType):
     """
     Stream is an abstract type. It is an array with unspecified size.
 
-    :ivar ~.element_t: type of smalest chunk of data
+    :ivar ~.element_t: type of the smallest chunk of data
         which can be send over this stream
     :ivar ~.len_min: minimum repetitions of element_t (inclusive interval)
     :ivar ~.len_max: maximum repetitions of element_t (inclusive interval)

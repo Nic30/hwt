@@ -2,14 +2,15 @@ from copy import copy
 import math
 from typing import List, Union
 
-from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.const import HConst
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.hdlType import HdlType
 from hwt.mainBases import HwIOBase
 from hwt.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
-from hwt.hdl.types.bitConstFunctions import AnyHValue
-from hwt.hdl.types.hdlType import HdlType
+
+
+AnyHValue = Union[HConst, RtlSignalBase, HwIOBase]
 
 
 def inRange(n: Union[int, AnyHValue], start: Union[int, AnyHValue], end: Union[int, AnyHValue]):
@@ -88,7 +89,7 @@ def sizeof(_type: HdlType) -> int:
     return math.ceil(s / 8)
 
 
-def shiftIntArray(values: List[Union[int, HBitsConst]], item_width: int, shift: int):
+def shiftIntArray(values: List[Union[int, "HBitsConst"]], item_width: int, shift: int):
     """
     :param values: array of values which will be shifted as a whole
     :param item_width: a bit length of a single item in array
@@ -111,7 +112,7 @@ def shiftIntArray(values: List[Union[int, HBitsConst]], item_width: int, shift: 
                     prev = t.from_py(None)
                 if v is None:
                     v = t.from_py(None)
-                elif isinstance(prev, HBitsConst) and not isinstance(v, HBitsConst):
+                elif isinstance(prev, HConst) and not isinstance(v, HConst):
                     v = t.from_py(v)
                 _v = (v << shift) | (prev >> (item_width - shift))
             new_v.append(_v)

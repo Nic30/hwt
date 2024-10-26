@@ -7,6 +7,8 @@ from hwt.pyUtils.typingFuture import override
 class HFunction(HdlType):
     """
     A type which represent reference to HDL function.
+    :note: For compatibility with HDL. It is not meant to be used
+        as a function pointer to call a function in synthetisable code.
     """
 
     def all_mask(self):

@@ -49,6 +49,20 @@ class HArray(HdlType):
     @internal
     @override
     @classmethod
+    def get_reinterpret_cast_HConst_fn(cls):
+        from hwt.hdl.types.arrayCast import reinterpret_cast_HArray
+        return reinterpret_cast_HArray
+
+    @internal
+    @override
+    @classmethod
+    def get_reinterpret_cast_RtlSignal_fn(cls):
+        from hwt.hdl.types.arrayCast import reinterpret_cast_HArray
+        return reinterpret_cast_HArray
+
+    @internal
+    @override
+    @classmethod
     def getConstCls(cls):
         try:
             return cls._constCls
@@ -60,9 +74,13 @@ class HArray(HdlType):
     @internal
     @override
     @classmethod
-    def get_reinterpret_cast_fn(cls):
-        from hwt.hdl.types.arrayCast import reinterpret_cast_HArray
-        return reinterpret_cast_HArray
+    def getRtlSignalCls(cls):
+        try:
+            return cls._rtlSignalCls
+        except AttributeError:
+            from hwt.hdl.types.arrayConst import HArrayRtlSignal
+            cls._rtlSignalCls = HArrayRtlSignal
+            return cls._rtlSignalCls
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """

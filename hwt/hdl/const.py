@@ -1,8 +1,8 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Self, Set
 
 from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-
+from hwt.mainBases import RtlSignalBase
 
 T = TypeVar("T", bound="HdlType")
 
@@ -10,7 +10,6 @@ T = TypeVar("T", bound="HdlType")
 class HConst(Generic[T]):
     """
     Wrap around hdl value with overloaded operators
-    http://www.rafekettler.com/magicmethods.html
 
     operators are overloaded in every type separately
     """
@@ -29,25 +28,33 @@ class HConst(Generic[T]):
     def _is_full_valid(self):
         return self.vld_mask == self._dtype.all_mask()
 
-    def _auto_cast(self, toT):
-        "type cast to compatible type"
-        return self._dtype.auto_cast(self, toT)
+    def _auto_cast(self, toType: "HdlType"):
+        """
+        Cast value or signal of this type to another compatible type.
 
-    def _reinterpret_cast(self, toT):
-        "type cast to type of same size"
-        return self._dtype.reinterpret_cast(self, toT)
+        :param toType: instance of HdlType to cast into
+        """
+        return self._dtype.auto_cast_HConst(self, toType)
 
-    def staticEval(self):
+    def _reinterpret_cast(self, toType: "HdlType"):
+        """
+        Cast value or signal of this type to another type of same size.
+
+        :param toType: instance of HdlType to cast into
+        """
+        return self._dtype.reinterpret_cast_HConst(self, toType)
+
+    def staticEval(self) -> Self:
         return self.__copy__()
 
-    def __copy__(self):
+    def __copy__(self) -> Self:
         return self.__class__(self._dtype, self.val, self.vld_mask)
 
     @internal
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._dtype, self.val, self.vld_mask))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self._is_full_valid():
             vld_mask = ""
         else:
@@ -56,39 +63,19 @@ class HConst(Generic[T]):
             self.__class__.__name__, repr(self.val), vld_mask)
 
     @classmethod
-    def _from_py(cls, typeObj, val, vld_mask):
+    def _from_py(cls, typeObj, val, vld_mask) -> Self:
         """
         from_py without value normalization and type checking
         """
         return cls(typeObj, val, vld_mask)
 
     @classmethod
-    def from_py(cls, typeObj, val, vld_mask=None):
+    def from_py(cls, typeObj, val, vld_mask=None) -> Self:
         raise NotImplementedError(
-            f"from_py fn is not implemented for {cls}")
-
-    def __int__(self):
-        if isinstance(self, HConst) or self._const:
-            if self._is_full_valid():
-                return int(self.val)
-            else:
-                raise ValueError(f"HConst of {self} is not fully defined")
-
-        raise ValueError(
-            f"HConst of {self} is not constant it can be statically solved")
-
-    def __bool__(self):
-        if isinstance(self, HConst) or self._const:
-            if self._is_full_valid():
-                return bool(self.val)
-            else:
-                raise ValueError(f"HConst of {self} is not fully defined")
-
-        raise ValueError(
-            f"HConst of {self} is not constant it can be statically solved")
+            f"from_py fn is not implemented for", cls)
 
     def __eq__(self, other):
-        if areHConsts(self, other):
+        if isinstance(other, HConst):
             return self._dtype == other._dtype and \
                 self.vld_mask == other.vld_mask and\
                 self.val == other.val
@@ -103,95 +90,11 @@ class HConst(Generic[T]):
         eq.val = not eq.val
         return eq
 
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+    def _walk_sensitivity(self, casualSensitivity: Set[RtlSignalBase], seen: Set[RtlSignalBase], ctx: SensitivityCtx):
         """
         :see: :meth:`hwt.synthesizer.rtlLevel.rtlSignal.RtlSignal._walk_sensitivity`
         """
         seen.add(self)
-
-    # def __pos__(self):
-    #     raise TypeError()
-    #
-    # def __neg__(self):
-    #     raise TypeError()
-    #
-    # def __abs__(self):
-    #     raise TypeError()
-    #
-    # def __invert__(self):
-    #     raise TypeError()
-    #
-    # def __round__(self, n):
-    #     raise TypeError()
-    #
-    # def __floor__(self):
-    #     raise TypeError()
-    #
-    # def __ceil__(self):
-    #     raise TypeError()
-    #
-    # def __add__(self, other):
-    #     raise TypeError()
-    #
-    # def __sub__(self, other):
-    #     raise TypeError()
-    #
-    # def __mul__(self, other):
-    #     raise TypeError()
-    #
-    # def __floordiv__(self, other):
-    #     raise TypeError()
-    #
-    # def __div__(self, other):
-    #     raise TypeError()
-    #
-    # def __truediv__(self, other):
-    #     raise TypeError()
-    #
-    # def __mod__(self, other):
-    #     raise TypeError()
-    #
-    # def __divmod__(self, other):
-    #     raise TypeError()
-    #
-    # def __pow__(self, other):
-    #     raise TypeError()
-    #
-    # def __lshift__(self, other):
-    #     raise TypeError()
-    #
-    # def __rshift__(self, other):
-    #     raise TypeError()
-    #
-    # def __and__(self, other):
-    #     raise TypeError()
-    #
-    # def __or__(self, other):
-    #     raise TypeError()
-    #
-    # def __xor__(self, other):
-    #     raise TypeError()
-    #
-    # def _concat(self, other):
-    #     raise TypeError()
-    #
-    # def __lt__(self, other):
-    #     raise TypeError()
-    #
-    # def __le__(self, other):
-    #     raise TypeError()
-    #
-    # def __gt__(self, other):
-    #     raise TypeError()
-    #
-    # def __ge__(self, other):
-    #     raise TypeError()
-    #
-    # def _onRisingEdge(self):
-    #     raise TypeError()
-    #
-    # def _onFallingEdge(self):
-    #     raise TypeError()
 
 
 def areHConsts(*items):

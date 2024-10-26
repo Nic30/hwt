@@ -7,7 +7,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.serializer.generic.indent import getIndent
 from hwt.pyUtils.typingFuture import override
-
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 _protectedNames = {"clone", "staticEval",
                   "from_py", "_dtype", "_usedField", "_val"}
@@ -76,6 +76,14 @@ class HUnionConstBase(HConst):
         return ("\n").join(buff)
 
 
+class HUnionRtlSignalBase(RtlSignal):
+
+    __slots__ = ["_dtype", "_val", "_usedField"]
+
+    def __repr__(self, indent=0):
+        return HUnionConstBase.__repr__(indent=indent)
+
+
 @internal
 class HUnionMemberHandler(object):
     """
@@ -130,7 +138,10 @@ class HUnion(HdlType):
         self.name = name
         bit_length = None
 
-        class UnionVal(HUnionConstBase):
+        class HUnionConst(HUnionConstBase):
+            pass
+
+        class HUnionRtlSignal(HUnionRtlSignalBase):
             pass
 
         for f in template:
@@ -157,7 +168,8 @@ class HUnion(HdlType):
 
             memberHandler = HUnionMemberHandler(field)
             p = property(fget=memberHandler.get, fset=memberHandler.set)
-            setattr(UnionVal, field.name, p)
+            setattr(HUnionConst, field.name, p)
+            setattr(HUnionRtlSignal, field.name, p)
 
         self.__bit_length_val = bit_length
         self.__hash = hash((self.name, tuple(self.fields.items())))
@@ -167,9 +179,11 @@ class HUnion(HdlType):
             usedNames), _protectedNames.intersection(usedNames)
 
         if name is not None:
-            UnionVal.__name__ = name + "Val"
+            HUnionConst.__name__ = name + "Const"
+            HUnionRtlSignal.__name__ = name + "RtlSignal"
 
-        self._constCls = UnionVal
+        self._constCls = HUnionConst
+        self._rtlSignalCls = HUnionRtlSignal
 
     def bit_length(self):
         bl = self.__bit_length_val

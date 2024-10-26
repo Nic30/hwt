@@ -8,7 +8,6 @@ from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.hwIO import HwIO
 from hwt.hwModule import HwModule
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 
 
 class XdcSerializer():
@@ -72,7 +71,7 @@ class XdcSerializer():
 
     def visit_get_clock_of(self, o: get_clock_of):
         w = self.out.write
-        if isinstance(o.obj[-1], RtlSyncSignal):
+        if isinstance(o.obj[-1], RtlSignal) and o.obj[-1].next is not None:
             w("get_clocks -of [")
             self._get(o.obj)
             w("]")

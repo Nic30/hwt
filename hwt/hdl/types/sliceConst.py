@@ -6,6 +6,7 @@ from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import INT
 from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 def slice_member_to_HConst(v):
@@ -19,6 +20,10 @@ def slice_member_to_HConst(v):
             return v._auto_cast(INT)
     else:
         return INT.from_py(v)
+
+
+class HSliceRtlSignal(RtlSignal):
+    pass
 
 
 class HSliceConst(HConst):
@@ -55,7 +60,6 @@ class HSliceConst(HConst):
         """
         :return: how many bits is this slice selecting
         """
-        assert isinstance(self, HConst)
         v = self.val
         if v.step == -1:
             return int(v.start) - int(v.stop)
@@ -64,12 +68,8 @@ class HSliceConst(HConst):
         else:
             raise NotImplementedError(self)
 
-    def _eq_const(self, other):
-        assert isinstance(other, HSliceConst)
-        return self.val == other.val
-
     def _eq(self, other):
-        return self._eq__const(other)
+        return self.val == other.val
 
     def __lt__(self, other):
         if self.val.step != other.val.step:

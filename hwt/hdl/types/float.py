@@ -1,12 +1,13 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
-from pyMathBitPrecise.floatt import Floatt
 from hwt.pyUtils.typingFuture import override
+from pyMathBitPrecise.floatt import Floatt
 
 
 class HFloat(HdlType, Floatt):
     """
     Elemental HDL type representing IEEE 754 like float type.
+    :note: This type is meant for HwModule parameters, operations with this type are not synthetisable.
     """
 
     def __init__(self, exponent_w, mantisa_w,
@@ -26,4 +27,12 @@ class HFloat(HdlType, Floatt):
     def getConstCls(cls):
         from hwt.hdl.types.floatConst import HFloatConst
         return HFloatConst
+
+
+    @internal
+    @override
+    @classmethod
+    def getRtlSignalCls(cls):
+        from hwt.hdl.types.floatConst import HFloatRtlSignal
+        return HFloatRtlSignal
 

@@ -4,16 +4,37 @@ import math
 
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
-from pyMathBitPrecise.floatt import FloattVal
-from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.typeCast import toHVal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from pyMathBitPrecise.floatt import FloattVal
+
+
+_HBoolConst = BOOL.getConstCls()
+
+
+def _HFloatEq(self, self_is_val: bool, other):
+    other = toHVal(other, self._dtype)
+    other_is_val = isinstance(self, HConst)
+
+    if self_is_val and other_is_val:
+        return _HBoolConst(BOOL, int(self.val == other.val), self.vld_mask & other.vld_mask)
+    else:
+        assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
+        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+
+
+class HFloatRtlSignal(RtlSignal):
+
+    def _eq(self, other):
+        return _HFloatEq(self, False, other)
 
 
 class HFloatConst(HConst, FloattVal):
     """
-    HConst class for HFloat type
+    HConst class for HFloat type.
     """
 
     @classmethod
@@ -55,20 +76,8 @@ class HFloatConst(HConst, FloattVal):
         """
         return float(self)
 
-    def _eq_const(self, other):
-        assert isinstance(other, HFloatConst)
-        return self.val == other.val
-
     def _eq(self, other):
-        other = toHVal(other, self._dtype)
-        self_is_val = isinstance(self, HConst)
-        other_is_val = isinstance(self, HConst)
-
-        if self_is_val and other_is_val:
-            return self._eq__const(other)
-        else:
-            assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
-            return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+        return _HFloatEq(self, True, other)
 
     def __copy__(self):
         v = HConst.__copy__(self)

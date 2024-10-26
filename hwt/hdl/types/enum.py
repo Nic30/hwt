@@ -1,5 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
+from hwt.pyUtils.typingFuture import override
 
 
 # [TODO] use python enum and only emulate HDL enum for HDL
@@ -40,6 +41,18 @@ class HEnum(HdlType):
         return int(2 ** self.bit_length())
 
     @internal
+    @override
+    @classmethod
+    def getRtlSignalCls(cls):
+        try:
+            return cls._rtlSignalCls
+        except AttributeError:
+            from hwt.hdl.types.enumConst import HEnumRtlSignal
+            cls._rtlSignalCls = HEnumRtlSignal
+            return cls._rtlSignalCls
+
+    @internal
+    @override
     @classmethod
     def getConstCls(cls):
         try:

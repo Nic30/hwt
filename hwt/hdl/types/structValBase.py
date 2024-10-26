@@ -1,8 +1,16 @@
 from typing import Optional
 
-from hwt.hdl.const import HConst, areHConsts
-from hwt.serializer.generic.indent import getIndent
+from hwt.hdl.const import HConst
 from hwt.mainBases import RtlSignalBase
+from hwt.serializer.generic.indent import getIndent
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+
+
+class HStructRtlSignalBase(RtlSignal):
+    __slots__ = []
+
+    def __repr__(self, indent=0):
+        return HStructConstBase.__repr__(indent=indent)
 
 
 class HStructConstBase(HConst):
@@ -82,7 +90,7 @@ class HStructConstBase(HConst):
         return d
 
     def __ne__(self, other):
-        if areHConsts(self, other):
+        if isinstance(other, HConst):
             if self._dtype == other._dtype:
                 for f in self._dtype.fields:
                     isPadding = f.name is None
@@ -101,7 +109,7 @@ class HStructConstBase(HConst):
         return self.__eq__(other)
 
     def __eq__(self, other):
-        if areHConsts(self, other):
+        if isinstance(other, HConst):
             if self._dtype == other._dtype:
                 for f in self._dtype.fields:
                     isPadding = f.name is None
@@ -132,3 +140,4 @@ class HStructConstBase(HConst):
 
         buff.append(getIndent(indent) + "}")
         return ("\n").join(buff)
+

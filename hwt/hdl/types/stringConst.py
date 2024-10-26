@@ -1,9 +1,17 @@
-from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+
+
+class HStringRtlSignal(RtlSignal):
+
+    def _eq(self, other):
+        other = toHVal(other, self._dtype)
+        assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
+        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
 
 
 class HStringConst(HConst):
@@ -37,20 +45,13 @@ class HStringConst(HConst):
             raise ValueError(f"Value of {self} is not fully defined")
         return self.val
 
-    @internal
-    def _eq__const(self, other):
-        eq = self.val == other.val
-        vld = int(self.vld_mask and other.vld_mask)
-
-        return BOOL.getConstCls()(BOOL, int(eq), vld)
-
     def _eq(self, other):
         other = toHVal(other, self._dtype)
-        self_is_val = isinstance(self, HConst)
-        other_is_val = isinstance(self, HConst)
 
-        if self_is_val and other_is_val:
-            return self._eq__const(other)
+        if isinstance(self, HConst):
+            eq = self.val == other.val
+            vld = int(self.vld_mask and other.vld_mask)
+            return BOOL.getConstCls()(BOOL, int(eq), vld)
+
         else:
-            assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
-            return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+            return HStringRtlSignal._eq(other)

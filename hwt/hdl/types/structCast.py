@@ -5,7 +5,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.hdlType import default_reinterpret_cast_fn, HdlType
+from hwt.hdl.types.hdlType import HdlType, default_reinterpret_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hwIOs.std import HwIOSignal
 from hwt.mainBases import HwIOBase

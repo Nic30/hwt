@@ -1,11 +1,24 @@
-from hwt.doc_markers import internal
-from hwt.hdl.const import HConst, areHConsts
+from typing import Union, Self
+
+from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.defs import BOOL
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-BoolVal = BOOL.getConstCls()
+_HBoolConst = BOOL.getConstCls()
+
+
+class HEnumRtlSignal(RtlSignal):
+
+    def _eq(self, other: Union[Self, "HEnumConst"]) -> "HBitsConst":
+        assert self._dtype is other._dtype, (self._dtype, other._dtype)
+        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+
+    def __ne__(self, other: Union[Self, "HEnumConst"]) -> "HBitsConst":
+        assert self._dtype is other._dtype, (self._dtype, other._dtype)
+        return HOperatorNode.withRes(HwtOps.NE, [self, other], BOOL)
 
 
 class HEnumConst(HConst):
@@ -33,34 +46,25 @@ class HEnumConst(HConst):
 
         return cls(typeObj, val, valid)
 
-    @internal
-    def _eq__const(self, other):
+    def _eq(self, other: Union[HEnumRtlSignal, Self]) -> "HBitsConst":
+        if isinstance(other, RtlSignal):
+            return HEnumRtlSignal._eq(other)
+
+        assert self._dtype is other._dtype, (self._dtype, other._dtype)
         eq = self.val == other.val \
             and self.vld_mask == other.vld_mask == 1
 
         vld_mask = int(self.vld_mask == other.vld_mask == 1)
-        return BoolVal(BOOL, int(eq), vld_mask)
+        return _HBoolConst(BOOL, int(eq), vld_mask)
 
-    def _eq(self, other):
-        assert self._dtype is other._dtype
+    def __ne__(self, other: Union[HEnumRtlSignal, Self]) -> "HBitsConst":
+        if isinstance(other, RtlSignal):
+            return HEnumRtlSignal.__ne__(other)
 
-        if areHConsts(self, other):
-            return self._eq__const(other)
-        else:
-            return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
-
-    @internal
-    def _ne__val(self, other):
+        assert self._dtype is other._dtype, (self._dtype, other._dtype)
         neq = self.val != other.val \
             and self.vld_mask == other.vld_mask == 1
 
         vld_mask = int(self.vld_mask == other.vld_mask == 1)
-        return BoolVal(BOOL, int(neq), vld_mask)
+        return _HBoolConst(BOOL, int(neq), vld_mask)
 
-    def __ne__(self, other):
-        assert self._dtype is other._dtype
-
-        if areHConsts(self, other):
-            return self._ne__val(other)
-        else:
-            return HOperatorNode.withRes(HwtOps.NE, [self, other], BOOL)

@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Dict, Set
+from typing import List, Optional, Union, Dict, Set, Type
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId
@@ -19,8 +19,7 @@ from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.rtlLevel.rtlNetlistPass import RtlNetlistPass
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, CREATE_NEXT_SIGNAL
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import statements_to_HdlStmCodeBlockContainers
 from ipCorePackager.constants import DIRECTION
 
@@ -48,7 +47,7 @@ class RtlNetlist():
         self.hwModDef: Optional[HdlModuleDef] = None
 
     def sig(self, name: str, dtype=BIT, clk=None, syncRst=None,
-            def_val=None, nop_val=NOT_SPECIFIED, nextSig=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
+            def_val=None, nop_val=NOT_SPECIFIED, nextSig=NOT_SPECIFIED) -> Union[RtlSignal, HwIOBase]:
         """
         Create new signal in this context
 
@@ -65,14 +64,15 @@ class RtlNetlist():
         _def_val = _try_cast_any_to_HValue(def_val, dtype, True)
         if nop_val is not NOT_SPECIFIED:
             nop_val = _try_cast_any_to_HValue(nop_val, dtype, False)
-
+        
+        signalCls: Type[RtlSignal] = dtype.getRtlSignalCls()
         if clk is not None:
             if nextSig is not None and isinstance(nextSig, HwIOBase):
                 nextSig = nextSig._sig
-            s = RtlSyncSignal(self, name, dtype,
-                              _def_val if isinstance(_def_val, HConst) else dtype.from_py(None),
-                              nop_val,
-                              nextSig)
+            s = signalCls(self, name, dtype,
+                          _def_val if isinstance(_def_val, HConst) else dtype.from_py(None),
+                          nop_val,
+                          next_signal=CREATE_NEXT_SIGNAL if nextSig is NOT_SPECIFIED else nextSig)
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
@@ -113,7 +113,7 @@ class RtlNetlist():
                     f"Signal {name:s} has nextSig which is used for next register value, but has no clock and thus is not a register.")
 
             assert isinstance(_def_val, HConst) or (isinstance(_def_val, RtlSignal) and _def_val._const), (_def_val, "The default value needs to be constant")
-            s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
+            s = signalCls(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 
         return s
 
