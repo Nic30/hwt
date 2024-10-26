@@ -12,13 +12,13 @@ from hwt.hdl.types.bitConstFunctions import bitsCmp, \
 from hwt.hdl.types.bitConst_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor, reduceSigCheckFnAnd, reduceSigCheckFnOr, reduceSigCheckFnXor
 from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdl.types.sliceUtils import slice_to_HSlice
 from hwt.hdl.types.typeCast import toHVal
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
-from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
 
 
 class HBitsConst(HConst, Bits3val):
@@ -310,3 +310,6 @@ class HBitsConst(HConst, Bits3val):
         else:
             raise NotImplementedError(b)
         return f"{signChar:s}{t.bit_length()}'{base_char}{bs.val}"
+
+    def __repr__(self)->str:
+        return Bits3val.__repr__(self)
