@@ -51,8 +51,7 @@ class RtlNetlist():
         """
         Create new signal in this context
 
-        :param clk: clock signal, if specified signal is synthesized
-            as RtlSyncSignal
+        :param clk: clock signal
         :param syncRst: synchronous reset signal
         :param def_val: a default value used for reset and initialization
         :param nop_val: a value which is used to drive the signal if there is no other drive

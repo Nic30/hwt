@@ -19,5 +19,6 @@ class NOT_SPECIFIED():
     Used for optional arguments as a value which marks that the value of this
     argument was not specified on the place where we can not just use None
     """
+
     def __init__(self):
         raise AssertionError("Use only a class a constant")
