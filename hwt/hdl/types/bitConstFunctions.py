@@ -15,7 +15,6 @@ from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val, Bits3val
 
-
 HBitsAnyCompatibleValue = Union["HBitsRtlSignal", "HBitsConst", int, None]
 HBitsAnyIndexCompatibleValue = Union[int, slice, RtlSignalBase[HSlice], RtlSignalBase[HBits], None]
 AnyHBitsValue = Union["HBitsRtlSignal", "HBitsConst"]
@@ -305,7 +304,7 @@ def bitsFloordiv(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompati
 
         return HOperatorNode.withRes(HwtOps.SDIV if self._dtype.signed else HwtOps.UDIV,
                                 [self, other],
-                                self._dtype.__copy__())
+                                self._dtype)
 
 
 @internal

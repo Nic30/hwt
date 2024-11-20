@@ -276,7 +276,7 @@ class HBitsRtlSignal(RtlSignal):
             return HOperatorNode.withRes(
                 HwtOps.TERNARY,
                 [self, vTrue, vFalse],
-                vTrue._dtype.__copy__())
+                vTrue._dtype)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
