@@ -282,6 +282,9 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
+    def getMsb(self) -> Self:
+        return self[self._dtype.bit_length() - 1]
+
     def _onFallingEdge(self) -> Self:
         return HOperatorNode.withRes(HwtOps.FALLING_EDGE, [self], BOOL)
 

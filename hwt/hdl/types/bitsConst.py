@@ -275,7 +275,10 @@ class HBitsConst(HConst, Bits3val):
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
-
+    
+    def getMsb(self) -> Self:
+        return self[self._dtype.bit_length() - 1]
+    
     def __len__(self) -> int:
         return self._dtype.bit_length()
 
