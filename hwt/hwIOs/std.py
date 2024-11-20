@@ -1,5 +1,8 @@
 from typing import TypeVar, Generic, Union, Optional, Dict
 
+from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.defs import BIT, BIT_N
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hwIO import HwIO
 from hwt.hwIOs.agents.bramPort import HwIOBramPortAgent
 from hwt.hwIOs.agents.bramPort import HwIOBramPort_noClkAgent
@@ -12,16 +15,14 @@ from hwt.hwIOs.agents.signal import HwIOSignalAgent
 from hwt.hwIOs.agents.vldSync import HwIODataVldAgent
 from hwt.hwIOs.signalOps import SignalOps
 from hwt.hwParam import HwParam
-from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BIT, BIT_N
-from hwt.hdl.types.hdlType import HdlType
+from hwt.pyUtils.typingFuture import override
 from hwtSimApi.agents.clk import ClockAgent
 from hwtSimApi.agents.rst import PullDownAgent
 from hwtSimApi.agents.rst import PullUpAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.utils import freq_to_period
 from ipCorePackager.constants import DIRECTION
-from hwt.pyUtils.typingFuture import override
+
 
 T = TypeVar("T", bound=HdlType)
 
