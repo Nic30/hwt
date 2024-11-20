@@ -31,7 +31,8 @@ class HdlAssignmentContainer(HdlStatement):
     __instCntr = 0
 
     def __init__(self, src: Union[RtlSignalBase, HConst], dst: RtlSignalBase,
-                 indexes: Optional[List[Union[RtlSignalBase, HConst]]]=None, virtual_only=False,
+                 indexes: Optional[List[Union[RtlSignalBase, HConst]]]=None,
+                 virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
                  parentStmList: Optional[ListOfHdlStatement]=None,
                  sensitivity: Optional[SetList]=None,
