@@ -5,6 +5,7 @@ from hwt.hdl.const import HConst
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp, HOperatorDef
 from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.types.hdlType import HdlType
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase, \
     OperatorCaheKeyType
@@ -15,8 +16,7 @@ def getCtxFromOps(operands: Sequence):
     for o in operands:
         if isinstance(o, RtlSignalBase):
             return o.ctx
-    raise TypeError("Can not find context because there is no signal in ops"
-                    "(value operators should be already resolved)")
+    return None # case for casts of constants
 
 
 def isConst(item: Union[HConst, RtlSignalBase]):
@@ -81,7 +81,7 @@ class HOperatorNode(HdlObject):
 
     @internal
     @staticmethod
-    def withRes(opDef, operands, resT):
+    def withRes(opDef, operands: Sequence[Union[RtlSignalBase, HConst]], resT: HdlType):
         """
         Create operator with result signal
 
@@ -128,9 +128,17 @@ class HOperatorNode(HdlObject):
                 assert isinstance(o, HConst), (
                     "HOperatorNode operands can be only signal or values got:", o)
 
+        # pre-compute constant signal if all used types support it
         if out._const:
-            # if this signal is constant precompute its value
-            out.staticEval()
+            precompute = resT._PRECOMPUTE_CONSTANT_SIGNALS
+            for o in operands:
+                precompute &= o._dtype._PRECOMPUTE_CONSTANT_SIGNALS
+                if not precompute:
+                    break
+
+            if precompute:
+                # if this signal is constant precompute its value
+                out.staticEval()
 
         return out
 

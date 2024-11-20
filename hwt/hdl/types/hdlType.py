@@ -22,7 +22,10 @@ class HdlType():
         on first convert function call)
         
     :note: Cast functions are linked trough HldType class because Python lacks forward declarations.
+    :cvar ~._PRECOMPUTE_CONSTANT_SIGNALS: if true a constant expressions
+        made from this type have value precomputed.
     """
+    _PRECOMPUTE_CONSTANT_SIGNALS = True
 
     def __init__(self, const=False):
         self.const = const
@@ -196,18 +199,16 @@ class HdlType():
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
         name = getattr(self, "name", "")
+        if name is None:
+            name = ""
         return f"<{self.__class__.__name__:s} {name:s}>"
 
 
 @internal
 def default_reinterpret_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
-    raise TypeConversionErr(
-        "Reinterpretation of %r of type \n%r to type %r is not implemented",
-        (sigOrConst, typeFrom, toType))
+    raise TypeConversionErr("reinterpret_cast", typeFrom, "->", toType, "is not implemented")
 
 
 @internal
 def default_auto_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
-    raise TypeConversionErr(
-        "Conversion of %r of type \n%r to type %r is not implemented",
-        (sigOrConst, typeFrom, toType))
+    raise TypeConversionErr("auto_cast", typeFrom, "->", toType, "is not implemented")
