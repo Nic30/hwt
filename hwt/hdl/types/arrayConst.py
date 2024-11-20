@@ -35,9 +35,6 @@ def _HArrayGetitem(self: Union["HArrayRtlSignal", "HArrayConst"], iamVal: bool, 
 
 class HArrayRtlSignal(RtlSignal):
 
-    def _is_full_valid(self):
-        return self.vld_mask == 1
-
     def __getitem__(self, key):
         try:
             return _HArrayGetitem(self, False, key)
@@ -130,6 +127,9 @@ class HArrayConst(HConst):
 
     def _is_full_valid(self):
         return self.vld_mask == 1
+
+    def _is_partially_valid(self) -> bool:
+        return self._is_full_valid() or any(v._is_partially_valid() for v in self.val.values())
 
     @internal
     def _getitem__const(self, key):

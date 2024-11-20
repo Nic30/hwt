@@ -79,6 +79,14 @@ class HStructConstBase(HConst):
                     return False
         return True
 
+    def _is_partially_valid(self) -> bool:
+        for f in self._dtype.fields:
+            if f.name is not None:
+                val = getattr(self, f.name, None)
+                if val is None and val._is_partially_valid():
+                    return True
+        return False
+
     def to_py(self):
         if not self._is_full_valid():
             raise ValueError(f"Value of {self} is not fully defined")

@@ -4,6 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.mainBases import RtlSignalBase
 
+
 T = TypeVar("T", bound="HdlType")
 
 
@@ -27,6 +28,9 @@ class HConst(Generic[T]):
 
     def _is_full_valid(self):
         return self.vld_mask == self._dtype.all_mask()
+
+    def _is_partially_valid(self) -> bool:
+        return self.vld_mask != 0
 
     def _auto_cast(self, toType: "HdlType"):
         """

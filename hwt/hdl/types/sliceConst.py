@@ -45,9 +45,13 @@ class HSliceConst(HConst):
 
         return cls(typeObj, val, vld_mask=1)
 
-    def _is_full_valid(self):
+    def _is_full_valid(self) -> bool:
         v = self.val
         return v.start._is_full_valid() and v.stop._is_full_valid()
+
+    def _is_partially_valid(self) -> bool:
+        v = self.val
+        return v.start._is_partially_valid() and v.stop._is_partially_valid()
 
     def to_py(self):
         """
