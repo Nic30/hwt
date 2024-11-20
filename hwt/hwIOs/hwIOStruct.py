@@ -120,7 +120,7 @@ class HdlType_to_HwIO():
             return HwIOStruct(dtype, field_path,
                               instantiateFieldFn=self.instantiateFieldFn,
                               masterDir=masterDir)
-        elif isinstance(dtype, (HBits, HEnum)):
+        elif dtype.isScalar():
             return HwIOSignal(dtype=dtype, masterDir=masterDir)
         elif isinstance(dtype, HArray):
             return HObjList(self.apply(dtype.element_t, masterDir=masterDir)

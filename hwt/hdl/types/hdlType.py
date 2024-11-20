@@ -176,6 +176,9 @@ class HdlType():
     def _as_hdl_requires_def(self, to_Hdl: "ToHdlAst", other_types: list):
         raise MethodNotOverloaded()
 
+    def isScalar(self):
+        return True
+
     def __getitem__(self, key):
         """
         [] operator to create an array of this type.

@@ -194,6 +194,10 @@ class HStruct(HdlType):
         assert isinstance(other, HStruct)
         return HStruct(*self.fields, *other.fields)
 
+    @override
+    def isScalar(self):
+        return False
+
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
