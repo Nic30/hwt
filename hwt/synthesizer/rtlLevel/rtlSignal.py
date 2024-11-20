@@ -445,7 +445,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
             e_simplified = copy(e)
             raise e_simplified
 
-    def _getAssociatedClk(self):
+    def _getAssociatedClk(self) -> Self:
         assert self.next is not None, self
         d = self.singleDriver()  # this expects a simple if rising_edge(clk)
         # assert isinstance(d, IfContainer), d
@@ -453,7 +453,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         # assert isinstance(cond, HOperatorNode) and cond.operator is HwtOps.RISING_EDGE, cond
         return cond.operands[0]
 
-    def _getAssociatedRst(self):
+    def _getAssociatedRst(self) -> Self:
         assert self.next is not None, self
         d = self.singleDriver()  # this expects a simple if rising_edge(clk)
         # assert isinstance(d, IfContainer), d
@@ -463,5 +463,8 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         reset_if = d.ifTrue[0]
         return reset_if.cond
 
-    def _is_full_valid(self):
+    def _is_full_valid(self) -> bool:
         return self._const and self._val._is_full_valid()
+
+    def _is_partially_valid(self) -> bool:
+        return self._const and self._val._is_partially_valid()
