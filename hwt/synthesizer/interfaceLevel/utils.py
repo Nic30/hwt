@@ -56,7 +56,8 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
             s = srcPacked[(w + offset): offset]  # src is likely to have insufficient amount of bits
             offset += w
 
-        connections.append(sig(s))
+        assert sig._dtype.bit_length() == s._dtype.bit_length(), (sig, s, sig._dtype, s._dtype)
+        connections.append(sig(s._reinterpret_cast(sig._dtype)))
 
     return connections
 
@@ -106,8 +107,11 @@ def HwIO_pack(hio: HwIOBase, masterDirEqTo=DIRECTION.OUT, exclude=None) -> Union
                 s = None
 
         if s is not None:
+            if not isinstance(s._dtype, HBits) or  s._dtype.signed is not None:
+                s = s._reinterpret_cast(HBits(s._dtype.bit_length()))
+
             if res is None:
-                res = s._reinterpret_cast(HBits(s._dtype.bit_length()))
+                res = s
             else:
                 res = s._concat(res)
 
