@@ -9,7 +9,7 @@ class ResourceError(Exception):
 
 class RtlResourceType():
     """
-    A base class for resource type desctiptions.
+    A base class for resource type descriptions.
     """
 
 
@@ -40,15 +40,15 @@ class ResourceRAM(RtlResourceType):
                  rwSync: int, rSync: int, wSync: int, rSync_wAsync: int,
                  rwAsync: int, rAsync: int, wAsync: int, rAsync_wSync: int):
         """
-        :param width: widtho of word in RAM/ROM
+        :param width: width of word in RAM/ROM
         :param items: number of words in RAM/ROM
-        :param rwSync: count of read + write sychronous ports
-        :param rSync: count of read only sychronous ports
-        :param wSync: count of write only sychronous ports
+        :param rwSync: count of read + write synchronous ports
+        :param rSync: count of read only synchronous ports
+        :param wSync: count of write only synchronous ports
         :param rSync_wAsync: count of synchronous read + asynchronous write ports
-        :param rwAsync: count of read + write asychronous ports
-        :param rAsync: count of read only asychronous ports
-        :param wAsync: count of write only asychronous ports
+        :param rwAsync: count of read + write asynchronous ports
+        :param rAsync: count of read only asynchronous ports
+        :param wAsync: count of write only asynchronous ports
         :param rAsync_wSync: count of asynchronous read + synchronous write ports
         """
         self.width = width
