@@ -71,7 +71,7 @@ class RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers(RtlNetlistPass):
             else:
                 sig.hidden = False
                 if sig not in ioSignals.keys():
-                    if not sig.def_val._is_full_valid():
+                    if not sig.def_val._is_partially_valid():
                         signals_with_driver_issue.append(
                             (SignalDriverErrType.MISSING_DRIVER, sig))
                     sig._const = True
