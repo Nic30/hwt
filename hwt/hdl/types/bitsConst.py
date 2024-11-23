@@ -282,18 +282,6 @@ class HBitsConst(HConst, Bits3val):
     def __len__(self) -> int:
         return self._dtype.bit_length()
 
-    def __int__(self) -> int:
-        if self._is_full_valid():
-            return int(self.val)
-        else:
-            raise ValueError(f"Constant is not fully defined", self)
-
-    def __bool__(self) -> bool:
-        if self._is_full_valid():
-            return bool(self.val)
-        else:
-            raise ValueError(f"Constant is not fully defined", self)
-
     def prettyRepr(self) -> str:
         t = self._dtype
         bs = bit_string(self.val, t.bit_length(), self.vld_mask)
