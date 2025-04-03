@@ -1,4 +1,4 @@
-from operator import and_, or_, xor, add
+from operator import and_, or_, xor, add, eq
 from types import GeneratorType
 from typing import Union, Sequence, Optional, Tuple
 
@@ -342,7 +342,8 @@ class FsmBuilder(Switch):
 And = _mkOp(and_)
 Add = _mkOp(add)
 Or = _mkOp(or_)
-Xor = _mkOp(xor)
+Xor = _mkOp(xor) # :note: xor is bitwise !=
+Xnor = _mkOp(eq) # :note: xnor is bitwise ==
 Concat = _mkOp(concatFn)
 
 
@@ -390,3 +391,26 @@ def replicate(n:int, v:Union[RtlSignalBase, HConst]):
 
 def segment_get(n:Union[RtlSignalBase, HConst], segmentWidth:int, segmentIndex:Union[RtlSignalBase, HConst, int]):
     return n[segmentWidth * (segmentIndex + 1): segmentWidth * segmentIndex]
+
+
+def zext(v:Union[RtlSignalBase, HConst], newWidth: int) -> Union[RtlSignalBase, HConst]:
+    """
+    Pad value on msb side with zeros (zero extend) to a specific width
+    """
+    curWidth = v._dtype.bit_length()
+    if curWidth == newWidth:
+        return v
+    assert newWidth > curWidth, (newWidth, curWidth)
+    return Concat(HBits(newWidth - curWidth).from_py(0), v)
+
+
+def sext(v:Union[RtlSignalBase, HConst], newWidth: int) -> Union[RtlSignalBase, HConst]:
+    """
+    Pad value on msb side with msb (signed extend) to a specific width
+    """
+    curWidth = v._dtype.bit_length()
+    if curWidth == newWidth:
+        return v
+    assert newWidth > curWidth, (newWidth, curWidth)
+    msb = v.getMsb()
+    return Concat(*(msb for _ in range(newWidth - curWidth)), v)
