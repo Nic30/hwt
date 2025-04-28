@@ -57,7 +57,7 @@ class ComponentPath(tuple):
                     # to not modify path if it is already in absolute format
                     if not path or path[-1] is not obj:
                         path.append(obj)
-                    obj = obj.ctx.parent
+                    obj = obj._rtlCtx.parent
 
                 while isinstance(obj, HwIO):
                     if not path:

@@ -1,9 +1,10 @@
-from hwt.doc_markers import internal
 from hwt.constants import DIRECTION
+from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.variables import HdlSignalItem
+from hwt.mainBases import RtlSignalBase
 
 
 class HdlPortItem():
@@ -28,7 +29,7 @@ class HdlPortItem():
         return cls(s._name, d, s._dtype, component)
 
     @internal
-    def connectOuterSig(self, signal):
+    def connectOuterSig(self, signal: RtlSignalBase):
         """
         Connect to port item on submodule
         """
@@ -38,7 +39,7 @@ class HdlPortItem():
                     "Port %s is already associated with %r"
                     % (self.name, self.src))
             self.src = signal
-            signal.endpoints.append(self)
+            signal._rtlEndpoints.append(self)
 
         elif self.direction == DIRECTION.OUT:
             if self.dst is not None:
@@ -46,13 +47,13 @@ class HdlPortItem():
                     "Port %s is already associated with %r"
                     % (self.name, self.dst))
             self.dst = signal
-            signal.drivers.append(self)
+            signal._rtlDrivers.append(self)
 
         else:
             raise NotImplementedError(self)
 
-        signal.hidden = False
-        signal.ctx.subHwModules.add(self.module)
+        signal._hidden = False
+        signal._rtlCtx.subHwModules.add(self.module)
 
     @internal
     def connectInternSig(self, signal):
@@ -65,7 +66,7 @@ class HdlPortItem():
                     "Port %s is already associated with signal %s"
                     % (self.name, str(self.src)))
             self.src = signal
-            self.src.endpoints.append(self)
+            self.src._rtlEndpoints.append(self)
 
         elif self.direction == DIRECTION.IN:
             if self.dst is not None:
@@ -73,7 +74,7 @@ class HdlPortItem():
                     "Port %s is already associated with signal %s"
                     % (self.name, str(self.dst)))
             self.dst = signal
-            self.dst.drivers.append(self)
+            self.dst._rtlDrivers.append(self)
         else:
             raise NotImplementedError(self.direction)
 

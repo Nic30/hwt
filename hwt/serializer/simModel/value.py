@@ -57,7 +57,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     @override
     def as_hdl_HdlSignalItem(self, si: Union[HdlSignalItem, HdlIdDef],
                           declaration=False):
-        if not declaration and not si.hidden:
+        if not declaration and not si._isUnnamedExpr:
             if si._const:
                 return hdl_getattr(self.SELF, si._name)
             else:

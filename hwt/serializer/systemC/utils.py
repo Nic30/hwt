@@ -28,7 +28,7 @@ def systemCTypeOfSig(s):
     elif isinstance(s, HwParam):
         return SIGNAL_TYPE.PORT_REG
     elif s._const or\
-        arr_any(s.drivers,
+        arr_any(s._rtlDrivers,
                 lambda d: isinstance(d, HdlStatement)
                 and d._event_dependent_from_branch is not None):
 

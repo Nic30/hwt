@@ -255,7 +255,7 @@ class HwModuleImplHelpers(HwModuleBase):
             return container
         else:
             # primitive data type signal
-            return self._ctx.sig(
+            return self._rtlCtx.sig(
                 name,
                 dtype=dtype,
                 clk=clk,
@@ -278,7 +278,7 @@ class HwModuleImplHelpers(HwModuleBase):
             return HwIO_without_registration(self, container, name, def_val=def_val, nop_val=nop_val)
         else:
             # primitive data type signal
-            return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
+            return self._rtlCtx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
 
     @internal
     def _cleanThisSubunitRtlSignals(self):

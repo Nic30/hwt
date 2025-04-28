@@ -66,7 +66,7 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
                 name = f"{name:s}_{_i:d}"
 
     if is_signal_needed:
-        tmp_sig = dst.ctx.sig(name, dst._dtype, def_val=def_val, nop_val=nop_val)
+        tmp_sig = dst._rtlCtx.sig(name, dst._dtype, def_val=def_val, nop_val=nop_val)
         return tmp_sig
     elif src is not None:
         return src
@@ -375,11 +375,11 @@ class RtlNetlistPassExtractPartDrivers(RtlNetlistPass):
                 if stm.parentStm is None:
                     for o in outputs:
                         if o not in stm._outputs:
-                            o.drivers.remove(stm)
+                            o._rtlDrivers.remove(stm)
 
                     for i in inputs:
                         if i not in stm._inputs:
-                            i.endpoints.remove(stm)
+                            i._rtlEndpoints.remove(stm)
 
                 return True
 

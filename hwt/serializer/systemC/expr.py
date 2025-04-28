@@ -57,13 +57,14 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             return hdl_call(
                 HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
                 [self.as_hdl_Value(ops[0]), ])
+
         elif o == HwtOps.CONCAT:
             isNew, o = self.tmpVars.create_var_cached("tmpConcat_",
                                                       op.result._dtype,
                                                       postponed_init=True,
                                                       extra_args=(HwtOps.CONCAT, op.result))
             if isNew:
-                o.drivers.append(HdlAssignmentContainer(op, o, virtual_only=True))
+                o._rtlDrivers.append(HdlAssignmentContainer(op, o, virtual_only=True))
                 self.tmpVars.finish_var_init(o)
 
             return self.as_hdl(o)
@@ -77,8 +78,8 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             with SignalTypeSwap(self, sigType):
                 return ToHdlAst_Value.as_hdl_HdlSignalItem(self, si, declaration=True)
         else:
-            if si.hidden and si.origin is not None:
-                return self.as_hdl(si.origin)
+            if si._isUnnamedExpr and si._rtlObjectOrigin is not None:
+                return self.as_hdl(si._rtlObjectOrigin)
             else:
                 sigType = systemCTypeOfSig(si)
                 _si = HdlValueId(si._name, obj=si)

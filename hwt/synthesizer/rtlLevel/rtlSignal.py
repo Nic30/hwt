@@ -11,6 +11,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError
 from hwt.hdl.types.bitsCastUtils import fitTo_t
+from hwt.hdl.types.defs import SLICE, INT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.variables import HdlSignalItem
@@ -19,6 +20,7 @@ from hwt.pyUtils.setList import SetList
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr, \
     SignalDriverErrType
+
 
 OperatorCaheKeyType = Union[
     Tuple['OpDefinition', int, object],
@@ -37,16 +39,16 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
     """
     RtlSignal signal is a connection between statements and operators in circuit graph.
 
-    :ivar ~.endpoints: SetList of operators and statements
+    :ivar ~._rtlEndpoints: SetList of operators and statements
         for which this signal is driver.
-    :ivar ~.drivers: SetList of operators and statements
+    :ivar ~._rtlDrivers: SetList of operators and statements
         which can drive this signal.
         If driver is statement tree only top statement is present.
     :ivar ~._usedOps: A dictionary of used operators which can be reused.
     :ivar ~._usedOpsAlias: A dictionary tuple of operator and operands to set of tuples of operator and operands,
         used to resolve which combination of the operator and operands resulted in to same result.
     :note: The _usedOps, _usedOpsAlias cache record is generated only for the left most signal in expression.
-    :ivar ~.hidden: means that this signal is part of expression
+    :ivar ~._isUnnamedExpr: means that this signal is part of expression
         and should not be rendered
     :ivar ~._nop_val: value which is used to fill up statements when no other
             value is assigned, use NOT_SPECIFIED to disable
@@ -56,26 +58,26 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
     :cvar __instCntr: counter used for generating instance ids
     :ivar ~._instId: internally used only for intuitive sorting of statements
         in serialized code
-    :ivar ~.origin: optionally an object which generated this signal
-    :ivar ~.next: optional signal signal which is used as a next signal if this RtlSignal is actually a FF output.
+    :ivar ~._rtlObjectOrigin: optionally an object which generated this signal
+    :ivar ~._rtlNextSig: optional signal signal which is used as a next signal if this RtlSignal is actually a FF output.
     """
     __instCntr = 0
 
     __slots__ = [
-        "ctx",
-        "endpoints",
-        "drivers",
+        "_ctx",
+        "_rlEndpoints",
+        "_drivers",
         "_usedOps",
         "_usedOpsAlias",
-        "hidden",
+        "_isUnnamedExpr",
         "_hdlName",
-        "hasGenericName",
+        "_hasGenericName",
         "_instId",
         "_nop_val",
         "_const",
         "_hwIO",
-        "origin",
-        "next",
+        "_rtlObjectOrigin",
+        "_rtlNextSig",
     ]
 
     def __init__(self, ctx: 'RtlNetlist',
@@ -101,13 +103,13 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         self._instId: int = RtlSignal._nextInstId()
         if name is None:
             name = "sig_"
-            self.hasGenericName = True
+            self._hasGenericName = True
         else:
-            self.hasGenericName = False
+            self._hasGenericName = False
 
         assert isinstance(dtype, HdlType)
         super(RtlSignal, self).__init__(name, dtype, def_val, virtual_only=virtual_only)
-        self.ctx = ctx
+        self._rtlCtx = ctx
 
         if ctx:
             # params do not have any context on created
@@ -115,15 +117,15 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
             ctx.signals.add(self)
 
         # set can not be used because hash of items are changing
-        self.endpoints: SetList[Union[HdlStatement, HdlPortItem, "Operator"]] = SetList()
-        self.drivers: SetList[HdlStatement, HdlPortItem, "Operator"] = SetList()
+        self._rtlEndpoints: SetList[Union[HdlStatement, HdlPortItem, "Operator"]] = SetList()
+        self._rtlDrivers: SetList[HdlStatement, HdlPortItem, "Operator"] = SetList()
         self._usedOps: Dict[OperatorCaheKeyType, RtlSignal] = {}
         self._usedOpsAlias: Dict[OperatorCaheKeyType, Set[OperatorCaheKeyType]] = {}
-        self.hidden: bool = True
+        self._isUnnamedExpr: bool = True
 
         self._nop_val = nop_val
         self._const = is_const
-        self.origin = None
+        self._rtlObjectOrigin = None
 
         if nop_val is NOT_SPECIFIED:
             nop_val = self
@@ -140,7 +142,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
             _next_signal = next_signal
             if _next_signal._nop_val is NOT_SPECIFIED:
                 _next_signal._nop_val = self
-        self.next: Optional[RtlSignal] = _next_signal
+        self._rtlNextSig: Optional[RtlSignal] = _next_signal
 
     @internal
     @classmethod
@@ -155,8 +157,8 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
     def staticEval(self):
         # operator writes in self._val new value
         driven_by_def_val = True
-        if self.drivers:
-            for d in self.drivers:
+        if self._rtlDrivers:
+            for d in self._rtlDrivers:
                 if isinstance(d, HdlPortItem):
                     assert d.getInternSig() is self, (d, self)
                     continue
@@ -181,13 +183,13 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         """
         Returns a first driver if signal has only one driver.
         """
-        d_cnt = len(self.drivers)
+        d_cnt = len(self._rtlDrivers)
         if d_cnt == 0:
             raise SignalDriverErr([(SignalDriverErrType.MISSING_DRIVER, self), ])
         elif d_cnt > 1:
             raise SignalDriverErr([(SignalDriverErrType.MULTIPLE_COMB_DRIVERS, self), ])
 
-        return self.drivers[0]
+        return self._rtlDrivers[0]
 
     @internal
     def _walk_sensitivity(self, casualSensitivity: Set[RtlSignalBase], seen: Set[RtlSignalBase], ctx: SensitivityCtx):
@@ -204,7 +206,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         if self._const:
             return
 
-        if not self.hidden:
+        if not self._isUnnamedExpr:
             casualSensitivity.add(self)
             return
 
@@ -225,13 +227,13 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         Walk all non hidden signals in an expression
         """
         seen.add(self)
-        if not self.hidden:
+        if not self._isUnnamedExpr:
             yield self
             return
 
-        assert self.drivers, self
+        assert self._rtlDrivers, self
 
-        for d in self.drivers:
+        for d in self._rtlDrivers:
             # d has to be operator otherwise this signal would be public itself
             assert not isinstance(d, HdlStatement), (d.__class__)
             yield from d._walk_public_drivers(seen)
@@ -276,15 +278,15 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         # input operands may be type converted,
         # search if this happened, and return always same result signal
         try:
-            op_instantiated = (o.origin.operator == operator
-                               and o.origin.operands[indexOfSelfInOperands] is self)
+            op_instantiated = (o._rtlObjectOrigin.operator == operator
+                               and o._rtlObjectOrigin.operands[indexOfSelfInOperands] is self)
         except AttributeError:
             op_instantiated = False
 
         usedOpsAlias = self._usedOpsAlias
         if op_instantiated:
             # try check real operands and operator which were used after all default type conversions
-            k_real = (operator, indexOfSelfInOperands, *o.origin.operands[1:])
+            k_real = (operator, indexOfSelfInOperands, *o._rtlObjectOrigin.operands[1:])
             if k != k_real:
                 alias = usedOpsAlias[k_real]
                 usedOpsAlias[k] = alias
@@ -343,7 +345,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         """
         :return: a signal which should be used as a destination if assigning to this signal
         """
-        return self if self.next is None else self.next
+        return self if self._rtlNextSig is None else self._rtlNextSig
 
     def __call__(self, source,
                  dst_resolve_fn=lambda x: x._getDestinationSignalForAssignmentToThis(),
@@ -359,10 +361,11 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         if exclude is not None and (self in exclude or source in exclude):
             return []
 
-        if isinstance(source, HwIOBase):
+        if isinstance(source, HwIOBase) and not source._hwIOs:
             assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
             source = source._sig
 
+        assert self._dtype.isScalar(), ("For non scalar types this should be overriden", self._dtype, self.__class__, self)
         try:
             if source is None:
                 requires_type_check = False
@@ -370,6 +373,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
             else:
                 requires_type_check = True
                 source = toHVal(source, suggestedType=self._dtype)
+
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -385,10 +389,9 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
                 err = True
             if err:
                 raise TypeConversionErr(
-                    ("Can not connect %r (of type %r) to %r "
-                     "(of type %r) due type incompatibility")
-                    % (source, source._dtype, self, self._dtype))
-        if self.hidden:
+                    "Can not connect ", source._dtype, " to ", self._dtype,
+                    " ", source, self)
+        if self._isUnnamedExpr:
             try:
                 d = self.singleDriver()
             except:
@@ -423,7 +426,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
                             offset += w
                         return res
                 else:
-                    raise AssertionError("Assignment to", self, "is not allowed by operator definition")
+                    raise AssertionError("Assignment to operator is not allowed by operator definition", self,)
 
         try:
             mainSig, indexCascade, signCastSeen = self._getIndexCascade()
@@ -446,7 +449,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
             raise e_simplified
 
     def _getAssociatedClk(self) -> Self:
-        assert self.next is not None, self
+        assert self._rtlNextSig is not None, self
         d = self.singleDriver()  # this expects a simple if rising_edge(clk)
         # assert isinstance(d, IfContainer), d
         cond = d.cond.singleDriver()
@@ -454,7 +457,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         return cond.operands[0]
 
     def _getAssociatedRst(self) -> Self:
-        assert self.next is not None, self
+        assert self._rtlNextSig is not None, self
         d = self.singleDriver()  # this expects a simple if rising_edge(clk)
         # assert isinstance(d, IfContainer), d
         # cond = d.cond.singleDriver()

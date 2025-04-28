@@ -7,12 +7,13 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.doc_markers import internal
-from hwt.hwIO import HwIO
-from hwt.hwModule import HwModule
-from hwt.hwParam import HwParam
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.variables import HdlSignalItem
+from hwt.hwIO import HwIO
+from hwt.hwModule import HwModule
+from hwt.hwParam import HwParam
 from hwt.mainBases import RtlSignalBase
 from hwt.serializer.store_manager import SaveToFilesFlat
 from hwt.serializer.vhdl import Vhdl2008Serializer, ToHdlAstVhdl2008
@@ -23,7 +24,6 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
-from hwt.hdl.variables import HdlSignalItem
 
 
 class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
@@ -32,9 +32,9 @@ class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
 
     def as_hdl_HdlSignalItem(self, si: HdlSignalItem, declaration=False):
         assert(declaration == False)
-        if si.hidden:
-            assert si.origin is not None, si
-            return self.as_hdl(si.origin)
+        if si._isUnnamedExpr:
+            assert si._rtlObjectOrigin is not None, si
+            return self.as_hdl(si._rtlObjectOrigin)
         else:
             id_ = hdl_call(self._id, [f'MODELPARAM_VALUE.{si._name}'])
             return hdl_call(self._spirit_decode, [id_])
@@ -133,7 +133,7 @@ class IpPackager(IpCorePackager):
 
     @internal
     def iterParams(self, module: HwModule):
-        return module._ctx.hwModDec.params
+        return module._rtlCtx.hwModDec.params
 
     @internal
     def iterInterfaces(self, top: HwModule):

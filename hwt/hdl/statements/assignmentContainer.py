@@ -61,10 +61,10 @@ class HdlAssignmentContainer(HdlStatement):
 
         if not virtual_only:
             for i in self._inputs:
-                i.endpoints.append(self)
+                i._rtlEndpoints.append(self)
                 
-            dst.drivers.append(self)
-            dst.ctx.statements.add(self)
+            dst._rtlDrivers.append(self)
+            dst._rtlCtx.statements.add(self)
 
         self._outputs.append(dst)
     

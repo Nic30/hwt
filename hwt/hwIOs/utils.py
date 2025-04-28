@@ -40,7 +40,7 @@ def _tryConnect(src: HwIOBase, module: HwModuleBase, hwIOName: str):
         dst = getattr(module, hwIOName)
     except AttributeError:
         return
-    if not dst._sig.drivers:
+    if not dst._sig._rtlDrivers:
         dst(src)
     return dst
 

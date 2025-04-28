@@ -15,7 +15,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase, \
 def getCtxFromOps(operands: Sequence):
     for o in operands:
         if isinstance(o, RtlSignalBase):
-            return o.ctx
+            return o._rtlCtx
     return None # case for casts of constants
 
 
@@ -81,7 +81,7 @@ class HOperatorNode(HdlObject):
 
     @internal
     @staticmethod
-    def withRes(opDef, operands: Sequence[Union[RtlSignalBase, HConst]], resT: HdlType):
+    def withRes(opDef: HOperatorDef, operands: Sequence[Union[RtlSignalBase, HConst]], resT: HdlType):
         """
         Create operator with result signal
 
@@ -106,15 +106,15 @@ class HOperatorNode(HdlObject):
         op = HOperatorNode(opDef, operands)
         out: RtlSignal = resT.getRtlSignalCls()(getCtxFromOps(operands), None, resT)
         out._const = arr_all(op.operands, isConst)
-        out.drivers.append(op)
-        out.origin = op
+        out._rtlDrivers.append(op)
+        out._rtlObjectOrigin = op
         op.result = out
 
         # Register potential signals to drivers/endpoints
         first_signal = True
         for i, o in enumerate(op.operands):
             if isinstance(o, RtlSignalBase):
-                o.endpoints.append(op)
+                o._rtlEndpoints.append(op)
                 if first_signal:
                     # register operator in _usedOps operator cache
                     if i == 0:
@@ -149,7 +149,7 @@ class HOperatorNode(HdlObject):
         
         :attention: costly operation because all records in operand cache for all inputs may be potentially updated
         """
-        assert self.result.ctx is replacement.ctx, self
+        assert self.result._rtlCtx is replacement._rtlCtx, self
         newOperands = []
         modified = False
         for op in self.operands:
@@ -197,26 +197,26 @@ class HOperatorNode(HdlObject):
                 break  # _usedOps/_usedOpsAlias is relevant only for the first operand
 
         self.operands = tuple(newOperands)
-        inp.endpoints.discard(self)
-        replacement.endpoints.append(self)
+        inp._rtlEndpoints.discard(self)
+        replacement._rtlEndpoints.append(self)
 
     @internal
     def _destroy(self):
-        self.result.drivers.remove(self)
+        self.result._rtlDrivers.remove(self)
         operands = self.operands
         first_op_sig = True
         for i, o in enumerate(operands):
             if isinstance(o, RtlSignalBase):
                 # discard because same signal can be on multiple places in operand list
-                o.endpoints.discard(self)
+                o._rtlEndpoints.discard(self)
                 if first_op_sig:
                     # clean all references on this operator instance from RtlSignal._usedOps operator cache
                     _k = (self.operator, i, *operands[:i], *operands[i + 1:])
                     for k in o._usedOpsAlias[_k]:
                         res = o._usedOps.pop(k)
-                        assert res is self.result, (self.result.ctx.parent, "HOperatorNode was not stored properly in operand cache", res, self.result, o)
+                        assert res is self.result, (self.result._rtlCtx.parent, "HOperatorNode was not stored properly in operand cache", res, self.result, o)
                     first_op_sig = False
-        self.result.origin = None
+        self.result._rtlObjectOrigin = None
         self.result = None
         self.operands = None
         self.operator = None

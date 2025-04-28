@@ -5,17 +5,16 @@ from hdlConvertorAst.hdlAst import HdlValueInt
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
+from hwt.hdl.commonConstants import b1, b0
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BIT, INT
+from hwt.hdl.types.defs import INT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-
-
-zero, one = BIT.from_py(0), BIT.from_py(1)
+from hwt.serializer.vhdl.ops import matchFullWidthMul
 
 
 class ToHdlAstVerilog_ops():
@@ -27,8 +26,8 @@ class ToHdlAstVerilog_ops():
     }
 
     def _operandIsAnotherOperand(self, operand):
-        if isinstance(operand, RtlSignal) and operand.hidden\
-                and isinstance(operand.origin, HOperatorNode):
+        if isinstance(operand, RtlSignal) and operand._isUnnamedExpr\
+                and isinstance(operand._rtlObjectOrigin, HOperatorNode):
             return True
 
     def as_hdl_operand(self, operand: Union[RtlSignal, HConst], i: int,
@@ -40,7 +39,7 @@ class ToHdlAstVerilog_ops():
         #        * maybe flatten the concatenations
         if operator.operator != HwtOps.CONCAT\
                 and self._operandIsAnotherOperand(operand)\
-                and operand.origin.operator == HwtOps.CONCAT:
+                and operand._rtlObjectOrigin.operator == HwtOps.CONCAT:
             _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
             # HdlAssignmentContainer(tmpVar, operand, virtual_only=True)
             operand = tmpVar
@@ -68,6 +67,7 @@ class ToHdlAstVerilog_ops():
                     break
 
             assert width is not None, (operator, operand)
+
         hdl_op = self.as_hdl_Value(operand)
         if width is not None:
             if isinstance(hdl_op, HdlValueInt):
@@ -82,7 +82,7 @@ class ToHdlAstVerilog_ops():
         o = op.operator
 
         if o == HwtOps.TERNARY:
-            if ops[1] == one and ops[2] == zero:
+            if ops[1] == b1 and ops[2] == b0:
                 # ignore redundant x ? 1 : 0
                 return self.as_hdl_cond(ops[0], True)
             else:
@@ -92,7 +92,7 @@ class ToHdlAstVerilog_ops():
                 return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
         elif o == HwtOps.RISING_EDGE or o == HwtOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
-        elif o in [HwtOps.BitsAsUnsigned, HwtOps.BitsAsVec, HwtOps.BitsAsSigned]:
+        elif o in (HwtOps.BitsAsUnsigned, HwtOps.BitsAsVec, HwtOps.BitsAsSigned):
             op0, = ops
             do_cast = bool(op0._dtype.signed) != bool(op.result._dtype.signed)
 

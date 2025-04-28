@@ -12,7 +12,7 @@ def discoverEventDependency(sig: RtlSignalBase):
     """
 
     try:
-        drivers = sig.drivers
+        drivers = sig._rtlDrivers
     except AttributeError:
         return
 

@@ -29,7 +29,7 @@ class SignalDriverErr(Exception):
 
     def __str__(self):
         try:
-            ctx = self.args[0][0][1].ctx
+            ctx = self.args[0][0][1]._rtlCtx
             name = ctx.getDebugScopeName()
             scope_name = f"{name:s} of class {ctx.parent.__class__}"
         except Exception:
@@ -44,7 +44,7 @@ class SignalDriverErr(Exception):
                 prev_err_t = err_t
             if err_t == SignalDriverErrType.MULTIPLE_COMB_DRIVERS or\
                     err_t == SignalDriverErrType.INPUT_WITH_DRIVER:
-                b.append(f"    {sig}: {sig.drivers}")
+                b.append(f"    {sig}: {sig._rtlDrivers}")
             else:
                 b.append(f"    {sig}")
 

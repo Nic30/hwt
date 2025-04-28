@@ -80,11 +80,11 @@ class RtlNetlist():
                 r = If(syncRst._isOn(),
                        s(_def_val, dst_resolve_fn=lambda x: x)
                     ).Else(
-                       s(s.next, dst_resolve_fn=lambda x: x)
+                       s(s._rtlNextSig, dst_resolve_fn=lambda x: x)
                     )
             else:
                 r = [
-                    s(s.next, dst_resolve_fn=lambda x: x)
+                    s(s._rtlNextSig, dst_resolve_fn=lambda x: x)
                 ]
 
             if isinstance(clk, (HwIOBase, RtlSignal)):
@@ -164,11 +164,11 @@ class RtlNetlist():
 
         # add signals, variables, etc. in architecture
         for s in sorted((s for s in self.signals
-                        if not s.hidden and
+                        if not s._isUnnamedExpr and
                         s not in self.hwIOs.keys()),
                         key=RtlSignal_sort_key):
             s: RtlSignal
-            assert s.ctx is self, ("RtlSignals in this context must know that they are in this context", s)
+            assert s._rtlCtx is self, ("RtlSignals in this context must know that they are in this context", s)
             v = HdlIdDef()
             v.origin = s
             v.name = s._name = ns.checked_name(s._name, s)
@@ -186,9 +186,9 @@ class RtlNetlist():
         for sm in self.subHwModules:
             ci = HdlCompInst()
             ci.origin = sm
-            ci.module_name = HdlValueId(sm._ctx.hwModDec.name, obj=sm._ctx.hwModDec)
+            ci.module_name = HdlValueId(sm._rtlCtx.hwModDec.name, obj=sm._rtlCtx.hwModDec)
             ci.name = HdlValueId(ns.checked_name(sm._name + "_inst", ci), obj=sm)
-            hwModDec = sm._ctx.hwModDec
+            hwModDec = sm._rtlCtx.hwModDec
 
             ci.param_map.extend(hwModDec.params)
             ci.port_map.extend(hwModDec.ports)

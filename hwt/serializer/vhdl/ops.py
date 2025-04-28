@@ -22,15 +22,16 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 @internal
-def isResultOfTypeConversion(sig):
-    if len(sig.drivers) != 1:
+def isResultOfTypeConversionForIndex(sig: RtlSignal):
+    if len(sig._rtlDrivers) != 1:
         return False
 
-    if sig.hidden:
+    if sig._isUnnamedExpr:
         d = sig.singleDriver()
         return d.operator != HwtOps.INDEX
 
     return False
+
 
 
 class ToHdlAstVhdl2008_ops():
@@ -46,7 +47,7 @@ class ToHdlAstVhdl2008_ops():
     }
 
     @internal
-    def _tmp_var_for_ternary(self, val: RtlSignal):
+    def _tmp_var_for_ternary(self, val: RtlSignal) -> RtlSignal:
         """
         Optionally convert boolean to std_logic_vector
         """
@@ -56,7 +57,7 @@ class ToHdlAstVhdl2008_ops():
             postponed_init=True,
             extra_args=(val, bool, 1, 0))
         if isNew:
-            cond, ifTrue, ifFalse = val.drivers[0].operands
+            cond, ifTrue, ifFalse = val._rtlDrivers[0].operands
             if_ = If(cond)
             if_.ifTrue.append(HdlAssignmentContainer(ifTrue, o,
                                          virtual_only=True,
@@ -69,7 +70,7 @@ class ToHdlAstVhdl2008_ops():
             for obj in (cond, ifTrue, ifFalse):
                 if isinstance(obj, RtlSignalBase):
                     if_._inputs.append(obj)
-            o.drivers.append(if_)
+            o._rtlDrivers.append(if_)
             if_._discover_enclosure()
             self.tmpVars.finish_var_init(o)
 
@@ -90,7 +91,7 @@ class ToHdlAstVhdl2008_ops():
                 if_.ifFalse = []
                 if_.ifFalse.append(HdlAssignmentContainer(ifFalse, o, virtual_only=True, parentStm=if_))
                 if_._outputs.append(o)
-                o.drivers.append(if_)
+                o._rtlDrivers.append(if_)
                 self.tmpVars.finish_var_init(o)
             return o
         else:
@@ -109,7 +110,7 @@ class ToHdlAstVhdl2008_ops():
                 postponed_init=True,
                 extra_args=(val, std_logic_vector))
             if isNew:
-                o.drivers.append(HdlAssignmentContainer(val, o, virtual_only=True))
+                o._rtlDrivers.append(HdlAssignmentContainer(val, o, virtual_only=True))
                 self.tmpVars.finish_var_init(o)
             return o
         else:
@@ -117,14 +118,20 @@ class ToHdlAstVhdl2008_ops():
             return val
 
     def as_hdl_operand(self, operand: Union[RtlSignal, HConst]):
-        # no nested ternary in expressions like
-        # ( '1'  WHEN r = f ELSE  '0' ) & "0"
-        # extract them as a tmp variable
+        # automatically extract some operators as tmp variable
+        # * nested ternary in expressions like
+        #   ( '1'  WHEN r = f ELSE  '0' ) & "0"
+        #   (0=>x, 1=>y) & "0"
+        isTernaryOp = False
         try:
-            isTernaryOp = operand.hidden\
-                and operand.drivers[0].operator == HwtOps.TERNARY
+            if operand._isUnnamedExpr:
+                d = operand._rtlDrivers[0]
+                o = d.operator
+                if o == HwtOps.TERNARY:
+                    isTernaryOp = True
+
         except (AttributeError, IndexError):
-            isTernaryOp = False
+            pass
 
         if isTernaryOp:
             # rewrite ternary operator as if
@@ -136,7 +143,7 @@ class ToHdlAstVhdl2008_ops():
                         [op, ])
 
     def _wrapConcatInTmpVariable(self, op):
-        if isinstance(op, RtlSignalBase) and op.hidden:
+        if isinstance(op, RtlSignalBase) and op._isUnnamedExpr:
             # if left operand is concatenation and this is not concatenation we must extract it as tmp variable
             # because VHDL would not be able to resolve type of concatenated signal otherwise
             try:
@@ -148,15 +155,29 @@ class ToHdlAstVhdl2008_ops():
                 _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
 
+    def as_hdl_HOperatorNode_indexRhs(self, op1: Union[HBitsConst, HBitsRtlSignal]):
+        if isinstance(op1._dtype, HBits) and op1._dtype != INT:
+            if op1._dtype.signed is None:
+                if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
+                    _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", HBits(1, force_vector=True), def_val=op1)
+                _op1 = self.as_hdl_operand(op1)
+                _op1 = self.apply_cast(self.UNSIGNED, _op1)
+            else:
+                _op1 = self.as_hdl_operand(op1)
+
+            return self.apply_cast(self.TO_INTEGER, _op1)
+        else:
+            return self.as_hdl_operand(op1)
+
     def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator
 
         if o == HwtOps.INDEX:
             op0, op1 = ops
-            if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
+            if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
                 _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
-            if isinstance(op1, RtlSignalBase) and isResultOfTypeConversion(op1):
+            if isinstance(op1, RtlSignalBase) and isResultOfTypeConversionForIndex(op1):
                 _, op1 = self.tmpVars.create_var_cached("tmpIndexTypeConv_", op1._dtype, def_val=op1)
 
             # if the op0 is not signal or other index index operator it is extracted
@@ -167,19 +188,7 @@ class ToHdlAstVhdl2008_ops():
                 assert int(ops[1]) == 0, ops
                 # drop whole index operator because it is useless
                 return op0
-
-            if isinstance(op1._dtype, HBits) and op1._dtype != INT:
-                if op1._dtype.signed is None:
-                    if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
-                        _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", HBits(1, force_vector=True), def_val=op1)
-                    _op1 = self.as_hdl_operand(op1)
-                    _op1 = self.apply_cast("UNSIGNED", _op1)
-                else:
-                    _op1 = self.as_hdl_operand(op1)
-
-                _op1 = self.apply_cast("TO_INTEGER", _op1)
-            else:
-                _op1 = self.as_hdl_operand(op1)
+            _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
 
             return HdlOp(HdlOpType.INDEX, [op0, _op1])
 
@@ -203,7 +212,7 @@ class ToHdlAstVhdl2008_ops():
             if _o is not None:
                 op0 = ops[0]
                 op0 = self._as_Bits_vec(op0)
-                if isinstance(op0, RtlSignalBase) and op0.hidden:
+                if isinstance(op0, RtlSignalBase) and op0._isUnnamedExpr:
                     _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
 

@@ -24,8 +24,8 @@ def _replace_input_in_expr(expr: Union[RtlSignalBase, HConst], toReplace: Signal
     if replacement is not None:
         return replacement, True
 
-    elif isinstance(expr, RtlSignalBase) and expr.hidden:
-        op = expr.origin
+    elif isinstance(expr, RtlSignalBase) and expr._isUnnamedExpr:
+        op = expr._rtlObjectOrigin
         if op is None:
             try:
                 op = expr.singleDriver()
@@ -66,9 +66,9 @@ def replace_input_in_expr(topStatement: "HdlStatement",
     if didContainExpr:
         # maybeDisconnectedSignals.append(expr)
         if not isinstance(expr, HConst):
-            expr.endpoints.discard(topStatement)
+            expr._rtlEndpoints.discard(topStatement)
         if not isinstance(res, HConst):
-            res.endpoints.append(topStatement)
+            res._rtlEndpoints.append(topStatement)
 
         return res, True
     else:

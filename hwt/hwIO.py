@@ -57,7 +57,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     :ivar ~._masterDir: specifies which direction has this interface at master
     :ivar ~._direction: means actual direction of this interface resolved
         by its drivers
-    :ivar ~._ctx: RTL netlist context of all signals and params
+    :ivar ~._rtlCtx: RTL netlist context of all signals and params
         on this interface after interface is registered on parent _ctx
         is merged
     :ivar ~._hdlPort: a HdlPortItem instance available once the unit is synthesized
@@ -92,7 +92,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         # HwIO is instantiated inside of :class:`hwt.hwModule.HwModule` first,
         # master direction actually means slave from outside view
         self._direction: INTF_DIRECTION = INTF_DIRECTION.UNKNOWN
-        self._ctx: Optional[RtlNetlist] = None
+        self._rtlCtx: Optional[RtlNetlist] = None
 
         if loadConfig:
             self._loadConfig()

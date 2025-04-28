@@ -63,7 +63,7 @@ class ResourceAnalyzer():
     def visit_HdlStmCodeBlockContainer_operators(self, sig: RtlSignal, synchronous):
         ctx = self.context
         seen = ctx.seen
-        for d in sig.drivers:
+        for d in sig._rtlDrivers:
             if (not isinstance(d, HOperatorNode)
                     or d in seen):
                 continue
@@ -106,7 +106,7 @@ class ResourceAnalyzer():
 
             for op in d.operands:
                 if (not isinstance(op, RtlSignal)
-                        or not op.hidden
+                        or not op._isUnnamedExpr
                         or op in seen):
                     continue
                 self.visit_HdlStmCodeBlockContainer_operators(op, synchronous)
@@ -159,7 +159,7 @@ class ResourceAnalyzer():
             for i in inputs:
                 # discover only internal signals in this statements for
                 # operators
-                if not i.hidden or i in seen:
+                if not i._isUnnamedExpr or i in seen:
                     continue
 
                 self.visit_HdlStmCodeBlockContainer_operators(i, ev_dep)
@@ -178,7 +178,7 @@ class ResourceAnalyzer():
 
     # [TODO] constant to ROMs
     def visit_HwModule(self, m: HwModule):
-        self.visit_HdlModuleDef(m._ctx.hwModDef)
+        self.visit_HdlModuleDef(m._rtlCtx.hwModDef)
 
     def report(self):
         ctx = self.context

@@ -57,7 +57,7 @@ class If(IfContainer):
         super(If, self).__init__(cond_sig)
         self.rank = 1
         self._inputs.append(cond_sig)
-        cond_sig.endpoints.append(self)
+        cond_sig._rtlEndpoints.append(self)
 
         ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
         self._event_dependent_from_branch = 0 if ev_dep else None
@@ -75,7 +75,7 @@ class If(IfContainer):
         self._event_dependent_from_branch = len(self.elIfs) + 1 if ev_dep else None
 
         self._inputs.append(cond_sig)
-        cond_sig.endpoints.append(self)
+        cond_sig._rtlEndpoints.append(self)
 
         stms = ListOfHdlStatement()
         self.elIfs.append((cond_sig, stms))
@@ -110,9 +110,9 @@ class Switch(SwitchContainer):
             raise HwtSyntaxError("Can not switch on result of event operator")
 
         super(Switch, self).__init__(switchOn, [])
-        switchOn.ctx.statements.add(self)
+        switchOn._rtlCtx.statements.add(self)
         self._inputs.append(switchOn)
-        switchOn.endpoints.append(self)
+        switchOn._rtlEndpoints.append(self)
 
     def add_cases(self, tupesValStms: Sequence[Tuple[Union[HConst, int], Sequence[HdlStatement]]]):
         """
@@ -342,8 +342,8 @@ class FsmBuilder(Switch):
 And = _mkOp(and_)
 Add = _mkOp(add)
 Or = _mkOp(or_)
-Xor = _mkOp(xor) # :note: xor is bitwise !=
-Xnor = _mkOp(eq) # :note: xnor is bitwise ==
+Xor = _mkOp(xor)  # :note: xor is bitwise !=
+Xnor = _mkOp(eq)  # :note: xnor is bitwise ==
 Concat = _mkOp(concatFn)
 
 

@@ -22,7 +22,7 @@ class ToHdlAstVhdl2008_statements():
     
     @staticmethod
     def _expandBitsOperandType(v):
-        if v._dtype == BIT and isinstance(v, RtlSignalBase) and v.hidden:
+        if v._dtype == BIT and isinstance(v, RtlSignalBase) and v._isUnnamedExpr:
             try:
                 d = v.singleDriver()
             except SignalDriverErr:
@@ -96,7 +96,7 @@ class ToHdlAstVhdl2008_statements():
     def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmCase:
         s = HdlStmCase()
         switchOn = sw.switchOn
-        if isinstance(switchOn, RtlSignalBase) and switchOn.hidden:
+        if isinstance(switchOn, RtlSignalBase) and switchOn._isUnnamedExpr:
             _, switchOn = self.tmpVars.create_var_cached("tmpTypeConv_", switchOn._dtype, def_val=switchOn)
 
         s.switch_on = self.as_hdl_cond(switchOn, False)

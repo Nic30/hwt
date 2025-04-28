@@ -47,7 +47,7 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
         if isinstance(item, HOperatorNode):
             op = item.operator
             assert op in (HwtOps.RISING_EDGE, HwtOps.FALLING_EDGE), item
-            assert not item.operands[0].hidden, item
+            assert not item.operands[0]._isUnnamedExpr, item
             return self.as_hdl_HOperatorNode(item)
         else:
             return HdlValueId(item._name, obj=item)

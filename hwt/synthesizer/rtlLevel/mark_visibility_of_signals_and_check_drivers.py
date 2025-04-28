@@ -38,15 +38,15 @@ class RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers(RtlNetlistPass):
         signals_with_driver_issue: List[Tuple[SignalDriverErrType, RtlSignal]] = []
         for sig in signals:
             # if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
-            #    sig._nop_val.hidden = False
+            #    sig._nop_val._isUnnamedExpr = False
 
-            driver_cnt = len(sig.drivers)
+            driver_cnt = len(sig._rtlDrivers)
             has_comb_driver = False
             if driver_cnt > 1:
-                sig.hidden = False
-                for d in sig.drivers:
+                sig._isUnnamedExpr = False
+                for d in sig._rtlDrivers:
                     if not isinstance(d, HOperatorNode):
-                        sig.hidden = False
+                        sig._isUnnamedExpr = False
 
                     is_comb_driver = False
 
@@ -66,10 +66,10 @@ class RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers(RtlNetlistPass):
 
                     has_comb_driver |= is_comb_driver
             elif driver_cnt == 1:
-                if not isinstance(sig.drivers[0], HOperatorNode):
-                    sig.hidden = False
+                if not isinstance(sig._rtlDrivers[0], HOperatorNode):
+                    sig._isUnnamedExpr = False
             else:
-                sig.hidden = False
+                sig._isUnnamedExpr = False
                 if sig not in ioSignals.keys():
                     if not sig.def_val._is_partially_valid():
                         signals_with_driver_issue.append(
@@ -81,12 +81,12 @@ class RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers(RtlNetlistPass):
             if d is None:
                 pass
             elif d is DIRECTION.IN:
-                assert sig.drivers, sig
-                if len(sig.drivers) != 1:
+                assert sig._rtlDrivers, sig
+                if len(sig._rtlDrivers) != 1:
                     signals_with_driver_issue.append(
                         (SignalDriverErrType.INPUT_WITH_DRIVER, sig))
             elif d is DIRECTION.OUT:
-                if not sig.drivers:
+                if not sig._rtlDrivers:
                     signals_with_driver_issue.append(
                         (SignalDriverErrType.OUTPUT_WITHOUT_DRIVER, sig))
 

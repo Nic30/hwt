@@ -27,9 +27,9 @@ def verilogTypeOfSig(s: Union[HdlSignalItem, HdlPortItem]):
         else:
             raise ValueError(t)
 
-    driver_cnt = len(s.drivers)
+    driver_cnt = len(s._rtlDrivers)
     if driver_cnt == 1:
-        d = s.drivers[0]
+        d = s._rtlDrivers[0]
         if isinstance(d, HdlPortItem):
             # input port
             return SIGNAL_TYPE.WIRE
@@ -37,7 +37,7 @@ def verilogTypeOfSig(s: Union[HdlSignalItem, HdlPortItem]):
                 and d.parentStm is None\
                 and not d.indexes\
                 and d._event_dependent_from_branch is None\
-                and (isinstance(d.src, HConst) or not d.src.hidden):
+                and (isinstance(d.src, HConst) or not d.src._isUnnamedExpr):
             # primitive assignment
             return SIGNAL_TYPE.WIRE
         elif isinstance(d, iHdlStatement) and d.in_preproc:

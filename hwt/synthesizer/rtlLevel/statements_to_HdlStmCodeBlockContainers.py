@@ -42,7 +42,7 @@ def name_for_process(outputs: List[RtlSignal]) -> str:
     """
     out_names = []
     for sig in outputs:
-        if not sig.hasGenericName:
+        if not sig._hasGenericName:
             out_names.append(sig._name)
 
     if out_names:
@@ -122,7 +122,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops: b
                 sensitivity.extend(_stm._sensitivity)
 
     for o in outputs:
-        assert not o.hidden, o
+        assert not o._isUnnamedExpr, o
 
     seen = set()
     inputs = SetList()

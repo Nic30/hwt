@@ -24,6 +24,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.hdl.types.slice import HSlice
+from hwt.hdl.types.struct import HStruct
 from hwt.mainBases import RtlSignalBase
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
@@ -103,6 +104,8 @@ class ToHdlAst():
             sFn = self.as_hdl_HdlType_slice
         elif isinstance(typ, HFloat):
             sFn = self.as_hdl_HdlType_float
+        elif isinstance(typ, HStruct):
+            sFn = self.as_hdl_HdlType_struct
         else:
             # [todo] better error msg
             raise NotImplementedError("type declaration is not implemented"
@@ -148,7 +151,13 @@ class ToHdlAst():
             return HdlValueId(name, obj=None)
 
     def as_hdl_HdlType_slice(self, typ: HSlice, declaration=False):
-        raise NotImplementedError(self)
+        raise NotImplementedError(self, typ)
+
+    def as_hdl_HdlType_float(self, typ: HFloat, declaration=False):
+        raise NotImplementedError(self, typ)
+
+    def as_hdl_HdlType_struct(self, typ: HStruct, declaration=False):
+        raise NotImplementedError(self, typ)
 
     def as_hdl_If(self, *args, **kwargs) -> HdlStmIf:
         return self.as_hdl_IfContainer(*args, **kwargs)

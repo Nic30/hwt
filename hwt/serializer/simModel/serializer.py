@@ -54,8 +54,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     def as_hdl_PortConnection(self, o: HdlPortItem):
         assert isinstance(o, HdlPortItem), o
         intern, outer = o.getInternSig(), o.getOuterSig()
-        assert not intern.hidden, intern
-        assert not outer.hidden, outer
+        assert not intern._isUnnamedExpr, intern
+        assert not outer._isUnnamedExpr, outer
         intern_hdl = HdlValueId(intern._name, obj=intern)
         outer_hdl = HdlValueId(outer._name, obj=outer)
         pm = hdl_map_asoc(intern_hdl, outer_hdl)

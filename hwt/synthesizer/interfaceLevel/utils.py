@@ -1,4 +1,5 @@
-from typing import Union
+from collections.abc import Container, Callable
+from typing import Union, Optional
 
 from hwt.constants import DIRECTION
 from hwt.hdl.types.bits import HBits
@@ -26,7 +27,9 @@ def HwIO_walkSignals(hio: HwIOBase):
         yield hio
 
 
-def HwIO_connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
+def HwIO_connectPacked(srcPacked: RtlSignalBase,
+                       dstInterface: Union[HwIOBase, RtlSignalBase],
+                       exclude:Optional[Container[Union[HwIOBase, RtlSignalBase]]]=None):
     """
     Connect 1D vector signal to this structuralized interface
     (LSB of first interface is LSB of result)
@@ -46,14 +49,18 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
         w = t.bit_length()
         if w == 1:
             if srcPacked._dtype.bit_length() == 1:
+                # avoid indexing on single bit
                 assert offset == 0, srcPacked
                 s = srcPacked
             else:
+                # select bit from bit vector
+                assert offset < srcPacked._dtype.bit_length(), ("Insufficient amount of bits in srcPacked", srcPacked, w, offset, i)
                 s = srcPacked[offset]
             offset += 1
         else:
-            assert srcPacked._dtype.bit_length() >= w + offset, ("Insufficient amount of bits in srcPacked", srcPacked, w, offset)
-            s = srcPacked[(w + offset): offset]  # src is likely to have insufficient amount of bits
+            # select bit slice from bit vector
+            assert srcPacked._dtype.bit_length() >= w + offset, ("Insufficient amount of bits in srcPacked", srcPacked, w, offset, i)
+            s = srcPacked[(w + offset): offset]  # src is likely to have insufficient amount of bits if
             offset += w
 
         assert sig._dtype.bit_length() == s._dtype.bit_length(), (sig, s, sig._dtype, s._dtype)
@@ -62,21 +69,23 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
     return connections
 
 
-def HwIO_walkFlatten(hio: HwIOBase, shouldEnterHwIOFn):
+def HwIO_walkFlatten(hwio: HwIOBase, shouldEnterHwIOFn: Optional[Callable[[HwIOBase], tuple[bool, bool]]]):
     """
-    :param shouldEnterHwIOFn: function (actual hio)
+    :param shouldEnterHwIOFn: function (actual hwio)
         returns tuple (shouldEnter, shouldYield)
     """
-    _shouldEnter, _shouldYield = shouldEnterHwIOFn(hio)
+    _shouldEnter, _shouldYield = shouldEnterHwIOFn(hwio)
     if _shouldYield:
-        yield hio
+        yield hwio
 
     if shouldEnterHwIOFn:
-        for sHwIO in hio._hwIOs:
+        for sHwIO in hwio._hwIOs:
             yield from HwIO_walkFlatten(sHwIO, shouldEnterHwIOFn)
 
 
-def HwIO_pack(hio: HwIOBase, masterDirEqTo=DIRECTION.OUT, exclude=None) -> Union[HBitsConst, RtlSignalBase[HBits]]:
+def HwIO_pack(hio: HwIOBase,
+              masterDirEqTo=DIRECTION.OUT,
+              exclude:Optional[Container[Union[HwIOBase, RtlSignalBase]]]=None) -> Union[HBitsConst, RtlSignalBase[HBits]]:
     """
     Concatenate all signals to one big signal, recursively
     (LSB of first interface is LSB of result)

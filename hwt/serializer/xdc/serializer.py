@@ -30,7 +30,7 @@ class XdcSerializer():
         _o = o[-1]
         if isinstance(_o, RtlSignal):
             q = "get_cells"
-            for d in _o.drivers:
+            for d in _o._rtlDrivers:
                 if d._event_dependent_from_branch is not None:
                     is_reg = True
 
@@ -71,7 +71,7 @@ class XdcSerializer():
 
     def visit_get_clock_of(self, o: get_clock_of):
         w = self.out.write
-        if isinstance(o.obj[-1], RtlSignal) and o.obj[-1].next is not None:
+        if isinstance(o.obj[-1], RtlSignal) and o.obj[-1]._rtlNextSig is not None:
             w("get_clocks -of [")
             self._get(o.obj)
             w("]")

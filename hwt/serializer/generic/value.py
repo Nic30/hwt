@@ -3,6 +3,7 @@ from typing import Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlDirection
+from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsConst import HBitsConst
@@ -13,10 +14,10 @@ from hwt.hdl.types.function import HFunction, HFunctionConst
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.string import HString
 from hwt.hdl.types.stringConst import HStringConst
-from hwt.hdl.const import HConst
 from hwt.hdl.variables import HdlSignalItem
-from hwt.serializer.exceptions import SerializerException
 from hwt.mainBases import RtlSignalBase
+from hwt.serializer.exceptions import SerializerException
+from pyMathBitPrecise.bit_utils import mask
 
 
 class ToHdlAst_Value():
@@ -111,10 +112,10 @@ class ToHdlAst_Value():
             if isinstance(si, RtlSignalBase):
                 if si.virtual_only:
                     var.is_latched = True
-                elif si.drivers or var.direction != HdlDirection.UNKNOWN:
+                elif si._rtlDrivers or var.direction != HdlDirection.UNKNOWN:
                     # has drivers or is port/param
                     pass
-                elif si.endpoints:
+                elif si._rtlEndpoints:
                     if not v.vld_mask:
                         raise SerializerException(
                             f"Signal {si._name:s} is constant and has undefined value")
@@ -149,7 +150,7 @@ class ToHdlAst_Value():
             var.type = self.as_hdl_HdlType(var.type)
             return var
         else:
-            if si.hidden and si.origin is not None:
+            if si._isUnnamedExpr and si._rtlObjectOrigin is not None:
                 # hidden signal, render it's driver instead
-                return self.as_hdl(si.origin)
+                return self.as_hdl(si._rtlObjectOrigin)
             return HdlValueId(si._name, obj=si)

@@ -123,5 +123,5 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         return res
 
     def as_hdl_HldComponent(self, o: HdlCompInst):
-        c = self.as_hdl_HdlModuleDec(o.origin._ctx.hwModDec)
+        c = self.as_hdl_HdlModuleDec(o.origin._rtlCtx.hwModDec)
         return c

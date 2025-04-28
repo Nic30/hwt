@@ -1,12 +1,12 @@
 from types import MethodType
 from typing import Tuple, Set, Optional, Callable
 
-from hwt.doc_markers import internal
-from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.hObjList import HObjList
-from hwt.mainBases import HwModuleBase, HwIOBase
-from hwt.hwParam import HwParam
 from hdlConvertorAst.translate.common.name_scope import WithNameScope
+from hwt.doc_markers import internal
+from hwt.hObjList import HObjList
+from hwt.hwParam import HwParam
+from hwt.mainBases import HwModuleBase, HwIOBase
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
 @internal
@@ -281,7 +281,7 @@ class PropDeclrCollector(object):
         assert hwIO._parent is None
         hwIO._parent = self
         hwIO._name = hwIOName
-        hwIO._ctx = self._ctx
+        hwIO._rtlCtx = self._rtlCtx
 
         # _setAsExtern() not used because _hwIOs are not initialized yet
         if isPrivate:
@@ -306,7 +306,7 @@ class PropDeclrCollector(object):
         return prop
 
     @internal
-    def _registerArray(self, name, items: HObjList):
+    def _registerArray(self, name: str, items: HObjList):
         """
         Register array of items on interface level object
         """
@@ -321,7 +321,7 @@ class PropDeclrCollector(object):
         """
         Register a single object in the list
         """
-        setattr(self, "%s_%d" % (h_obj_list._name, index), item)
+        setattr(self, f"{h_obj_list._name:s}_{index:d}", item)
 
     # implementation phase
     @internal
@@ -331,28 +331,28 @@ class PropDeclrCollector(object):
         self._setAttrListener = None
 
     @internal
-    def _registerSubmoduleInImpl(self, uName, u):
+    def _registerSubmoduleInImpl(self, name: str, m: HwModuleBase):
         """
         :attention: unit has to be parametrized before it is registered
             (some components can change interface by parametrization)
         """
-        self._registerSubmodule(uName, u)
-        u._loadHwDeclarations()
+        self._registerSubmodule(name, m)
+        m._loadHwDeclarations()
         sm = self._store_manager
         with WithNameScope(sm, sm.name_scope.parent):
-            self._lazy_loaded.extend(u._to_rtl(
+            self._lazy_loaded.extend(m._to_rtl(
                 self._target_platform, self._store_manager))
-        u._signalsForSubHwModuleEntity(self._ctx, "sig_" + uName)
+        m._signalsForSubHwModuleEntity(self._rtlCtx, "sig_" + name)
 
     @internal
-    def _registerHwIOInHwImpl(self, hwIOName, i):
+    def _registerHwIOInHwImpl(self, hwIOName: str, hwio: HwIOBase):
         """
         Register interface in implementation phase
         """
         raise NotImplementedError()
 
     @internal
-    def _paramCollector(self, pName, prop):
+    def _paramCollector(self, pName: str, prop):
         if isinstance(prop, HwParam):
             self._registerParameter(pName, prop)
             return prop._initval
@@ -360,7 +360,7 @@ class PropDeclrCollector(object):
             return prop
 
     @internal
-    def _implCollector(self, name, prop):
+    def _implCollector(self, name: str, prop):
         """
         Handle property definitions in _impl phase
         """

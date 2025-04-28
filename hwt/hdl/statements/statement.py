@@ -143,7 +143,7 @@ class HdlStatement(HdlObject):
             self.parentStmList = None
             return True
 
-        sig.drivers.discard(self)
+        sig._rtlDrivers.discard(self)
         return False
 
     @internal
@@ -174,10 +174,10 @@ class HdlStatement(HdlObject):
             if self.parentStm is None:
                 for i in cut_of_smt._inputs:
                     if i not in self._inputs:
-                        i.endpoints.remove(self)
+                        i._rtlEndpoints.remove(self)
 
         if self.parentStm is None:
-            cut_off_sig.drivers.append(cut_of_smt)
+            cut_off_sig._rtlDrivers.append(cut_of_smt)
 
         if self.parentStmList is not None:
             self.parentStmList._unregisterOutput(cut_off_sig, self)
@@ -215,8 +215,8 @@ class HdlStatement(HdlObject):
         get RtlNetlist context from signals
         """
         for sig in chain(self._inputs, self._outputs):
-            if sig.ctx:
-                return sig.ctx
+            if sig._rtlCtx:
+                return sig._rtlCtx
             else:
                 # Param instances does not have context
                 continue
@@ -276,9 +276,9 @@ class HdlStatement(HdlObject):
                 ctx.statements.update(result_statements)
 
                 for i in self._inputs:
-                    i.endpoints.discard(self)
+                    i._rtlEndpoints.discard(self)
                 for o in self._outputs:
-                    o.drivers.remove(self)
+                    o._rtlDrivers.remove(self)
 
             for stm in result_statements:
                 stm.parentStm = parentStm
@@ -286,9 +286,9 @@ class HdlStatement(HdlObject):
                 if was_top:
                     # connect signals to child statements
                     for inp in stm._inputs:
-                        inp.endpoints.append(stm)
+                        inp._rtlEndpoints.append(stm)
                     for outp in stm._outputs:
-                        outp.drivers.append(stm)
+                        outp._rtlDrivers.append(stm)
                 else:
                     for outp in stm._outputs:
                         if parentStmList is not None:
@@ -333,12 +333,12 @@ class HdlStatement(HdlObject):
         if other_was_top:
             other._get_rtl_context().statements.remove(other)
             for s in other._inputs:
-                s.endpoints.discard(other)
-                s.endpoints.append(self)
+                s._rtlEndpoints.discard(other)
+                s._rtlEndpoints.append(self)
 
             for s in other._outputs:
-                s.drivers.discard(other)
-                s.drivers.append(self)
+                s._rtlDrivers.discard(other)
+                s._rtlDrivers.append(self)
 
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
@@ -394,14 +394,14 @@ class HdlStatement(HdlObject):
 
         if was_top:
             for inp in self._inputs:
-                inp.endpoints.discard(self)
-                inp.endpoints.append(topStatement)
+                inp._rtlEndpoints.discard(self)
+                inp._rtlEndpoints.append(topStatement)
                 for p in parents:
                     p._inputs.append(inp)
 
             for outp in self._outputs:
-                outp.drivers.discard(self)
-                outp.drivers.append(topStatement)
+                outp._rtlDrivers.discard(self)
+                outp._rtlDrivers.append(topStatement)
                 for p in parents:
                     p._outputs.append(outp)
 
@@ -440,12 +440,12 @@ class HdlStatement(HdlObject):
             that means they can not be used for iteration
         """
         for i in self._inputs:
-            i.endpoints.discard(self)
+            i._rtlEndpoints.discard(self)
 
         if self.parentStm is None:
             ctx = self._get_rtl_context()
             for o in self._outputs:
-                o.drivers.remove(self)
+                o._rtlDrivers.remove(self)
 
             ctx.statements.remove(self)
             self.parentStm = None

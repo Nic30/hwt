@@ -64,14 +64,14 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
     _serializeDecision = None
     # properties which are used internally by this library
-    _PROTECTED_NAMES = set([
+    _PROTECTED_NAMES = {
         "_PROTECTED_NAMES",
         "_name", "_hdl_module_name",
         "_hwIOs", "_private_hwIOs",
         "_units", "_hwParams", "_parent", "_constraints",
-        "_lazy_loaded", "_ctx", "_shared_component_with",
+        "_lazy_loaded", "_rtlCtx", "_shared_component_with",
         "_target_platform", "_store_manager",
-    ])
+    }
 
     def __init__(self, hdlName:Optional[str]=None):
         self._parent: Optional[HwModule] = None
@@ -81,7 +81,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         assert hdlName is None or isinstance(hdlName, str), hdlName
         self._hdlNameOverride = hdlName
         self._lazy_loaded: List[Union[HwModule, HwIOBase]] = []
-        self._ctx = RtlNetlist(self)
+        self._rtlCtx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
         self._loadConfig()
 
@@ -120,7 +120,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         self._registerHwIO(hwIOName, hwIO, isPrivate=True)
         self._loadHwIODeclarations(hwIO, False)
         hwIO._signalsForHwIO(
-            self._ctx, None, self._store_manager.name_scope)
+            self._rtlCtx, None, self._store_manager.name_scope)
 
     def _getDefaultName(self) -> str:
         return self.__class__.__name__
@@ -168,7 +168,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         for proc in target_platform.beforeToRtl:
             proc(self)
 
-        mdec = self._ctx.create_HdlModuleDec(
+        mdec = self._rtlCtx.create_HdlModuleDec(
             self._hdl_module_name, store_manager, self._hwParams)
         mdec.origin = self
         mdec.doc = self._get_hdl_doc()
@@ -176,13 +176,13 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         # prepare signals for interfaces
         for hwIO in self._hwIOs:
             if hwIO._isExtern:
-                ei = self._ctx.hwIOs
+                ei = self._rtlCtx.hwIOs
             else:
                 ei = None
             # we are reversing direction because we are looking
             # at the interface from inside of component
             hwIO._signalsForHwIO(
-                self._ctx, ei,
+                self._rtlCtx, ei,
                 store_manager.name_scope, reverse_dir=True)
         store_manager.hierarchy_pop(mdec)
 
@@ -194,7 +194,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
             # now every sub unit has a HdlModuleDec prepared
             for sm in self._subHwModules:
                 subHwModuleName = sm._name
-                sm._signalsForSubHwModuleEntity(self._ctx, "sig_" + subHwModuleName)
+                sm._signalsForSubHwModuleEntity(self._rtlCtx, "sig_" + subHwModuleName)
 
             for proc in target_platform.beforeToRtlImpl:
                 proc(self)
@@ -205,7 +205,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
                 self._loadImpl()
                 yield from self._lazy_loaded
 
-                if not self._ctx.hwIOs:
+                if not self._rtlCtx.hwIOs:
                     raise IntfLvlConfErr(
                         "Can not find any external interface for unit %s"
                         "- unit without interfaces are not synthesisable"
@@ -218,7 +218,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
             mdec.ports[:] = natsorted(mdec.ports, key=lambda x: x.name)
             if do_serialize_this:
                 # synthesize signal level context
-                mdef = self._ctx.create_HdlModuleDef(
+                mdef = self._rtlCtx.create_HdlModuleDef(
                     target_platform, store_manager)
                 mdef.origin = self
 
@@ -259,7 +259,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
     @internal
     def _checkCompInstances(self):
-        cInstances = [o for o in self._ctx.hwModDef.objs
+        cInstances = [o for o in self._rtlCtx.hwModDef.objs
                       if isinstance(o, HdlCompInst)]
         cInst_cnt = len(cInstances)
         unit_cnt = len(self._subHwModules)
@@ -307,13 +307,13 @@ def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
 
 
 def copy_HdlModuleDec(orig_m: HwModule, new_m: HwModule):
-    assert not new_m._ctx.statements
-    assert not new_m._ctx.hwIOs
-    assert not new_m._ctx.signals
-    assert new_m._ctx.hwModDec is None
+    assert not new_m._rtlCtx.statements
+    assert not new_m._rtlCtx.hwIOs
+    assert not new_m._rtlCtx.signals
+    assert new_m._rtlCtx.hwModDec is None
 
     new_m._hdl_module_name = orig_m._hdl_module_name
-    hwModDec = new_m._ctx.hwModDec = copy(orig_m._ctx.hwModDec)
+    hwModDec = new_m._rtlCtx.hwModDec = copy(orig_m._rtlCtx.hwModDec)
     hwModDec: HdlModuleDec
 
     params = []

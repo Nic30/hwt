@@ -69,13 +69,13 @@ class RtlNetlistPassRemoveUnconnectedSignals(RtlNetlistPass):
                 #     continue
                 s = sig._sig
                 assert s is not None, (netlist.parent, sig, "broken HwIO instance")
-                assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
+                assert s._rtlCtx is netlist, (netlist.parent, s, "must be in the same netlist")
                 toSearch.append(s)
 
         while toSearch:
             sig = toSearch.popleft()
 
-            for e in sig.drivers:
+            for e in sig._rtlDrivers:
                 if isinstance(e, HOperatorNode):
                     inputs = e.operands
                 elif isinstance(e, HdlPortItem):
@@ -87,14 +87,14 @@ class RtlNetlistPassRemoveUnconnectedSignals(RtlNetlistPass):
 
                 for i in inputs:
                     if isinstance(i, RtlSignalBase) and i not in seen:
-                        assert i.ctx is netlist, (netlist.parent, e, "all inputs must be in the same netlist", i)
+                        assert i._rtlCtx is netlist, (netlist.parent, e, "all inputs must be in the same netlist", i)
                         seen.add(i)
                         toSearch.append(i)
 
             nv = sig._nop_val
             if isinstance(nv, RtlSignalBase):
                 if nv not in seen:
-                    assert nv.ctx is netlist, nv
+                    assert nv._rtlCtx is netlist, nv
                     seen.add(nv)
                     toSearch.append(nv)
 
@@ -104,7 +104,7 @@ class RtlNetlistPassRemoveUnconnectedSignals(RtlNetlistPass):
             for sig in HwIO_walkSignals(c):
                 s = sig._sig
                 assert s is not None, (netlist.parent, sig, "broken HwIO instance after initial scan")
-                assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
+                assert s._rtlCtx is netlist, (netlist.parent, s, "must be in the same netlist")
                 seen.add(s)
 
         # remove signals which were not seen
@@ -117,9 +117,9 @@ class RtlNetlistPassRemoveUnconnectedSignals(RtlNetlistPass):
                 trace.write("removing unseen: ")
                 trace.write(repr(sig))
                 trace.write("\n")
-            assert sig.ctx is netlist, (netlist.parent, sig, "must be in the same netlist")
+            assert sig._rtlCtx is netlist, (netlist.parent, sig, "must be in the same netlist")
 
-            for e in tuple(sig.drivers):
+            for e in tuple(sig._rtlDrivers):
                 # drivers of this signal are useless rm them
                 if isinstance(e, HOperatorNode):
                     removed_e = e
