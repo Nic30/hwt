@@ -66,7 +66,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
   * Use `to_rtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
 * How do I define my interface type, protocol and simulation agent?
   * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107)
-* I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?
+* I do have c structure of UDP header, how do I send/receive UDP packet over AXI-stream interface?
   * Define HStruct type composed of eth_header_t, IPv4_header_t and HStream(uint8_t) and use [AxisFrameGen](https://github.com/Nic30/hwtLib/blob/master/hwtLib/amba/axis_comp/frameGen.py). There is and example of [ping responder](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/builders/pingResponder.py)
 
 
