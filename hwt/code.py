@@ -386,11 +386,35 @@ def rol(sig:Union[RtlSignalBase, HConst], howMany:Union[RtlSignalBase, int]) -> 
 
 
 def replicate(n:int, v:Union[RtlSignalBase, HConst]):
+    assert n > 0, n
     return Concat(*(v for _ in range(n)))
 
 
-def segment_get(n:Union[RtlSignalBase, HConst], segmentWidth:int, segmentIndex:Union[RtlSignalBase, HConst, int]):
+def segment_get(n:Union[RtlSignalBase, HConst],
+                segmentWidth:int,
+                segmentIndex:Union[RtlSignalBase, HConst, int]):
+    """
+    This function gets bits from bit vector as if it was an array of items of "segmentWidth" bits
+    """
     return n[segmentWidth * (segmentIndex + 1): segmentWidth * segmentIndex]
+
+
+def split_to_segments(n:Union[RtlSignalBase, HConst], maxSegmentWidth:int, allowLastToBeSmaller=False):
+    """
+    Split bit vector to a segments of up to maxSegmentWidth bits, lower bits first.
+    """
+    offset = 0
+    segments = []
+    width = n._dtype.bit_length()
+    if not allowLastToBeSmaller:
+        assert width % maxSegmentWidth == 0, (width, maxSegmentWidth)
+    while True:
+        end = min(offset + maxSegmentWidth, width)
+        segments.append(n[end:offset])
+        if end == width:
+            break
+        offset = end
+    return segments
 
 
 def zext(v:Union[RtlSignalBase, HConst], newWidth: int) -> Union[RtlSignalBase, HConst]:
