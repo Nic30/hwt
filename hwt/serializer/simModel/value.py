@@ -20,7 +20,7 @@ from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t, bitsBitOp__lshr, \
-    bitsBitOp__rol, bitsBitOp__ror
+    bitsBitOp__rol, bitsBitOp__ror, bitsBitOp__ashr
 
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
@@ -37,6 +37,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     ABits3t = HdlValueId("Bits3t", obj=Bits3t)
     SELF_IO = hdl_getattr(HdlValueId("self", obj=LanguageKeyword()), "io")
     CONCAT = HdlValueId("Concat", obj=Concat)
+    FN_bitsBitOp__ashr = HdlValueId("bitsBitOp__ashr", obj=bitsBitOp__ashr)
     FN_bitsBitOp__lshr = HdlValueId("bitsBitOp__lshr", obj=bitsBitOp__lshr)
     FN_bitsBitOp__rol = HdlValueId("bitsBitOp__rol", obj=bitsBitOp__rol)
     FN_bitsBitOp__ror = HdlValueId("bitsBitOp__ror", obj=bitsBitOp__ror)
@@ -146,12 +147,22 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                     sign = self.TRUE
                 else:
                     sign = self.FALSE
-                return hdl_call(hdl_getattr(op_hdl, "cast_sign"), [sign, ])
+                return hdl_call(hdl_getattr(op_hdl, "_cast_sign"), [sign, ])
             else:
                 return op_hdl
         elif o == HwtOps.CONCAT:
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_concat"),
                             [self.as_hdl_Value(ops[1]), ])
+        elif o == HwtOps.ZEXT or o == HwtOps.SEXT or o == HwtOps.TRUNC:
+            v, newWidth = ops
+            newWidth = int(newWidth)
+            v = self.as_hdl_Value(v)
+            op1 = self.as_hdl_int(newWidth)
+            fnName = "_zext" if o == HwtOps.ZEXT else \
+                     "_sext" if o == HwtOps.SEXT else \
+                     "_trunc"
+            return hdl_call(hdl_getattr(v, fnName), [op1, ])
+            
         elif o == HwtOps.EQ:
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_eq"),
                             [self.as_hdl_Value(ops[1]), ])
@@ -165,10 +176,12 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             else:
                 o = _o
 
-            if o == HdlOpType.SRL and isinstance(ops[0]._dtype, HBits) and ops[0]._dtype.signed:
+            if o == HdlOpType.SRL and isinstance(ops[0]._dtype, HBits):
                 return hdl_call(self.FN_bitsBitOp__lshr,
-                            [self.as_hdl_Value(o2)
-                               for o2 in ops])
+                            [self.as_hdl_Value(o2) for o2 in ops])
+            elif o == HdlOpType.SRA and isinstance(ops[0]._dtype, HBits):
+                return hdl_call(self.FN_bitsBitOp__ashr,
+                            [self.as_hdl_Value(o2) for o2 in ops])
             elif o == HdlOpType.ROL and isinstance(ops[0]._dtype, HBits):
                 return hdl_call(self.FN_bitsBitOp__rol,
                             [self.as_hdl_Value(o2) for o2 in ops])

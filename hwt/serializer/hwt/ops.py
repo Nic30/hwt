@@ -29,6 +29,17 @@ class ToHdlAstHwt_ops():
             elif o == HwtOps.CONCAT:
                 return hdl_call(self.CONCAT,
                                 [self.as_hdl(o2) for o2 in ops])
+            elif o == HwtOps.ZEXT or o == HwtOps.SEXT or o == HwtOps.TRUNC:
+                op0, newWidth = ops
+                newWidth = int(newWidth)
+                with ValueWidthRequirementScope(self, True):
+                    op0 = self.as_hdl(op0)
+                op1 = self.as_hdl_int(newWidth)
+                fnName = "_zext" if o == HwtOps.ZEXT else \
+                         "_sext" if o == HwtOps.SEXT else \
+                         "_trunc"
+                return hdl_call(hdl_getattr(op0, fnName), [op1])
+
             elif o == HwtOps.TERNARY:
                 cond, op0, op1 = ops
                 cond = self.as_hdl(cond)

@@ -7,8 +7,9 @@ from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.bitConstFunctions import bitsCmp, \
-    bitsBitOp, bitsArithOp, bitsFloordiv, bitsMul, bitsGetitem, bitsLshift, \
-    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue
+    bitsBitOp, bitsArithOp, bitsFloordiv, bitsMul, bitsLshift, \
+    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue, bitsRem
+from hwt.hdl.types.bitConstFunctionsGetitem import bitsGetitem
 from hwt.hdl.types.bitConst_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor, reduceSigCheckFnAnd, reduceSigCheckFnOr, reduceSigCheckFnXor
 from hwt.hdl.types.bits import HBits
@@ -34,9 +35,11 @@ class HBitsConst(HConst, Bits3val):
         return cls(typeObj, val, vld_mask=vld_mask)
 
     @internal
-    def _convSign(self, signed:Union[bool, None]) -> Self:
+    def _cast_sign(self, signed:Union[bool, None]) -> Self:
         try:
-            v = Bits3val.cast_sign(self, signed)
+            v = Bits3val._cast_sign(self, signed)
+            if v is self:
+                return v
             if signed is not None:
                 if v._dtype is self._dtype:
                     # can modify shared type instance
@@ -49,13 +52,13 @@ class HBitsConst(HConst, Bits3val):
             raise e_simplified
 
     def _signed(self) -> Self:
-        return self._convSign(True)
+        return self._cast_sign(True)
 
     def _unsigned(self) -> Self:
-        return self._convSign(False)
+        return self._cast_sign(False)
 
     def _vec(self) -> Self:
-        return self._convSign(None)
+        return self._cast_sign(None)
 
     @internal
     def _concat(self, other: Union[Self, "HBitsRtlSignal"]) -> Union[Self, "HBitsRtlSignal"]:
@@ -63,6 +66,11 @@ class HBitsConst(HConst, Bits3val):
             if isinstance(other, HConst):
                 return Bits3val._concat(self._vec(), other._vec())
             else:
+                if self._is_full_valid():
+                    if int(self) == 0:
+                        # fold concat(0, x) -> zext(x)
+                        return other._zext(self._dtype.bit_length() + other._dtype.bit_length())
+
                 return HBitsRtlSignal._concat(self, other)
 
         except Exception as e:
@@ -85,7 +93,7 @@ class HBitsConst(HConst, Bits3val):
         try:
             # convert index to HSlice or hInt
             if isinstance(index, HConst):
-                index = index
+                pass
             elif isinstance(index, slice):
                 length = self._dtype.bit_length()
                 index = slice_to_HSlice(index, length)
@@ -275,10 +283,10 @@ class HBitsConst(HConst, Bits3val):
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
-    
+
     def getMsb(self) -> Self:
         return self[self._dtype.bit_length() - 1]
-    
+
     def __len__(self) -> int:
         return self._dtype.bit_length()
 

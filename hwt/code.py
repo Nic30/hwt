@@ -416,25 +416,3 @@ def split_to_segments(n:Union[RtlSignalBase, HConst], maxSegmentWidth:int, allow
         offset = end
     return segments
 
-
-def zext(v:Union[RtlSignalBase, HConst], newWidth: int) -> Union[RtlSignalBase, HConst]:
-    """
-    Pad value on msb side with zeros (zero extend) to a specific width
-    """
-    curWidth = v._dtype.bit_length()
-    if curWidth == newWidth:
-        return v
-    assert newWidth > curWidth, (newWidth, curWidth)
-    return Concat(HBits(newWidth - curWidth).from_py(0), v)
-
-
-def sext(v:Union[RtlSignalBase, HConst], newWidth: int) -> Union[RtlSignalBase, HConst]:
-    """
-    Pad value on msb side with msb (signed extend) to a specific width
-    """
-    curWidth = v._dtype.bit_length()
-    if curWidth == newWidth:
-        return v
-    assert newWidth > curWidth, (newWidth, curWidth)
-    msb = v.getMsb()
-    return Concat(*(msb for _ in range(newWidth - curWidth)), v)

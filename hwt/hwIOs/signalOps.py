@@ -11,17 +11,17 @@ class SignalOps(object):
         return self._sig._auto_cast(toT)
 
     @internal
-    def _convSign(self, signed):
-        return self._sig._convSign(signed)
+    def _cast_sign(self, signed):
+        return self._sig._cast_sign(signed)
 
     def _signed(self):
-        return self._convSign(True)
+        return self._cast_sign(True)
 
     def _unsigned(self):
-        return self._convSign(False)
+        return self._cast_sign(False)
 
     def _vec(self):
-        return self._convSign(None)
+        return self._cast_sign(None)
 
     def _reinterpret_cast(self, toT):
         return self._sig._reinterpret_cast(toT)
@@ -39,6 +39,9 @@ class SignalOps(object):
         convert this signal to hBool
         """
         return self._sig._isOn()
+
+    def getMsb(self):
+        return self._sig.getMsb()
 
     def _eq(self, other):
         """
@@ -116,7 +119,7 @@ class SignalOps(object):
         return self._sig.__pow__(other)
 
     def __mod__(self, other):
-        "** operator"
+        "% operator"
         return self._sig.__mod__(other)
 
     def __truediv__(self, other):
@@ -167,3 +170,11 @@ class SignalOps(object):
         """
         assert self._isAccessible, self
         return self._sig(source, exclude=None, fit=fit)
+
+    def __getattr__(self, name:str):
+        if name == "_dtype" or name == "_setAttrListener" or self._setAttrListener is not None:
+            raise AttributeError(name)
+
+        sigProp = getattr(self._sig, name)
+        return sigProp
+

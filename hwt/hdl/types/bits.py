@@ -1,3 +1,6 @@
+from typing import Union, Literal, Optional, Self
+
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.pyUtils.typingFuture import override
@@ -14,12 +17,13 @@ class HBits(HdlType, Bits3t):
     Elemental HDL type representing bits (vector or single bit)
     """
 
-    def __init__(self, bit_length, signed=BITS_DEFAUTL_SIGNED,
-                 force_vector=BITS_DEFAUTL_FORCEVECTOR,
-                 negated=BITS_DEFAUTL_NEGATED,
-                 name=None,
-                 const=False,
-                 strict_sign=True, strict_width=True):
+    def __init__(self, bit_length: Union[int, "AnyHBitsValue"],
+                 signed:Literal[None, True, False]=BITS_DEFAUTL_SIGNED,
+                 force_vector:bool=BITS_DEFAUTL_FORCEVECTOR,
+                 negated:bool=BITS_DEFAUTL_NEGATED,
+                 name:Optional[str]=None,
+                 const:bool=False,
+                 strict_sign:bool=True, strict_width:bool=True):
         """
         :param negated: if true the value is in negated form
         """
@@ -30,6 +34,47 @@ class HBits(HdlType, Bits3t):
         Bits3t.__init__(self, bit_length, signed, name=name,
                         force_vector=force_vector or bit_length == 1 and signed is not None,
                         strict_sign=strict_sign, strict_width=strict_width)
+
+    def _createMutated(self,
+                 bit_length: Union[int, "AnyHBitsValue"]=NOT_SPECIFIED,
+                 signed:Literal[None, True, False]=NOT_SPECIFIED,
+                 force_vector:bool=NOT_SPECIFIED,
+                 negated:bool=NOT_SPECIFIED,
+                 name:Optional[str]=NOT_SPECIFIED,
+                 const:bool=NOT_SPECIFIED,
+                 strict_sign:bool=NOT_SPECIFIED,
+                 strict_width:bool=NOT_SPECIFIED
+                 ) -> Self:
+        if bit_length is NOT_SPECIFIED:
+            bit_length = self.bit_length()
+        else:
+            if force_vector is NOT_SPECIFIED and self.force_vector and bit_length > 1 and self.bit_length() == 1:
+                force_vector = False
+        if signed is NOT_SPECIFIED:
+            signed = self.signed
+        if force_vector is NOT_SPECIFIED:
+            force_vector = self.force_vector
+        if negated is NOT_SPECIFIED:
+            negated = self.negated
+        if name is NOT_SPECIFIED:
+            name = None
+        if const is NOT_SPECIFIED:
+            const = self.const
+        if strict_sign is NOT_SPECIFIED:
+            strict_sign = self.strict_sign
+        if strict_width is NOT_SPECIFIED:
+            strict_width = self.strict_width
+
+        return self.__class__(
+            bit_length,
+            signed=signed,
+            force_vector=force_vector,
+            negated=negated,
+            name=name,
+            const=const,
+            strict_sign=strict_sign,
+            strict_width=strict_width
+        )
 
     @internal
     def domain_size(self):
@@ -85,6 +130,9 @@ class HBits(HdlType, Bits3t):
             from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
             cls._rtlSignalCls = HBitsRtlSignal
             return cls._rtlSignalCls
+
+    def getAllOnesValue(self):
+        return self.from_py(self._all_mask)
 
     def __hash__(self):
         return hash((Bits3t.__hash__(self), self.const))

@@ -43,8 +43,9 @@ class ToHdlAstVerilog_ops():
             _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
             # HdlAssignmentContainer(tmpVar, operand, virtual_only=True)
             operand = tmpVar
-        elif operator.operator == HwtOps.INDEX and i == 0 and self._operandIsAnotherOperand(operand):
-            _, tmpVar = self.tmpVars.create_var_cached("tmp_index_", operand._dtype, def_val=operand)
+        elif operator.operator in (HwtOps.INDEX, HwtOps.TRUNC) and i == 0 and self._operandIsAnotherOperand(operand):
+            tmpVarName = "tmp_index_" if operator.operator == HwtOps.INDEX else "tmp_trunc_"
+            _, tmpVar = self.tmpVars.create_var_cached(tmpVarName, operand._dtype, def_val=operand)
             operand = tmpVar
 
         oper = operator.operator
@@ -98,20 +99,57 @@ class ToHdlAstVerilog_ops():
 
             op_hdl = self.as_hdl_operand(op0, 0, op)
             if do_cast:
-                if bool(op0._dtype.signed):
+                if bool(op.result._dtype.signed):
                     cast = self.SIGNED
                 else:
                     cast = self.UNSIGNED
                 return hdl_call(cast, [op_hdl, ])
             else:
                 return op_hdl
-        else:
-            op0_t = ops[0]._dtype
-            if o == HwtOps.INDEX and isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
-                assert int(ops[1]) == 0, ops
-                # drop whole index operator
-                return self.as_hdl_operand(ops[0], 0, op)
+
+        elif o == HwtOps.TRUNC:
+            # convert trunc to slice
+            resWidth = int(ops[1])
+            return HdlOp(HdlOpType.INDEX, [
+                self.as_hdl_operand(ops[0], 0, op),
+                self.as_hdl_HSliceConst(SLICE.from_py(slice(resWidth, 0, -1)))
+            ])
+        elif o in (HwtOps.SEXT, HwtOps.ZEXT):
+            # convert sext to concat with repliacation, zext to concat 0
+            # x4b._sext(8) -> { {8-4{x[4-1]}}, x }; # replication operator
+            resWidth = int(ops[1])
+            srcWidth = ops[0]._dtype.bit_length()
+            prefixLen = resWidth - srcWidth
+            if o == HwtOps.ZEXT:
+                prefix = self.as_hdl_HBitsConst(HBits(prefixLen).from_py(0))
             else:
-                _o = self.op_transl_dict[o]
-                return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
-                                  for i, o2 in enumerate(ops)])
+                if srcWidth == 1:
+                    msb = self.as_hdl_operand(ops[0], 0, op)
+                else:
+                    msb = HdlOp(HdlOpType.INDEX, [
+                        self.as_hdl_operand(ops[0], 0, op),
+                        self.as_hdl_int(srcWidth - 1),
+                    ])
+                if prefixLen == 1:
+                    prefix = msb
+                else:
+                    prefix = HdlOp(HdlOpType.REPL_CONCAT, [
+                        self.as_hdl_int(prefixLen),
+                        msb,
+                    ])
+            return HdlOp(HdlOpType.CONCAT, [
+                prefix,
+                self.as_hdl_operand(ops[0], 0, op)
+            ])
+
+        else:
+            if o == HwtOps.INDEX:
+                op0_t = ops[0]._dtype
+                if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+                    assert int(ops[1]) == 0, ops
+                    # drop whole index operator when indexing on 1b vector
+                    return self.as_hdl_operand(ops[0], 0, op)
+
+            _o = self.op_transl_dict[o]
+            return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
+                              for i, o2 in enumerate(ops)])

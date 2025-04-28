@@ -34,7 +34,7 @@ def convertBits__HConst(curType: HBits, val: "HBitsConst", toType: HdlType):
         if curType.signed != toType.signed:
             if curType.strict_sign and bool(curType.signed) != bool(toType.signed):
                 raise TypeConversionErr(curType, toType)
-            val = val._convSign(toType.signed)
+            val = val._cast_sign(toType.signed)
 
         w_from, w_to = curType.bit_length(), toType.bit_length()
         if w_from != w_to:
@@ -87,7 +87,7 @@ def convertBits__RtlSignal(curType: HBits, sig: RtlSignal, toType: HdlType):
             #    raise NotImplementedError(curType, toType)
 
             if curType.const == toType.const:
-                return sig._convSign(toType.signed)
+                return sig._cast_sign(toType.signed)
 
     return default_auto_cast_fn(curType, sig, toType)
 
@@ -176,7 +176,7 @@ def reinterpret_bits_to_harray(sigOrConst: Union[RtlSignal, HConst], hArrayT: HA
 def reinterpretBits__HConst(curType: HBits, val: HConst, toType: HdlType):
     if isinstance(toType, HBits):
         if curType.signed != toType.signed:
-            val = val._convSign(toType.signed)
+            val = val._cast_sign(toType.signed)
         return fitTo_t(val, toType)
     elif isinstance(toType, HStruct):
         return reinterpret_bits_to_hstruct__HConst(val, toType)
@@ -196,7 +196,7 @@ def reinterpretBits__RtlSignal(curType: HBits, sig: RtlSignal, toType: HdlType):
     """
     if isinstance(toType, HBits):
         if curType.signed != toType.signed:
-            sig = sig._convSign(toType.signed)
+            sig = sig._cast_sign(toType.signed)
         return fitTo_t(sig, toType)
     elif sig._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):

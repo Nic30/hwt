@@ -8,6 +8,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT, FLOAT64
 from hwt.hdl.types.float import HFloat
+from hwt.hdl.types.string import HString
 
 
 class ToHdlAstVhdl2008_types():
@@ -19,7 +20,13 @@ class ToHdlAstVhdl2008_types():
     SIGNED = HdlValueId("SIGNED", obj=LanguageKeyword())
     UNSIGNED = HdlValueId("UNSIGNED", obj=LanguageKeyword())
 
-    def as_hdl_HdlType_str(self, typ, declaration=False):
+  
+    _sign_flag_to_cast_id = {
+        None: STD_LOGIC_VECTOR,
+        True: SIGNED,
+        False: UNSIGNED,
+    }
+    def as_hdl_HdlType_str(self, typ: HString, declaration=False):
         assert not declaration
         return self.STRING
 

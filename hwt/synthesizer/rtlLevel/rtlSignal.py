@@ -321,8 +321,19 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
                         hwIO = indexedOn
                         indexes.append(d.operands[1])
                     else:
-                        raise HwtSyntaxError(
-                            f"can not assign to a static value {indexedOn}")
+                        raise HwtSyntaxError("can not assign to a static value", indexedOn)
+                
+                elif op == HwtOps.TRUNC:
+                    indexedOn = d.operands[0]
+                    width = int(d.operands[1])
+                    if isinstance(indexedOn, RtlSignalBase):
+                        if hwIO._dtype.bit_length() > 1 or hwIO._dtype.force_vector:
+                            indexes.append(SLICE.from_py(slice(width, 0, -1)))
+                        else:
+                            indexes.append(INT.from_py(width))
+                        hwIO = indexedOn
+                    else:
+                        raise HwtSyntaxError("can not assign to a static value", indexedOn)
                 elif op in CAST_OPS:
                     sign_cast_seen = True
                     hwIO = d.operands[0]

@@ -51,8 +51,12 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                                          self.as_hdl_Value(o1.val.stop)])
             else:
                 return ToHdlAstVerilog_ops.as_hdl_HOperatorNode(self, op)
-        elif o in ToHdlAstHwt_ops._cast_ops:
-            assert len(ops) == 1, ops
+        elif o in ToHdlAstHwt_ops._cast_ops or o == HwtOps.TRUNC:
+            if o == HwtOps.TRUNC:
+                assert len(ops) == 2, ops
+            else:
+                assert len(ops) == 1, ops
+
             t = self.as_hdl_HdlType(op.result._dtype)
             return hdl_call(
                 HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
@@ -68,6 +72,26 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 self.tmpVars.finish_var_init(o)
 
             return self.as_hdl(o)
+        elif o == HwtOps.SEXT or o == HwtOps.ZEXT:
+            t = self.as_hdl_HdlType(op.result._dtype)
+            isSigned = op.result._dtype.signed
+            isSignedExt = o == HwtOps.SEXT
+            _op0 = self.as_hdl_Value(ops[0])
+            if isSignedExt != bool(isSigned):
+                # must cast first to signed, then to larger result type
+                # the sign/unsigned ext is driven by src type
+                # https://docs.oracle.com/cd/E19205-01/819-5265/bjamz/index.html
+                signFixedTy = self.as_hdl_HdlType(ops[0]._dtype._createMutated(signed=isSignedExt))
+                _op0 = hdl_call(
+                    HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, signFixedTy]),
+                    [_op0, ])
+
+            res = hdl_call(
+                HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
+                [_op0, ])
+
+            return res
+
         else:
             return ToHdlAstVerilog_ops.as_hdl_HOperatorNode(self, op)
 

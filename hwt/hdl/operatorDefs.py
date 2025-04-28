@@ -1,4 +1,4 @@
-from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
+from operator import floordiv, add, sub, inv, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
 from typing import Optional
 
@@ -64,15 +64,15 @@ def dotOpFn(a, name):
 
 
 # [TODO] downto / to are relict of vhdl and should be replaced with slice
-def downtoFn(a, b):
+def downtoFn(a: int, b: int):
     return SLICE.from_py(slice(a, b, -1))
 
 
-def toFn(a, b):
+def toFn(a: int, b: int):
     return SLICE.from_py(slice(a, b, 1))
 
 
-def concatFn(a, b):
+def concatFn(a: "AnyHBitsValue", b: "AnyHBitsValue") -> "AnyHBitsValue":
     return a._concat(b)
 
 
@@ -84,32 +84,44 @@ def eqFn(a, b):
     return a._eq(b)
 
 
-def ternaryFn(cond, vTrue, vFalse):
+def ternaryFn(cond: "AnyHBitsValue", vTrue, vFalse):
     return cond._ternary(vTrue, vFalse)
 
 
-def callFn(fn, *operands, **kwargs):
+def callFn(fn: "HdlFunctionDef", *operands, **kwargs):
     return fn(*operands, **kwargs)
 
 
-def bitsToIntFn(a):
+def bitsToIntFn(a: "AnyHBitsValue"):
     return a._auto_cast(INT)
 
 
-def intToBitsFn(a, t):
+def intToBitsFn(a: "AnyHBitsValue", t: "HdlType"):
     return a._auto_cast(t)
 
 
-def bitsAsSignedFn(a):
+def bitsAsSignedFn(a: "AnyHBitsValue"):
     return a._signed()
 
 
-def bitsAsUnsignedFn(a):
+def bitsAsUnsignedFn(a: "AnyHBitsValue"):
     return a._unsigned()
 
 
-def bitsAsVec(a):
+def bitsAsVec(a: "AnyHBitsValue"):
     return a._vec()
+
+
+def zextFn(a: "AnyHBitsValue", newWidth: int):
+    return a._zext(newWidth)
+
+
+def sextFn(a: "AnyHBitsValue", newWidth: int):
+    return a._sext(newWidth)
+
+
+def truncFn(a: "AnyHBitsValue", newWidth: int):
+    return a._trunc(newWidth)
 
 
 class HwtOps():
@@ -142,9 +154,22 @@ class HwtOps():
     DOWNTO = HOperatorDef(downtoFn)
     TO = HOperatorDef(toFn)
     CONCAT = HOperatorDef(concatFn, allowsAssignTo=True)
+    # :note: SEXT, ZEXT, TRUNC are redundant as it can be implemented using INDEX/CONCAT however they exist
+    #        from performance reasons as patern match for them would be very common during optimizations and
+    #        specific evaluation functions may be significantly faster
+    # :note: normalization rules:
+    #    * SEXT, ZEXT is prefered over concatenation
+    #    * sext(a:1b) should be used internally instead of concat(a, a)
+    #    * TRUNC is prefered over index with a single exception
+    #      * x[0] should be used internally instead of trunc(x, 1)
+    SEXT = HOperatorDef(sextFn)  # sign extension of bit vector to larger width
+    ZEXT = HOperatorDef(zextFn)  # zero extension  of bit vector to larger width
+    TRUNC = HOperatorDef(truncFn, allowsAssignTo=True)  # truncate width of bit vector
 
     EQ = HOperatorDef(eqFn)
     NE = HOperatorDef(ne)
+    # :note: for compare operands without U/S the info about sign is stored in type of operands
+    #     for U/S variant the signed flag in the type is ignored and signines is forced by operator definition 
     GT = HOperatorDef(gt)
     GE = HOperatorDef(ge)
     LT = HOperatorDef(lt)
@@ -159,7 +184,8 @@ class HwtOps():
     SLT = HOperatorDef(lambda a, b: a._signed() < b._signed())
     SGT = HOperatorDef(lambda a, b: a._signed() > b._signed())
     SGE = HOperatorDef(lambda a, b: a._signed() >= b._signed())
-
+    
+    # :note: INDEX is used for arrays and also for bit vectors
     INDEX = HOperatorDef(getitem, allowsAssignTo=True)
     TERNARY = HOperatorDef(ternaryFn)
     CALL = HOperatorDef(callFn)
