@@ -314,7 +314,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
                     # probably port or statement
                     break
 
-                if op == HwtOps.INDEX:
+                if op == HwtOps.INDEX or op == HwtOps.DOT:
                     # get signal on which is index applied
                     indexedOn = d.operands[0]
                     if isinstance(indexedOn, RtlSignalBase):

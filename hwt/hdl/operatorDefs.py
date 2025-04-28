@@ -153,7 +153,7 @@ class HwtOps():
     AND = HOperatorDef(and_)
     OR = HOperatorDef(or_)
 
-    DOT = HOperatorDef(dotOpFn)
+    DOT = HOperatorDef(dotOpFn, allowsAssignTo=True)
     DOWNTO = HOperatorDef(downtoFn)
     TO = HOperatorDef(toFn)
     CONCAT = HOperatorDef(concatFn, allowsAssignTo=True)
