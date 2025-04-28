@@ -17,8 +17,8 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
 
     TRUE = HdlValueId("TRUE", obj=LanguageKeyword())
     FALSE = HdlValueId("FALSE", obj=LanguageKeyword())
-    #TO_UNSIGNED = HdlValueId("TO_UNSIGNED", obj=LanguageKeyword())
-    #TO_SIGNED = HdlValueId("TO_SIGNED", obj=LanguageKeyword())
+    # TO_UNSIGNED = HdlValueId("TO_UNSIGNED", obj=LanguageKeyword())
+    # TO_SIGNED = HdlValueId("TO_SIGNED", obj=LanguageKeyword())
 
     def as_hdl_cond(self, c, forceBool):
         assert isinstance(c, (RtlSignalBase, HConst)), c
@@ -46,7 +46,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
     def as_hdl_BitString(self, v, width: int,
                          force_vector: bool, vld_mask: int, signed):
         is_bit = not force_vector and width == 1
-        #if vld_mask != mask(width) or width >= 32 or is_bit:
+        # if vld_mask != mask(width) or width >= 32 or is_bit:
         v = bit_string(v, width, vld_mask)
         if is_bit:
             v.base = 256
@@ -59,7 +59,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
             cast = self.UNSIGNED
         return HdlOp(HdlOpType.APOSTROPHE, [cast, v])
 
-        #else:
+        # else:
         #    v = HdlValueInt(v, None, None)
         #
         #    if signed is None:
