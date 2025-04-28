@@ -39,6 +39,62 @@ def isResultOfTypeConversionForIndex(sig: RtlSignal):
     return False
 
 
+def matchZextOrSextArg(op: Union[RtlSignal, HConst], srcWidth:int) -> tuple[Optional[AnyHBitsValue], Optional[bool]]:
+    """
+    Check if the value is zext or sext to double width
+    :returns: base operand, isSigned or None, None if not matched
+    """
+    if isinstance(op, HConst):
+        prefixBits = op.val >> srcWidth
+        if prefixBits == 0:
+            return op[srcWidth:], False
+        elif prefixBits == mask(srcWidth):
+            return op[srcWidth:], True
+
+    elif op._isUnnamedExpr:
+        try:
+            d = op.singleDriver()
+        except SignalDriverErr:
+            return None, None
+        casts = []
+        # drop unnecessary casts
+        while isinstance(d, HOperatorNode) and d.operator in CAST_OPS:
+            casts.append(d.operator)
+            d = d.operands[0].singleDriver()
+
+        if isinstance(d, HOperatorNode) and d.operator in (HwtOps.ZEXT, HwtOps.SEXT):
+            src = d.operands[0]
+            if src._dtype.bit_length() == srcWidth:
+                return src, d.operator == HwtOps.SEXT
+
+    return None, None
+
+
+def matchFullWidthMul(op0: Union[RtlSignal, HConst], op1: Union[RtlSignal, HConst])\
+     ->tuple[bool, bool, Union[RtlSignal, HConst], Union[RtlSignal, HConst]]:
+        # result of multiplication in VHDL has 2x width, while in hwt has same width as operands have
+    # truncatenation is required,
+    # * first we check if operands are not zero extended to double width
+    #   if this is the case we can use original operands and avoid any cast
+    sextMulMatch = False
+    zextMulMatch = False
+    width = op0._dtype.bit_length() // 2
+    _op0, _op0SignExtended = matchZextOrSextArg(op0, width)
+    if _op0 is not None:
+        _op1, _op1SignExtended = matchZextOrSextArg(op1, width)
+        if _op1 is not None:
+            if _op0SignExtended == _op1SignExtended:
+                op0 = _op0._cast_sign(_op0SignExtended)
+                op1 = _op1._cast_sign(_op1SignExtended)
+                if _op0SignExtended:
+                    sextMulMatch = True
+                else:
+                    zextMulMatch = True
+
+    # * else we need to truncatenate result to width of operand
+    return zextMulMatch, sextMulMatch, op0, op1
+
+
 class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
     op_transl_dict = {
         **ToHdlAstHwt_ops.op_transl_dict,
@@ -202,6 +258,25 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
 
+    def _as_hdl_HOperatorNode_mulWithTrunc(self, op: HOperatorNode, srcOperandType: HBits, _op0, _op1):
+        # new tmp variable must be created because downto may be applied only on ID and not expression
+        width = srcOperandType.bit_length()
+        isNew, tmpMulTruncVar = self.tmpVars.create_var_cached(
+            "tmpMulTrunc_",
+            HBits(width * 2, srcOperandType.signed),
+            postponed_init=True,
+            extra_args=(op,))
+        if isNew:
+            hdl = self.tmpVars.extraVarsHdl
+            hdl_a = HdlStmAssign(HdlOp(HdlOpType.MUL, [_op0, _op1]), self.as_hdl_HdlSignalItem(tmpMulTruncVar))
+            hdl_a.is_blocking = True
+            hdl.append(hdl_a)
+            as_hdl = self.as_hdl_HdlSignalItem(tmpMulTruncVar, declaration=True)
+            hdl.append(as_hdl)
+
+        return hdl_index(self.as_hdl_HdlSignalItem(tmpMulTruncVar),
+                         hdl_downto(self.as_hdl_int(width - 1), self.as_hdl_int(0)))
+
     def as_hdl_HOperatorNode_indexRhs(self, op1: Union[HBitsConst, HBitsRtlSignal]):
         if isinstance(op1._dtype, HBits) and op1._dtype != INT:
             if op1._dtype.signed is None:
@@ -332,7 +407,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 res_t = op.result._dtype
                 op0, op1 = ops
 
-                 if o != HdlOpType.CONCAT:
+                zextMulMatch = False
+                sextMulMatch = False
+                if o == HdlOpType.MUL:
+                    # optionally drop zext/sext and add casts
+                    zextMulMatch, sextMulMatch, op0, op1 = matchFullWidthMul(op0, op1)
+
+                if o != HdlOpType.CONCAT:
                     op0 = self._wrapConcatInTmpVariable(op0)
                     op1 = self._wrapConcatInTmpVariable(op1)
 
@@ -350,6 +431,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                     return _op0
                 else:
                     assert o not in HDLCONVERTAST_OPS_SHIFT_AND_ROT, (o, "shifts and rotations should have been handled sooner in this function")
+                    if o == HdlOpType.MUL and\
+                            not sextMulMatch and\
+                            not zextMulMatch and\
+                            op0._dtype.strict_width and\
+                            op1._dtype.strict_width:
+                        return self._as_hdl_HOperatorNode_mulWithTrunc(op, op0._dtype, _op0, _op1)
+
                     return HdlOp(o, [_op0, _op1])
 
             return HdlOp(o, [self.as_hdl_operand(o2)

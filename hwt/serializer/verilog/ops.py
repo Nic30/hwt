@@ -47,6 +47,10 @@ class ToHdlAstVerilog_ops():
             tmpVarName = "tmp_index_" if operator.operator == HwtOps.INDEX else "tmp_trunc_"
             _, tmpVar = self.tmpVars.create_var_cached(tmpVarName, operand._dtype, def_val=operand)
             operand = tmpVar
+        elif self._operandIsAnotherOperand(operand)\
+                and operand._rtlObjectOrigin.operator == HwtOps.MUL:
+            _, tmpVar = self.tmpVars.create_var_cached("tmp_mul_", operand._dtype, def_val=operand)
+            operand = tmpVar
 
         oper = operator.operator
         width = None
@@ -143,7 +147,12 @@ class ToHdlAstVerilog_ops():
             ])
 
         else:
-            if o == HwtOps.INDEX:
+            if o == HwtOps.MUL:
+                op0, op1 = ops
+                # optionally drop zext/sext and add casts
+                _, _, op0, op1 = matchFullWidthMul(op0, op1)
+                ops = [op0, op1]
+            elif o == HwtOps.INDEX:
                 op0_t = ops[0]._dtype
                 if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
                     assert int(ops[1]) == 0, ops
