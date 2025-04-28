@@ -135,7 +135,7 @@ def bitsGetitem_foldSliceOnEXT(v: AnyHBitsValue,
             return extSrc.getMsb()._sext(resultWidth)
     else:
         # selected value overlaps between extSrc and extension bits
-        return extSrc[:stop]._ext(iAmResultOfOp == HwtOps.SEXT, resultWidth)
+        return extSrc[:stop]._ext(resultWidth, iAmResultOfOp == HwtOps.SEXT)
 
 
 @internal

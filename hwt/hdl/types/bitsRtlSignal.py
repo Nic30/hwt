@@ -1,7 +1,8 @@
 from copy import copy
 from operator import eq
-from typing import Union, Optional, Self
+from typing import Union, Optional, Self, Literal
 
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
@@ -121,13 +122,16 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
-    def _ext(self, signed: bool, newWidth: Union[int, "HBitsConst"]) -> Self:
+    def _ext(self, newWidth: Union[int, "HBitsConst"], signed: Union[bool, Literal[NOT_SPECIFIED]]=NOT_SPECIFIED) -> Self:
         """
         construct zext/sext operator
         :note: preserves sign of type
         """
         assert newWidth > 0, newWidth
-        assert isinstance(signed, bool), signed
+        if signed is NOT_SPECIFIED:
+            signed = bool(self._dtype.signed)
+        else:
+            assert isinstance(signed, bool), signed
         try:
             w = self._dtype.bit_length()
             extBitCnt = int(newWidth) - w
@@ -156,14 +160,14 @@ class HBitsRtlSignal(RtlSignal):
                     hiBits, loBits = d.operands
                     newHiBitsExtWidth = newWidth - w + hiBits._dtype.bit_length()
                     if isinstance(hiBits, HConst):
-                        hiBits = hiBits._ext(signed, newHiBitsExtWidth)
+                        hiBits = hiBits._ext(newHiBitsExtWidth, signed)
                         # fold ext(concat(c, x)) to concat(cExtended, x)
                         return hiBits._concat(loBits)
                     else:
                         selfHiBitsOp = _get_operator_i_am_the_result_of(hiBits)
                         if selfHiBitsOp == extOp:
                             # fold ext(concat(ext(x), y)) to concat(ext(x), y)
-                            return hiBits.singleDriver().operands[0]._ext(signed, newHiBitsExtWidth)._concat(loBits)
+                            return hiBits.singleDriver().operands[0]._ext(newHiBitsExtWidth, signed)._concat(loBits)
 
                 break
 
@@ -178,14 +182,14 @@ class HBitsRtlSignal(RtlSignal):
         signed extension, pad with MSB bit on MSB side to newWidth result width
         :see: :meth:`HBitsRtlSignal._ext`
         """
-        return self._ext(True, newWidth)
+        return self._ext(newWidth, True)
 
     def _zext(self, newWidth: Union[int, "HBitsConst"]) -> Self:
         """
         zero extension, pad with 0 on msb side to newWidth result width
         :see: :meth:`HBitsRtlSignal._ext`
         """
-        return self._ext(False, newWidth)
+        return self._ext(newWidth, False)
 
     def _trunc(self, newWidth: Union[int, "HBitsConst"]):
         assert newWidth > 0, newWidth

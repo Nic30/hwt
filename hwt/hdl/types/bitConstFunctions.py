@@ -470,7 +470,7 @@ def bitsRshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
     width = self._dtype.bit_length()
 
     if shiftAmount < width:
-        return self[:shiftAmount]._ext(bool(self._dtype.signed), width)
+        return self[:shiftAmount]._ext(width, bool(self._dtype.signed))
     elif shiftAmount > width:
         if self._dtype.signed:
             msb = self[width - 1]
