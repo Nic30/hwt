@@ -298,11 +298,35 @@ class HBitsConst(HConst, Bits3val):
     def __len__(self) -> int:
         return self._dtype.bit_length()
 
+    def __eq__(self, other):
+        if isinstance(other, HConst):
+            t = self._dtype
+            o_t = other._dtype
+            typeCompatible = (
+                t == o_t
+                    or (
+                        t.bit_length() == 1 and
+                        o_t.bit_length() == 1 and \
+                        t.signed is o_t.signed and \
+                        t.force_vector != o_t.force_vector
+                        )
+            )
+            return typeCompatible and \
+                self.vld_mask == other.vld_mask and\
+                self.val == other.val
+        else:
+            return False
+
     def prettyRepr(self) -> str:
         t = self._dtype
         bs = bit_string(self.val, t.bit_length(), self.vld_mask)
         signChar = ('i' if t.signed else 'b' if t.signed is None else 'u')
         b = bs.base
+        if t.bit_length() == 1 and t.force_vector:
+            vecSpec = "vec"
+        else:
+            vecSpec = ""
+
         if b == 2:
             if bs.bits == 1:
                 base_char = ""
@@ -316,7 +340,7 @@ class HBitsConst(HConst, Bits3val):
             base_char = 'h'
         else:
             raise NotImplementedError(b)
-        return f"{signChar:s}{t.bit_length()}'{base_char}{bs.val}"
+        return f"{signChar:s}{t.bit_length()}{vecSpec:s}'{base_char}{bs.val}"
 
-    def __repr__(self)->str:
+    def __repr__(self) -> str:
         return Bits3val.__repr__(self)
