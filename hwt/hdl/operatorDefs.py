@@ -137,7 +137,7 @@ class HwtOps():
     MINUS_UNARY = HOperatorDef(neg)
     DIV = HOperatorDef(floordiv)
     UDIV = HOperatorDef(lambda a, b: a._unsigned() // b._unsigned())
-    SDIV = HOperatorDef(lambda a, b: a._signed() <= b._signed())
+    SDIV = HOperatorDef(lambda a, b: a._signed() // b._signed())
 
     ADD = HOperatorDef(add)
     SUB = HOperatorDef(sub)
