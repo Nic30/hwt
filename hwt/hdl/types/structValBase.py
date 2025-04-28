@@ -1,6 +1,10 @@
-from typing import Optional
+from typing import Optional, Union
 
 from hwt.hdl.const import HConst
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.types.defs import STR
 from hwt.mainBases import RtlSignalBase
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -9,8 +13,45 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 class HStructRtlSignalBase(RtlSignal):
     __slots__ = []
 
+    def __len__(self):
+        return len(self.__slots__)
+
+    def __iter__(self):
+        for f in self._dtype.fields:
+            if f.name is None:
+                yield f._dtype.from_py(None)
+            else:
+                yield getattr(self, f.name)
+
+    def __getattr__(self, name:str) -> RtlSignal:
+        structField = self._dtype.field_by_name.get(name, None)
+        if structField is None:
+            raise AttributeError(self.__class__, ' object has no attribute ', name)
+
+        structField: "HStructField"
+        return HOperatorNode.withRes(HwtOps.DOT, (self, STR.from_py(name)), structField.dtype)
+
+    def __call__(self, source,
+        dst_resolve_fn=lambda x:x._getDestinationSignalForAssignmentToThis(),
+        exclude=None,
+        fit=False) -> list[HdlAssignmentContainer]:
+        res = []
+        if isinstance(source, dict):
+            source = [source[field.name] for field in self._dtype.fields]
+        else:
+            assert len(self) == len(source), ("source and destination array must be of the same size", len(self) == len(source))
+
+        for src, dst in zip(source, self):
+            a = dst.__call__(src, dst_resolve_fn=dst_resolve_fn, exclude=exclude, fit=fit)
+            if isinstance(a, (list, tuple)):
+                res.extend(a)
+            else:
+                res.append(a)
+
+        return res
+
     def __repr__(self, indent=0):
-        return HStructConstBase.__repr__(indent=indent)
+        return HStructConstBase.__repr__(self, indent=indent)
 
 
 class HStructConstBase(HConst):
@@ -20,7 +61,7 @@ class HStructConstBase(HConst):
     """
     __slots__ = []
 
-    def __init__(self, typeObj: "HStruct", val: Optional[dict], skipCheck=False):
+    def __init__(self, typeObj: "HStruct", val: Optional[Union[dict, tuple]], skipCheck=False):
         """
         :param val: None or dict {field name: field value}
         :param typeObj: instance of HString HdlType
@@ -28,22 +69,54 @@ class HStructConstBase(HConst):
         """
         self._dtype = typeObj
         if not skipCheck and val is not None:
-            assert set(self.__slots__).issuperset(set(val.keys())), \
-                ("struct value specifies undefined members",
-                 set(val.keys()).difference(set(self.__slots__)))
+            if isinstance(val, dict):
+                assert set(self.__slots__).issuperset(set(val.keys())), \
+                    ("struct value specifies undefined members",
+                     set(val.keys()).difference(set(self.__slots__)))
+            else:
+                assert len(val) == len(self.__slots__), ("struct value has different number of values than initialization value", len(val), len(self.__slots__))
 
+        if isinstance(val, dict):
+            for f in self._dtype.fields:
+                if f.name is None:
+                    continue
+                if val is None:
+                    v = None
+                else:
+                    v = val.get(f.name, None)
+
+                if not isinstance(v, (HConst, RtlSignalBase)):
+                    v = f.dtype.from_py(v)
+
+                setattr(self, f.name, v)
+
+        else:
+            if val is None:
+                val = (None for _ in range(len(self.__slots__)))
+
+            valIt = iter(val)
+            for f in self._dtype.fields:
+                if f.name is None:
+                    continue
+                if val is None:
+                    v = None
+                else:
+                    v = next(valIt)
+
+                if not isinstance(v, (HConst, RtlSignalBase)):
+                    v = f.dtype.from_py(v)
+
+                setattr(self, f.name, v)
+
+    def __len__(self):
+        return len(self.__slots__)
+
+    def __iter__(self):
         for f in self._dtype.fields:
             if f.name is None:
-                continue
-            if val is None:
-                v = None
+                yield f._dtype.from_py(None)
             else:
-                v = val.get(f.name, None)
-
-            if not isinstance(v, (HConst, RtlSignalBase)):
-                v = f.dtype.from_py(v)
-
-            setattr(self, f.name, v)
+                yield getattr(self, f.name)
 
     def __copy__(self):
         d = {}

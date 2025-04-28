@@ -134,14 +134,14 @@ class HObjList(list, Generic[T]):
         tmp = self
         while isinstance(tmp, (HwIOBase, HObjList)):
             n = tmp._name
-
-
             if name == '':
                 if n is not None:
                     assert isinstance(n, str), (name, n)
                     name = n
             else:
-                name = n + "." + name
+                if n is None:
+                    n = "<unnamed>"
+                name = f"{n:s}.{name:s}"
 
             tmp = getattr(tmp, "_parent", None)
 
@@ -165,6 +165,11 @@ class HObjList(list, Generic[T]):
             if isinstance(o, (HwIOBase, HwModuleBase, HObjList)):
                 o._updateHwParamsFrom(*args, **kwargs)
         return self
+
+    def _cleanRtlSignals(self):
+        for o in self:
+            if isinstance(o, (HwIOBase, HwModuleBase, HObjList)):
+                o._cleanRtlSignals()
 
     def __call__(self, other: List[T], exclude=None, fit=False):
         """

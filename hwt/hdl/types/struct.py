@@ -1,15 +1,18 @@
 from typing import Self
 
 from hwt.doc_markers import internal
+from hwt.hdl.const import HConst
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structValBase import HStructConstBase, HStructRtlSignalBase
+from hwt.hwIO import HwIO
 from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.indent import getIndent
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class HStructFieldMeta():
     """
-    Meta for field in struct type
+    Metadata for a field in :class:`HStruct` type
 
     :ivar ~.split: flag which specifies if structured data type of this field
         should be synchronized as a one interface
@@ -30,6 +33,9 @@ class HStructFieldMeta():
 
 
 class HStructField(object):
+    """
+    Object holding info about a single member in :class:`HStruct` type
+    """
 
     def __init__(self, typ: HdlType, name: str, meta=None):
         assert isinstance(name, str) or name is None, name
@@ -54,7 +60,30 @@ class HStructField(object):
         return f"<HStructField {self.dtype}, {name:s}>"
 
 
-_protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
+_protectedNames = {
+    # RtlSignal props
+    "_dtype",
+    * dir(RtlSignal),
+    # HConst
+    * dir(HConst),
+    # HwIO props
+    "_setAttrListener",
+    "_associatedClk",
+    "_associatedRst",
+    "_parent",
+    "_name",
+    "_masterDir",
+    "_direction",
+    "_ctx",
+    "_isExtern",
+    "_ag",
+    "_hdlPort",
+    "_hdlNameOverride",
+    *dir(HwIO),
+    # HwIOSignal props
+    # "_sig", "_sigInside", "_isAccessible",
+    # *dir(HwIOSignal),
+}
 
 
 class HStruct(HdlType):
@@ -66,7 +95,42 @@ class HStruct(HdlType):
     :ivar ~.field_by_name: dictionary which maps the name of the field to :class:`~.HStructField` instance
     :ivar ~._constCls: Class of value for this type as usual
         in HdlType implementations
+    
+    .. code-block::python
+        # type definition
+        t = HStruct(
+            (BIT, "a"),
+            (BIT, "b"),
+        )
+        # constant instantiation 
+        v = t.from_py({"a": 1, "b":0})
+    
+    :attention: v._reinterpet_cast(HBits(2)) packs the first member ("a") to a bit 0 (first member at the lowest address as in C)
+        Note that this is exactly opposite as in SystemVerilog struct packed {bit a; bit b;}
+        where bit "b" would be bit 0    
+    
+    :ivar _HStructConstBase: base class for HStructConst to allow for instance method re-definion
+        for constants of child types
+    :ivar _HStructRtlSignalBase: base class for HStructRtlSignal to allow for instance method re-definion
+        for constants of child types
+        
+    .. code-block::python
+        # example of use of _HStructConstBase/_HStructRtlSignalBase
+        t = HStruct(
+            (BIT, "a"),
+            (BIT, "b"),
+        )
+        class MyHStructConstBase(HStructConstBase)
+            def any(self):
+                return self.a | self.b
+        t._HStructConstBase = MyHStructConstBase
+
+        v = t.from_py({"a": 1, "b":0})
+        t.any()
+    
     """
+    _HStructConstBase = HStructConstBase
+    _HStructRtlSignalBase = HStructRtlSignalBase
 
     def __init__(self, *template, name=None, const=False):
         """
@@ -111,10 +175,10 @@ class HStruct(HdlType):
         assert not _protectedNames.intersection(usedNames), \
             _protectedNames.intersection(usedNames)
 
-        class HStructConst(HStructConstBase):
+        class HStructConst(self._HStructConstBase):
             __slots__ = list(usedNames)
 
-        class HStructRtlSignal(HStructRtlSignalBase):
+        class HStructRtlSignal(self._HStructRtlSignalBase):
             __slots__ = list(usedNames)
 
         if name is not None:
@@ -140,6 +204,11 @@ class HStruct(HdlType):
     @internal
     @override
     def getRtlSignalCls(self):
+        """
+        :attention: RtlSignal of this class is actually never instantiated and :class:`HwIOStruct` is used instead.
+            However the methods of RtlSignal class are called from HwIOStruct.
+            This is to have RtlSignal with single HDL id only and to keep RTL level data structures as simple as possible. 
+        """
         return self._rtlSignalCls
 
     @internal
@@ -236,3 +305,19 @@ class HStruct(HdlType):
 
         buff.append(f"{myIndent:s}}}")
         return "\n".join(buff)
+
+
+def offsetof(structTy: HStruct, field: HStructField):
+    """
+    Get bit offset field in HStruct
+    """
+    off = 0
+    for f in structTy.fields:
+        f: HStructField
+        if f is field:
+            return off
+        else:
+            off += f.dtype.bit_length()
+
+    raise AssertionError("field was not found in struct type fields", structTy, field)
+

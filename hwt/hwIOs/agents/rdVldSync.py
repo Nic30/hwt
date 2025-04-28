@@ -71,7 +71,7 @@ class UniversalRdVldSyncAgent(HwIODataRdVldAgent):
         rd = self.get_ready_signal(hwIO)
         vld = self.get_valid_signal(hwIO)
         for hwIO in hwIO._hwIOs:
-            if hwIO._sigInside is not rd and hwIO._sigInside is not vld:
+            if hwIO._hwIOs or (hwIO._sigInside is not rd and hwIO._sigInside is not vld):
                 signals.append(hwIO)
         self._signals = tuple(signals)
         self._sigCnt = len(signals)
@@ -100,6 +100,7 @@ class UniversalRdVldSyncAgent(HwIODataRdVldAgent):
                         sig.write(val)
                     except:
                         raise ValueError("Error while writing ", val, "to ", sig)
+
 
 class HwIORdVldSyncAgent(HwIODataRdVldAgent):
     """

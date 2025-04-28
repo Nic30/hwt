@@ -4,9 +4,8 @@ from typing import Optional, Union, Set
 from hwt.code import And, Or
 from hwt.doc_markers import internal
 from hwt.hObjList import HObjList
+from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
-from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.structCast import hstruct_reinterpret
@@ -32,25 +31,25 @@ class HwIOStruct(HwIO):
     :ivar ~._fieldsToHwIOs: dictionary {field_path: sub interface for it}
         field path is a tuple of HStructFields which leads to this interface
     :ivar ~._dtype: HStruct instance used as template for this interface
-    :param _instantiateFieldFn: function(FieldTemplateItem instance)
+    :ivar ~._instantiateFieldFn: function(FieldTemplateItem instance)
         return HwIO instance
     :attention: _instantiateFieldFn should also share _fieldsToHwIOs
         with all other instances of HwIOStruct on this interface
     """
 
     def __init__(self, structT: HStruct,
-                 field_path: TypePath,
+                 field_path: Optional[TypePath],
                  instantiateFieldFn,
                  masterDir=DIRECTION.OUT,
                  loadConfig=True):
         HwIO.__init__(self,
-                           masterDir=masterDir,
-                           loadConfig=loadConfig)
-        if not field_path:
-            field_path = TypePath()
-        else:
+                      masterDir=masterDir,
+                      loadConfig=loadConfig)
+        if field_path:
             assert isinstance(field_path, TypePath), field_path
-
+        else:
+            field_path = TypePath()
+        self._isAccessible = True
         self._field_path = field_path
         self._dtype = structT
         assert self._dtype.fields, "Needs to have at least some members (otherwise this interface is useless)"
@@ -60,6 +59,7 @@ class HwIOStruct(HwIO):
     @override
     def hwDeclr(self):
         _t = self._dtype
+        assert _t is not None
         if isinstance(_t, HStruct):
             fields = _t.fields
         else:
@@ -82,6 +82,12 @@ class HwIOStruct(HwIO):
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOStructAgent(sim, self)
 
+    def _raiseBinOperatorError(self, opStr, other):
+        raise TypeError("unsupported operand type(s) for ", opStr, ": ",
+                        self.__class__.__name__, self._dtype,
+                        " and ",
+                        other.__class__.__name__, other._dtype if isinstance(other, (HwIO, RtlSignal, HConst)) else None)
+
     @override
     def _eq(self, other: Union["HwIOStruct", HStructConstBase]):
         if isinstance(other, self.__class__):
@@ -89,6 +95,51 @@ class HwIOStruct(HwIO):
             return And(*(sHwIO._eq(oi) for sHwIO, oi in zip(self._hwIOs, other._hwIOs)))
         else:
             return And(*(sHwIO._eq(getattr(other, sHwIO._name)) for sHwIO in self._hwIOs))
+
+    @override
+    def __add__(self, other):
+        try:
+            sigOpFn = self._dtype.getRtlSignalCls().__add__
+        except:
+            self._raiseBinOperatorError("+", other)
+
+        return sigOpFn(self, other)
+
+    @override
+    def __sub__(self, other):
+        try:
+            sigOpFn = self._dtype.getRtlSignalCls().__sub__
+        except:
+            self._raiseBinOperatorError("-", other)
+
+        return sigOpFn(self, other)
+
+    @override
+    def __mul__(self, other):
+        try:
+            sigOpFn = self._dtype.getRtlSignalCls().__mul__
+        except:
+            self._raiseBinOperatorError("*", other)
+
+        return sigOpFn(self, other)
+
+    @override
+    def __truediv__(self, other):
+        try:
+            sigOpFn = self._dtype.getRtlSignalCls().__truediv__
+        except:
+            self._raiseBinOperatorError("/", other)
+
+        return sigOpFn(self, other)
+
+    @override
+    def __floordiv__(self, other):
+        try:
+            sigOpFn = self._dtype.getRtlSignalCls().__floordiv__
+        except:
+            self._raiseBinOperatorError("//", other)
+
+        return sigOpFn(self, other)
 
     @override
     def __ne__(self, other: Union["HwIOStruct", HStructConstBase]):
@@ -101,6 +152,24 @@ class HwIOStruct(HwIO):
     @override
     def _reinterpret_cast(self, toT: HdlType):
         return hstruct_reinterpret(self._dtype, self, toT)
+
+    def __iter__(self):
+        return iter(self._hwIOs)
+
+    def __len__(self):
+        return len(self._hwIOs)
+
+    def __getattr__(self, name:str):
+        if name == "_dtype" or name == "_setAttrListener" or self._setAttrListener is not None:
+            raise AttributeError(name)
+
+        try:
+            rtlSignalCls = self._dtype.getRtlSignalCls()
+        except NotImplementedError:
+            raise AttributeError(name)
+
+        sigMethod = getattr(rtlSignalCls, name)
+        return lambda *args, **kwargs: sigMethod(self, *args, **kwargs)  # bound method to this instance
 
 
 class HdlType_to_HwIO():
@@ -160,9 +229,12 @@ class HwIO_to_HdlType():
                 )
             else:
                 return HStruct(
-                    *((self.apply(sHwIO, const=const), sHwIO._name)
+                    *((self.apply(sHwIO, const=const, exclude=exclude), sHwIO._name)
                       for sHwIO in hwIO._hwIOs if sHwIO not in exclude)
                 )
+        elif isinstance(hwIO, HObjList):
+            assert hwIO, "HObjList must have atleast some items to resolve type"
+            return self.apply(hwIO[0], const=const, exclude=exclude)[len(hwIO)]
         else:
             t = hwIO._dtype
             if t.const != const:
@@ -255,7 +327,7 @@ class HwIOStructRdVld(HwIORdVldSync):
 
     @override
     def hwDeclr(self):
-        assert isinstance(self.T, HdlType), (self.T, self._name)
+        assert isinstance(self.T, HdlType), (self.__class__, self._name, "does not have correct initialization of T", self.T,)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
         HwIORdVldSync.hwDeclr(self)

@@ -19,10 +19,14 @@ defaultPyConversions = {
 
 def toHVal(op: Any, suggestedType: Optional[HdlType]=None) -> Union[HConst, RtlSignalBase, HwIOBase]:
     """Convert python or hdl HConst/RtlSignal object to hdl HConst/RtlSignal object"""
-    if isinstance(op, HConst) or isinstance(op, HdlSignalItem):
+    if isinstance(op, (HConst, HdlSignalItem)):
         return op
     elif isinstance(op, HwIOBase):
-        return op._sig
+        sig = getattr(op, "_sig", None)
+        if sig is not None:
+            return sig
+        else:
+            return op
     else:
         if suggestedType is not None:
             return suggestedType.from_py(op)

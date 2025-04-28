@@ -5,6 +5,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.bitConstFunctions import HBitsAnyIndexCompatibleValue
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, INT
@@ -48,6 +49,21 @@ class HArrayRtlSignal(RtlSignal):
 
         for i in range(mySize):
             yield self[i]
+
+    def __call__(self, source,
+        dst_resolve_fn=lambda x:x._getDestinationSignalForAssignmentToThis(),
+        exclude=None,
+        fit=False) -> list[HdlAssignmentContainer]:
+        assert len(self) == len(source), ("source and destination array must be of the same size", len(self) == len(source))
+        res = []
+        for src, dst in zip(source, self):
+            a = dst.__call__(src, dst_resolve_fn=dst_resolve_fn, exclude=exclude, fit=fit)
+            if isinstance(a, (list, tuple)):
+                res.extend(a)
+            else:
+                res.append(a)
+
+        return res
 
     def __len__(self):
         return int(self._dtype.size)
