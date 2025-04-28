@@ -317,7 +317,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         elif o == HwtOps.TRUNC or o == HwtOps.SEXT or o == HwtOps.ZEXT:
             op0, op1 = ops
             op1 = int(op1)
-            assert op1 > 1, op
+            assert op1 >= 1, op
             resultSign = op.result._dtype.signed
             signedForVhdlResize = o == HwtOps.SEXT  # :note: VHDL std_numeric.resize supports only signed or unsinged
             _op0 = self.as_hdl_operand(op0)
