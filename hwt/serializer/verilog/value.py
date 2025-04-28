@@ -1,3 +1,5 @@
+from typing import Optional
+
 from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOpType, \
     HdlOp
 from hdlConvertorAst.to.hdlUtils import bit_string
@@ -74,7 +76,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
             " in initial processes")
 
     @internal
-    def as_hdl_BitString(self, v, width, force_vector, vld_mask, signed):
+    def as_hdl_BitString(self, v: int, width: int, force_vector: bool, vld_mask: int, signed: Optional[int]):
         v = bit_string(v, width, vld_mask=vld_mask)
         if signed:
             return hdl_call(self.SIGNED, [v, ])
