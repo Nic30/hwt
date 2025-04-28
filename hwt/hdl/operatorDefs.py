@@ -142,7 +142,10 @@ class HwtOps():
     ADD = HOperatorDef(add)
     SUB = HOperatorDef(sub)
     POW = HOperatorDef(power)
-    MOD = HOperatorDef(mod)
+    UREM = HOperatorDef(lambda a, b: a._unsigned() % b._unsigned())
+    SREM = HOperatorDef(lambda a, b: a._signed() % b._signed())
+    # MUL bit_length and sign of src0, src1 and dst is the same
+    # sign/unsign variant with double result width is recognized from sext/zext of operands in final phases of serialization 
     MUL = HOperatorDef(mul)
 
     NOT = HOperatorDef(inv, allowsAssignTo=True)

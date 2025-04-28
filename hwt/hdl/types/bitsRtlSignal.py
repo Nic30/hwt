@@ -389,6 +389,14 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
+    def __mod__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
+        try:
+            return bitsRem(self, True, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
     def _ternary(self, vTrue: Union["HBitsConst", Self], vFalse: Union["HBitsConst", Self]) -> Union["HBitsConst", Self]:
         try:
             vTrue = toHVal(vTrue)
