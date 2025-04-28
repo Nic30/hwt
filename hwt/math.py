@@ -9,7 +9,6 @@ from hwt.mainBases import HwIOBase
 from hwt.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
 
-
 AnyHValue = Union[HConst, RtlSignalBase, HwIOBase]
 
 
@@ -144,8 +143,16 @@ def shiftIntArray(values: List[Union[int, "HBitsConst"]], item_width: int, shift
 
 
 def hMin(a: AnyHValue, b: AnyHValue):
-    return (a < b)._ternary(a, b)
+    c = a < b
+    if isinstance(c, bool):
+        return a if c else b
+    else:
+        return c._ternary(a, b)
 
 
 def hMax(a: AnyHValue, b: AnyHValue):
-    return (a > b)._ternary(a, b)
+    c = a > b
+    if isinstance(c, bool):
+        return a if c else b
+    else:
+        return c._ternary(a, b)
