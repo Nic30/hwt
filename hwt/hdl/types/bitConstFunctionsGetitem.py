@@ -6,11 +6,12 @@ from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps, HOperatorDef
 from hwt.hdl.types.bitConstFunctions import AnyHBitsValue, \
     HBitsAnyIndexCompatibleValue
+from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import INT, SLICE, BIT, BIT_N
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.sliceUtils import slice_to_HSlice
 from hwt.hdl.types.typeCast import toHVal
-from hwt.mainBases import RtlSignalBase, HwIOBase
+from hwt.mainBases import RtlSignalBase
 from pyMathBitPrecise.bits3t import Bits3val
 
 
@@ -26,7 +27,7 @@ def _match_msb_get(v: "HBitsRtlSignal"):
     if opVIsResultOf == HwtOps.INDEX:
         iOp = v.singleDriver()
         iOpSrc, iOpI = iOp.operands
-        if isinstance(iOpI, HConst) and iOpI._is_full_valid() and int(iOpI) == iOpSrc._dtype.bit_length() - 1:
+        if isinstance(iOpI, HConst) and iOpI._is_full_valid() and isinstance(iOpI._dtype, HBits) and int(iOpI) == iOpSrc._dtype.bit_length() - 1:
             return iOpSrc
 
     return None
@@ -96,7 +97,7 @@ def bitsGetitem_foldSliceOnCONCAT(v: AnyHBitsValue, start:int, stop: int, key: H
             assert start - stop == 1
             return op_h
         else:
-            return op_h[key._dtype.from_py(slice(start, stop, -1))]
+            return op_h[SLICE.from_py(slice(start, stop, -1))]
     else:
         # partially in op_h and op_l, allpy slice on concat operands and return concatenation of it
         if stop != 0 or op_l._dtype.bit_length() > 1:
@@ -135,7 +136,9 @@ def bitsGetitem_foldSliceOnEXT(v: AnyHBitsValue,
             return extSrc.getMsb()._sext(resultWidth)
     else:
         # selected value overlaps between extSrc and extension bits
-        return extSrc[:stop]._ext(resultWidth, iAmResultOfOp == HwtOps.SEXT)
+        if stop != 0:
+            extSrc = extSrc[:stop]
+        return extSrc._ext(resultWidth, iAmResultOfOp == HwtOps.SEXT)
 
 
 @internal
