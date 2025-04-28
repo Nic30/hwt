@@ -20,6 +20,9 @@ from hwt.serializer.exceptions import SerializerException
 from pyMathBitPrecise.bit_utils import mask
 
 
+INT32_MAX = mask(32-1)
+INT32_MIN = -INT32_MAX - 1
+
 class ToHdlAst_Value():
 
     def is_suitable_for_const_extract(self, val: HConst):
@@ -77,9 +80,11 @@ class ToHdlAst_Value():
     def as_hdl_HBitsConst(self, val: HBitsConst):
         t = val._dtype
         if t == INT:
-            return self.as_hdl_IntegerVal(val)
+            if val < INT32_MAX and val > INT32_MIN:
+                return self.as_hdl_IntegerVal(val)
         elif t == BOOL:
             return self.as_hdl_HBoolConst(val)
+        
         w = t.bit_length()
         return self.as_hdl_BitString(val.val, w, t.force_vector,
                                      val.vld_mask, t.signed)
