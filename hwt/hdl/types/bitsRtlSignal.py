@@ -232,6 +232,9 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
+    def _extOrTrunc(self, newWidth: int, signed: Union[bool, None, Literal[_NOT_SPECIFIED]]=_NOT_SPECIFIED) -> Self:
+        return Bits3val._extOrTrunc(self, newWidth, signed)
+
     def __getitem__(self, key: HBitsAnyIndexCompatibleValue) -> Union["HBitsConst", Self]:
         """
         :see: :func:`bitsGetitem`
