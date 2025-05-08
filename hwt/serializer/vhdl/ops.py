@@ -34,7 +34,7 @@ def isResultOfTypeConversionForIndex(sig: RtlSignal):
 
     if sig._isUnnamedExpr:
         d = sig.singleDriver()
-        return d.operator != HwtOps.INDEX
+        return d.operator not in (HwtOps.INDEX, HwtOps.TRUNC)
 
     return False
 
@@ -320,13 +320,18 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             assert op1 >= 1, op
             resultSign = op.result._dtype.signed
             signedForVhdlResize = o == HwtOps.SEXT  # :note: VHDL std_numeric.resize supports only signed or unsinged
-            _op0 = self.as_hdl_operand(op0)
             if o == HwtOps.TRUNC:
+                if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
+                    _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+
+                _op0 = self.as_hdl_operand(op0)
                 if resultSign is None:
                     # prefer downto notation over resize with casts
                     _sliceOp = HdlOp(HdlOpType.DOWNTO, [self.as_hdl_int(int(op1) - 1), self.as_hdl_int(0)])
                     return HdlOp(HdlOpType.INDEX, [_op0, _sliceOp])
                 signedForVhdlResize = resultSign  # it does not matter if trunc is signed/unsigned, but we preffer less casting
+            else:
+                _op0 = self.as_hdl_operand(op0)
 
             op0T = op0._dtype
             if op0T.signed is None and op0T.bit_length() == 1 and not op0T.force_vector and o != HwtOps.TRUNC:
