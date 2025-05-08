@@ -13,8 +13,8 @@ from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import INT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.serializer.vhdl.ops import matchFullWidthMul
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class ToHdlAstVerilog_ops():
@@ -114,10 +114,15 @@ class ToHdlAstVerilog_ops():
         elif o == HwtOps.TRUNC:
             # convert trunc to slice
             resWidth = int(ops[1])
-            return HdlOp(HdlOpType.INDEX, [
+            res = HdlOp(HdlOpType.INDEX, [
                 self.as_hdl_operand(ops[0], 0, op),
                 self.as_hdl_HSliceConst(SLICE.from_py(slice(resWidth, 0, -1)))
             ])
+            op0_t = ops[0]._dtype
+            if isinstance(op0_t, HBits) and op0_t.signed:
+                return hdl_call(self.SIGNED, [res, ])
+            return res
+
         elif o in (HwtOps.SEXT, HwtOps.ZEXT):
             # convert sext to concat with repliacation, zext to concat 0
             # x4b._sext(8) -> { {8-4{x[4-1]}}, x }; # replication operator
@@ -160,5 +165,11 @@ class ToHdlAstVerilog_ops():
                     return self.as_hdl_operand(ops[0], 0, op)
 
             _o = self.op_transl_dict[o]
-            return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
+            res = HdlOp(_o, [self.as_hdl_operand(o2, i, op)
                               for i, o2 in enumerate(ops)])
+            if o == HwtOps.INDEX:
+                op0_t = ops[0]._dtype
+                if isinstance(op0_t, HBits) and op0_t.signed:
+                    return hdl_call(self.SIGNED, [res, ])
+
+            return res

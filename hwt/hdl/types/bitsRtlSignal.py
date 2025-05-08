@@ -21,6 +21,7 @@ from hwt.mainBases import HwIOBase
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from pyMathBitPrecise.bit_utils import ValidityError
+from pyMathBitPrecise.bits3t import _NOT_SPECIFIED, Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
 
@@ -232,6 +233,9 @@ class HBitsRtlSignal(RtlSignal):
             raise e_simplified
 
     def __getitem__(self, key: HBitsAnyIndexCompatibleValue) -> Union["HBitsConst", Self]:
+        """
+        :see: :func:`bitsGetitem`
+        """
         try:
             return bitsGetitem(self, False, key)
         except Exception as e:

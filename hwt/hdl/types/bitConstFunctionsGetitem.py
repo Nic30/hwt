@@ -206,6 +206,8 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
     +-----------------------------+----------------------------------------------------------------------------------+
     | a[:], a[-1], a[-2:], a[:-2] | raises NotImplementedError   (not implemented due to complicated support in hdl) |
     +-----------+----------------------------------------------------------------------------------------------------+
+
+    :note: signed is preserved as in VHDL, and not like in Verilog where result of slice is always unsigned
     """
     st = v._dtype
     vWidth = st.bit_length()
