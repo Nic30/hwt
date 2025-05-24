@@ -10,6 +10,7 @@ from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.types.bitConstFunctions import AnyHBitsValue
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enumConst import HEnumConst
@@ -36,32 +37,59 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                        operator: HOperatorNode):
         return self.as_hdl(operand)
 
+    def as_hdl_HOperatorNode_INDEX(self, op: HOperatorNode):
+        ops = op.operands
+        assert len(ops) == 2
+        o0, o1 = ops
+        if o1._dtype == SLICE:
+            # index to .range(x, y)
+            o0_hdl = self.as_hdl_operand(o0, 0, op)
+            o0_hdl = hdl_getattr(o0_hdl, "range")
+            return hdl_call(o0_hdl, [self.as_hdl_Value(o1.val.start),
+                                     self.as_hdl_Value(o1.val.stop)])
+        else:
+            op0_t = ops[0]._dtype
+            if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+                assert int(ops[1]) == 0, ops
+                # drop whole index operator when indexing on 1b vector
+                return self.as_hdl_operand(ops[0], 0, op)
+
+            _o = self.op_transl_dict[op.operator]
+            res = HdlOp(_o, [self.as_hdl_operand(o2, i, op)
+                              for i, o2 in enumerate(ops)])
+
+            op0_t = ops[0]._dtype
+            if isinstance(op0_t, HBits) and op0_t.signed:
+                # cast to signed if necesary
+                t = self.as_hdl_HdlType(op.result._dtype)
+                return hdl_call(
+                    HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]), [res, ])
+
+            return res
+
+    def as_hdl_HOperatorNode_BITSCAST(self, op: HOperatorNode):
+
+        ops = op.operands
+        if op.operator == HwtOps.TRUNC:
+            assert len(ops) == 2, ops
+        else:
+            assert len(ops) == 1, ops
+        t = self.as_hdl_HdlType(op.result._dtype)
+        return hdl_call(
+            HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
+            [self.as_hdl_Value(ops[0]), ])
+
+    def as_hdl_HOperatorNode_TERNARY(self, op: HOperatorNode, ops: list[AnyHBitsValue]):
+        return ToHdlAstVerilog_ops.as_hdl_HOperatorNode_TERNARY(self, op, ops)
+
     def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator
 
         if o == HwtOps.INDEX:
-            assert len(ops) == 2
-            o0, o1 = ops
-            if o1._dtype == SLICE:
-                # index to .range(x, y)
-                o0_hdl = self.as_hdl_operand(o0, 0, op)
-                o0_hdl = hdl_getattr(o0_hdl, "range")
-                return hdl_call(o0_hdl, [self.as_hdl_Value(o1.val.start),
-                                         self.as_hdl_Value(o1.val.stop)])
-            else:
-                return ToHdlAstVerilog_ops.as_hdl_HOperatorNode(self, op)
+            return self.as_hdl_HOperatorNode_INDEX(op)
         elif o in ToHdlAstHwt_ops._cast_ops or o == HwtOps.TRUNC:
-            if o == HwtOps.TRUNC:
-                assert len(ops) == 2, ops
-            else:
-                assert len(ops) == 1, ops
-
-            t = self.as_hdl_HdlType(op.result._dtype)
-            return hdl_call(
-                HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
-                [self.as_hdl_Value(ops[0]), ])
-
+            return self.as_hdl_HOperatorNode_BITSCAST(op)
         elif o == HwtOps.CONCAT:
             isNew, o = self.tmpVars.create_var_cached("tmpConcat_",
                                                       op.result._dtype,
@@ -72,6 +100,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 self.tmpVars.finish_var_init(o)
 
             return self.as_hdl(o)
+
         elif o == HwtOps.SEXT or o == HwtOps.ZEXT:
             t = self.as_hdl_HdlType(op.result._dtype)
             isSigned = op.result._dtype.signed

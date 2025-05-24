@@ -9,9 +9,10 @@ from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_c
     hdl_index, hdl_downto
 from hwt.code import If
 from hwt.doc_markers import internal
+from hwt.hdl.commonConstants import b0, b1
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
-from hwt.hdl.operatorDefs import HwtOps, CAST_OPS
+from hwt.hdl.operatorDefs import HwtOps, CAST_OPS, HOperatorDef
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bitConstFunctions import AnyHBitsValue
@@ -24,7 +25,7 @@ from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.vhdl.types import ToHdlAstVhdl2008_types
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from pyMathBitPrecise.bit_utils import mask
+from pyMathBitPrecise.bit_utils import ctlz, get_bit
 
 
 @internal
@@ -39,23 +40,38 @@ def isResultOfTypeConversionForIndex(sig: RtlSignal):
     return False
 
 
-def matchZextOrSextArg(op: Union[RtlSignal, HConst], srcWidth:int) -> tuple[Optional[AnyHBitsValue], Optional[bool]]:
+def matchZextOrSextArg(op: Union[RtlSignal, HConst]) -> tuple[Optional[AnyHBitsValue], Optional[bool]]:
     """
     Check if the value is zext or sext to double width
     :returns: base operand, isSigned or None, None if not matched
     """
     if isinstance(op, HConst):
-        prefixBits = op.val >> srcWidth
-        if prefixBits == 0:
-            return op[srcWidth:], False
-        elif prefixBits == mask(srcWidth):
-            return op[srcWidth:], True
+        if not op._is_full_valid():
+            return None, None
+
+        width = op._dtype.bit_length()
+        isSigned = op._dtype.signed
+        msb = bool(get_bit(op.val, width - 1))
+        if msb:
+            prefixLen = ctlz(~op.val, width)
+        else:
+            prefixLen = ctlz(op.val, width)
+
+        if prefixLen == width:
+            # this is x * 0 or x * -1, this should have been optimized before, we do not do any opt there
+            return None, None
+
+        if isSigned:
+            prefixLen -= 1  # msb 0/1 must stay to mark signed
+
+        return op[prefixLen:], False
 
     elif op._isUnnamedExpr:
         try:
             d = op.singleDriver()
         except SignalDriverErr:
             return None, None
+
         casts = []
         # drop unnecessary casts
         while isinstance(d, HOperatorNode) and d.operator in CAST_OPS:
@@ -64,35 +80,27 @@ def matchZextOrSextArg(op: Union[RtlSignal, HConst], srcWidth:int) -> tuple[Opti
 
         if isinstance(d, HOperatorNode) and d.operator in (HwtOps.ZEXT, HwtOps.SEXT):
             src = d.operands[0]
-            if src._dtype.bit_length() == srcWidth:
-                return src, d.operator == HwtOps.SEXT
+            return src, d.operator == HwtOps.SEXT
 
     return None, None
 
 
 def matchFullWidthMul(op0: Union[RtlSignal, HConst], op1: Union[RtlSignal, HConst])\
-     ->tuple[bool, bool, Union[RtlSignal, HConst], Union[RtlSignal, HConst]]:
+     ->tuple[Union[RtlSignal, HConst], Union[RtlSignal, HConst]]:
         # result of multiplication in VHDL has 2x width, while in hwt has same width as operands have
     # truncatenation is required,
     # * first we check if operands are not zero extended to double width
     #   if this is the case we can use original operands and avoid any cast
-    sextMulMatch = False
-    zextMulMatch = False
-    width = op0._dtype.bit_length() // 2
-    _op0, _op0SignExtended = matchZextOrSextArg(op0, width)
+    _op0, _op0SignExtended = matchZextOrSextArg(op0)
     if _op0 is not None:
-        _op1, _op1SignExtended = matchZextOrSextArg(op1, width)
+        _op1, _op1SignExtended = matchZextOrSextArg(op1)
         if _op1 is not None:
             if _op0SignExtended == _op1SignExtended:
                 op0 = _op0._cast_sign(_op0SignExtended)
                 op1 = _op1._cast_sign(_op1SignExtended)
-                if _op0SignExtended:
-                    sextMulMatch = True
-                else:
-                    zextMulMatch = True
 
     # * else we need to truncatenate result to width of operand
-    return zextMulMatch, sextMulMatch, op0, op1
+    return op0, op1
 
 
 class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
@@ -122,7 +130,6 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         HdlOpType.SRA: (SHIFT_RIGHT, True),  # shift right arithmetical
         HdlOpType.ROL: (ROTATE_LEFT, False),  # rotate left
         HdlOpType.ROR: (ROTATE_RIGHT, False),  # rotate right
-
     }
 
     @internal
@@ -164,6 +171,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
            xTmp10b := (0=> x1b, others=>x1b);
             
         """
+        # [todo]: _as_Bits_vec
         _, o = self.tmpVars.create_var_cached(
             "tmpAggregate_",
             val._dtype,
@@ -173,14 +181,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
 
     def _as_Bits(self, val: Union[RtlSignal, HConst]):
         if val._dtype == BOOL:
-            bit1_t = HBits(1)
             isNew, o = self.tmpVars.create_var_cached(
                 "tmpBool2std_logic_",
-                bit1_t,
+                BIT,
                 postponed_init=True,
                 extra_args=(val, int, 1, 0))
             if isNew:
-                ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
+                ifTrue, ifFalse = b1, b0
                 if_ = If(val)
                 if_.ifTrue.append(HdlAssignmentContainer(ifTrue, o, virtual_only=True, parentStm=if_))
                 if_.ifFalse = []
@@ -229,6 +236,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 elif o == HwtOps.SEXT or o == HwtOps.ZEXT:
                     op0T = d.operands[0]._dtype
                     if op0T.signed is None and op0T.bit_length() == 1 and not op0T.force_vector:
+                        # :note: == if this is not SEXT/ZEXT implemented using VHDL resize()
                         isArrayAggregateOp = True
 
         except (AttributeError, IndexError):
@@ -258,12 +266,21 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
 
-    def _as_hdl_HOperatorNode_mulWithTrunc(self, op: HOperatorNode, srcOperandType: HBits, _op0, _op1):
+    def _as_hdl_HOperatorNode_mulWithTrunc(self, op: HOperatorNode,
+                                           src0Type: HBits, src1Type: HBits,
+                                           resType: HBits,
+                                           _op0: HdlOp, _op1: HdlOp):
         # new tmp variable must be created because downto may be applied only on ID and not expression
-        width = srcOperandType.bit_length()
+        width = src0Type.bit_length() + src1Type.bit_length()
+        resWidth = resType.bit_length()
+        if not src0Type.strict_width or not src1Type.strict_width or width == resWidth:
+            return HdlOp(HdlOpType.MUL, [_op0, _op1])
+
+        signed = src0Type.signed or src1Type.signed
+        assert signed == resType.signed
         isNew, tmpMulTruncVar = self.tmpVars.create_var_cached(
-            "tmpMulTrunc_",
-            HBits(width * 2, srcOperandType.signed),
+            "tmpMulTrunc_" if width > resWidth else "tmpMulExt_",
+            HBits(width, signed),
             postponed_init=True,
             extra_args=(op,))
         if isNew:
@@ -274,8 +291,15 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             as_hdl = self.as_hdl_HdlSignalItem(tmpMulTruncVar, declaration=True)
             hdl.append(as_hdl)
 
-        return hdl_index(self.as_hdl_HdlSignalItem(tmpMulTruncVar),
-                         hdl_downto(self.as_hdl_int(width - 1), self.as_hdl_int(0)))
+        res = self.as_hdl_HdlSignalItem(tmpMulTruncVar)
+        if width > resWidth:
+            res = hdl_index(res, hdl_downto(self.as_hdl_int(resWidth - 1), self.as_hdl_int(0)))
+        else:
+            assert width < resWidth
+            _op1 = self.as_hdl_int(resWidth)
+            res = hdl_call(self.RESIZE, [res, _op1])
+
+        return res
 
     def as_hdl_HOperatorNode_indexRhs(self, op1: Union[HBitsConst, HBitsRtlSignal]):
         if isinstance(op1._dtype, HBits) and op1._dtype != INT:
@@ -291,90 +315,123 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         else:
             return self.as_hdl_operand(op1)
 
-    def as_hdl_HOperatorNode(self, op: HOperatorNode):
-        ops = op.operands
-        o = op.operator
-
-        if o == HwtOps.INDEX:
-            op0, op1 = ops
+    def as_hdl_HOperatorNode_TRUNC_SEXT_ZEXT(self, op: HOperatorNode, o: HOperatorDef):
+        op0, op1 = op.operands
+        op1 = int(op1)
+        assert op1 >= 1, op
+        resultSign = op.result._dtype.signed
+        signedForVhdlResize = o == HwtOps.SEXT  # :note: VHDL std_numeric.resize supports only signed or unsinged
+        if o == HwtOps.TRUNC:
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
                 _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
-            if isinstance(op1, RtlSignalBase) and isResultOfTypeConversionForIndex(op1):
-                _, op1 = self.tmpVars.create_var_cached("tmpIndexTypeConv_", op1._dtype, def_val=op1)
 
-            # if the op0 is not signal or other index index operator it is extracted
-            # as tmp variable
-            op0 = self.as_hdl_operand(op0)
-            op0_t = ops[0]._dtype
-            if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
-                assert int(ops[1]) == 0, ops
-                # drop whole index operator because it is useless
-                return op0
-            _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
+            _op0 = self.as_hdl_operand(self._as_Bits(op0))
+            if resultSign is None:
+                # prefer downto notation over resize with casts
+                _sliceOp = HdlOp(HdlOpType.DOWNTO, [self.as_hdl_int(int(op1) - 1),
+                                                    self.as_hdl_int(0)])
+                return HdlOp(HdlOpType.INDEX, [_op0, _sliceOp])
 
-            return HdlOp(HdlOpType.INDEX, [op0, _op1])
+            signedForVhdlResize = resultSign  # it does not matter if trunc is signed/unsigned, but we preffer less casting
+        else:
+            _op0 = self.as_hdl_operand(self._as_Bits(op0))
 
-        elif o == HwtOps.TRUNC or o == HwtOps.SEXT or o == HwtOps.ZEXT:
-            op0, op1 = ops
-            op1 = int(op1)
-            assert op1 >= 1, op
-            resultSign = op.result._dtype.signed
-            signedForVhdlResize = o == HwtOps.SEXT  # :note: VHDL std_numeric.resize supports only signed or unsinged
-            if o == HwtOps.TRUNC:
-                if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
-                    _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
-
-                _op0 = self.as_hdl_operand(op0)
-                if resultSign is None:
-                    # prefer downto notation over resize with casts
-                    _sliceOp = HdlOp(HdlOpType.DOWNTO, [self.as_hdl_int(int(op1) - 1), self.as_hdl_int(0)])
-                    return HdlOp(HdlOpType.INDEX, [_op0, _sliceOp])
-                signedForVhdlResize = resultSign  # it does not matter if trunc is signed/unsigned, but we preffer less casting
+        op0T = op0._dtype
+        if o != HwtOps.TRUNC and\
+           op0T.signed is None and\
+           op0T.bit_length() == 1 and\
+           not op0T.force_vector:
+            # use aggregate expression
+            if o == HwtOps.SEXT:
+                msb = _op0
+                return [HdlOp(HdlOpType.MAP_ASSOCIATION, [HdlOthers, msb]), ]
             else:
-                _op0 = self.as_hdl_operand(op0)
-
-            op0T = op0._dtype
-            if op0T.signed is None and op0T.bit_length() == 1 and not op0T.force_vector and o != HwtOps.TRUNC:
-                # use aggregate expression
-                if o == HwtOps.SEXT:
-                    msb = _op0
-                else:
-                    msb = self.as_hdl_HBitsConst(BIT.from_py(0))
-
+                msb = self.as_hdl_HBitsConst(b0)
                 return [
                     HdlOp(HdlOpType.MAP_ASSOCIATION, [self.as_hdl_int(0), _op0]),
                     HdlOp(HdlOpType.MAP_ASSOCIATION, [HdlOthers, msb]),
                 ]
 
-            else:
-                # use vhdl RESIZE()
-                if resultSign != signedForVhdlResize:
-                    _op0 = self.apply_cast(self._sign_flag_to_cast_id[signedForVhdlResize], _op0)
-
-                _op1 = self.as_hdl_int(op1)
-                res = hdl_call(self.RESIZE, [_op0, _op1])
-
-                if resultSign != signedForVhdlResize:
-                    res = self.apply_cast(self._sign_flag_to_cast_id[resultSign], res)
-
-            return res
-
-        elif o == HwtOps.TERNARY:
-            _c, _op0, _op1 = ops
-            op0 = self.as_hdl_cond(_c, True)
-            op1 = self.as_hdl_operand(_op0)
-            t0 = _op0._dtype
-            t1 = _op1._dtype
-            if not (t0 == t1):
-                assert isinstance(t0, HBits) and\
-                       isinstance(t1, HBits) and\
-                       t0.bit_length() == t1.bit_length() and\
-                       bool(t0.signed) == bool(t1.signed), (t0, t1)
-                _, _op1 = self.tmpVars.create_var_cached("tmpTernaryAutoCast_", t0, def_val=_op1)
-
-            op2 = self.as_hdl_operand(_op1)
-            return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
         else:
+            # use vhdl RESIZE()
+            if resultSign != signedForVhdlResize:
+                _op0 = self.apply_cast(self._sign_flag_to_cast_id[signedForVhdlResize], _op0)
+
+            _op1 = self.as_hdl_int(op1)
+            res = hdl_call(self.RESIZE, [_op0, _op1])
+
+            if resultSign != signedForVhdlResize:
+                res = self.apply_cast(self._sign_flag_to_cast_id[resultSign], res)
+
+        return res
+
+    def as_hdl_HOperatorNode_INDEX(self, op: HOperatorNode):
+        ops = op.operands
+        op0, op1 = ops
+        if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
+            _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+        if isinstance(op1, RtlSignalBase) and isResultOfTypeConversionForIndex(op1):
+            _, op1 = self.tmpVars.create_var_cached("tmpIndexTypeConv_", op1._dtype, def_val=op1)
+
+        # if the op0 is not signal or other index index operator it is extracted
+        # as tmp variable
+        op0 = self.as_hdl_operand(op0)
+        op0_t = ops[0]._dtype
+        if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+            assert int(ops[1]) == 0, ops
+            # drop whole index operator because it is useless
+            return op0
+        _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
+
+        return HdlOp(HdlOpType.INDEX, [op0, _op1])
+
+    def as_hdl_HOperatorNode_TERNARY(self, op: HOperatorNode):
+        _c, _op0, _op1 = op.operands
+        op0 = self.as_hdl_cond(_c, True)
+        op1 = self.as_hdl_operand(_op0)
+        t0 = _op0._dtype
+        t1 = _op1._dtype
+        if not (t0 == t1):
+            assert isinstance(t0, HBits) and\
+                   isinstance(t1, HBits) and\
+                   t0.bit_length() == t1.bit_length() and\
+                   bool(t0.signed) == bool(t1.signed), (t0, t1)
+            _, _op1 = self.tmpVars.create_var_cached("tmpTernaryAutoCast_", t0, def_val=_op1)
+
+        op2 = self.as_hdl_operand(_op1)
+        return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
+
+    def as_hdl_HOperatorNode_asVhdlFn(self, op: HOperatorNode, vhldFn: HdlValueId, isArithmetical):
+        ops = op.operands
+        op0, op1 = ops
+        _op0 = self.as_hdl_Value(op0)
+        op0Signed = op0._dtype.signed
+        if isArithmetical:
+            if not op0Signed:
+                _op0 = self.apply_cast(self.SIGNED, _op0)
+        else:
+            if op0Signed or op0Signed is None:
+                _op0 = self.apply_cast(self.UNSIGNED, _op0)
+
+        _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
+        res = hdl_call(vhldFn, [_op0, _op1])
+        resSigned = op.result._dtype.signed
+        if op0Signed != isArithmetical:
+            res = self.apply_cast(self._sign_flag_to_cast_id[resSigned], res)
+
+        return res
+
+    def as_hdl_HOperatorNode(self, op: HOperatorNode):
+        o = op.operator
+
+        if o == HwtOps.INDEX:
+            return self.as_hdl_HOperatorNode_INDEX(op)
+        elif o == HwtOps.TRUNC or o == HwtOps.SEXT or o == HwtOps.ZEXT:
+            return self.as_hdl_HOperatorNode_TRUNC_SEXT_ZEXT(op, o)
+        elif o == HwtOps.TERNARY:
+            return self.as_hdl_HOperatorNode_TERNARY(op)
+        else:
+            ops = op.operands
             _o = self._cast_ops.get(o, None)
             if _o is not None:
                 op0 = ops[0]
@@ -389,34 +446,16 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             else:
                 vhldFn, isArithmetical = self.HDLCONVERTORAST_TO_VHDL.get(_o, (None, None))
                 if vhldFn is not None:
-                    op0, op1 = ops
-                    _op0 = self.as_hdl_Value(op0)
-                    op0Signed = op0._dtype.signed
-                    if isArithmetical:
-                        if not op0Signed:
-                            _op0 = self.apply_cast(self.SIGNED, _op0)
-                    else:
-                        if op0Signed or op0Signed is None:
-                            _op0 = self.apply_cast(self.UNSIGNED, _op0)
-
-                    _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
-                    res = hdl_call(vhldFn, [_op0, _op1])
-                    resSigned = op.result._dtype.signed
-                    if op0Signed != isArithmetical:
-                        res = self.apply_cast(self._sign_flag_to_cast_id[resSigned], res)
-
-                    return res
+                    return self.as_hdl_HOperatorNode_asVhdlFn(op, vhldFn, isArithmetical)
                 o = _o
 
             if len(ops) == 2:
                 res_t = op.result._dtype
                 op0, op1 = ops
 
-                zextMulMatch = False
-                sextMulMatch = False
                 if o == HdlOpType.MUL:
                     # optionally drop zext/sext and add casts
-                    zextMulMatch, sextMulMatch, op0, op1 = matchFullWidthMul(op0, op1)
+                    op0, op1 = matchFullWidthMul(op0, op1)
 
                 if o != HdlOpType.CONCAT:
                     op0 = self._wrapConcatInTmpVariable(op0)
@@ -431,18 +470,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 if o == HdlOpType.EQ and isinstance(_op0, HdlValueId) and\
                         (isinstance(_op0.obj._dtype, HBits) and self._expandBitsOperandType(_op0.obj) == BOOL) and\
                         isinstance(_op1, HdlValueInt) and\
-                        _op1.val:
+                        _op1.val == 1:
                     # drop unnecessary casts
                     return _op0
+                elif o == HdlOpType.MUL:
+                    return self._as_hdl_HOperatorNode_mulWithTrunc(op, op0._dtype, op1._dtype, res_t, _op0, _op1)
                 else:
                     assert o not in HDLCONVERTAST_OPS_SHIFT_AND_ROT, (o, "shifts and rotations should have been handled sooner in this function")
-                    if o == HdlOpType.MUL and\
-                            not sextMulMatch and\
-                            not zextMulMatch and\
-                            op0._dtype.strict_width and\
-                            op1._dtype.strict_width:
-                        return self._as_hdl_HOperatorNode_mulWithTrunc(op, op0._dtype, _op0, _op1)
-
                     return HdlOp(o, [_op0, _op1])
 
             return HdlOp(o, [self.as_hdl_operand(o2)
