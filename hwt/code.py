@@ -399,19 +399,22 @@ def segment_get(n:Union[RtlSignalBase, HConst],
     return n[segmentWidth * (segmentIndex + 1): segmentWidth * segmentIndex]
 
 
-def split_to_segments(n:Union[RtlSignalBase, HConst], maxSegmentWidth:int, allowLastToBeSmaller=False):
+def split_to_segments(n:Union[RtlSignalBase, HConst], maxSegmentWidth:int, allowLastToBeSmaller=False, extendLast=False):
     """
     Split bit vector to a segments of up to maxSegmentWidth bits, lower bits first.
     """
     offset = 0
     segments = []
     width = n._dtype.bit_length()
-    if not allowLastToBeSmaller:
+    if not allowLastToBeSmaller and not extendLast:
         assert width % maxSegmentWidth == 0, (width, maxSegmentWidth)
+
     while True:
         end = min(offset + maxSegmentWidth, width)
         segments.append(n[end:offset])
         if end == width:
+            if extendLast and end != offset + maxSegmentWidth:
+                segments[-1] = segments[-1]._ext(maxSegmentWidth)
             break
         offset = end
     return segments
