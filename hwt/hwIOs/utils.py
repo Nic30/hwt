@@ -10,8 +10,6 @@ def addClkRstn(obj: HwModuleOrHwIOBase):
     """
     obj.clk = HwIOClk()
     freq = getattr(obj, "CLK_FREQ", NOT_SPECIFIED)
-    if freq is NOT_SPECIFIED:
-        freq = getattr(obj, "FREQ", NOT_SPECIFIED)
     if freq is not NOT_SPECIFIED:
         obj.clk.FREQ = freq
     obj.rst_n = HwIORst_n()
@@ -24,8 +22,6 @@ def addClkRst(obj: HwModuleOrHwIOBase):
     """
     obj.clk = HwIOClk()
     freq = getattr(obj, "CLK_FREQ", NOT_SPECIFIED)
-    if freq is NOT_SPECIFIED:
-        freq = getattr(obj, "FREQ", NOT_SPECIFIED)
     if freq is not NOT_SPECIFIED:
         obj.clk.FREQ = freq
     obj.rst = HwIORst()
