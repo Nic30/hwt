@@ -1,5 +1,5 @@
-from functools import reduce
 from typing import Union
+
 from hwt.hdl.types.bits import HBits
 
 
@@ -37,17 +37,7 @@ def fitTo_t(what: Union["HBitsRtlSignal", "HBitsConst"], where_t: HBits,
         if not extend:
             raise BitWidthErr()
 
-        w = toWidth - whatWidth
-
-        if what._dtype.signed:
-            # signed extension
-            msb = what[whatWidth - 1]
-            ext = reduce(lambda a, b: a._concat(b), [msb for _ in range(w)])
-        else:
-            # 0 extend
-            ext = HBits(w).from_py(0)
-
-        res = ext._concat(what)
+        res = what._ext(toWidth)
         if where_t.signed is not None:
             return res._reinterpret_cast(where_t)
         return res
