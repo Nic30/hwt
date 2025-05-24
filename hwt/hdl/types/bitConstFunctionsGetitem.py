@@ -308,10 +308,11 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
 
     elif isinstance(key, HBits.getConstCls()):
         # int like value addressing a single bit
-        if not key._is_full_valid():
+        if st.negated:
+            resT = BIT_N
+        else:
             resT = BIT
-            if st.negated and resT is BIT:
-                resT = BIT_N
+        if not key._is_full_valid():
             return resT.from_py(None)
 
         # check index range
@@ -327,6 +328,11 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
                 parentLower = parentIndex.val.stop
                 return original[parentLower + _index]
 
+        elif iAmResultOfOp == HwtOps.TRUNC:
+            # fold x._trunc(n)[i] to x[i]
+            original = v._rtlObjectOrigin.operands[0]
+            return original[_index]
+
         elif iAmResultOfOp == HwtOps.ZEXT or iAmResultOfOp == HwtOps.SEXT:
             return bitsGetitem_foldBitGetOnEXT(v, _index, key, iAmResultOfOp)
 
@@ -335,13 +341,16 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
             # fold concat(a, x)[i] -> x[i]
             v, key = bitsGetitem_foldBitGetOnConcat(v, key, _index, iAmResultOfOp)
             st = v._dtype
+            if isinstance(key, HBits.getConstCls()) and int(key) == 0 and (
+                    v._dtype.bit_length() == 1 and not v._dtype.force_vector
+                ):
+                return v
 
         if iamConst:
+            # at the end because multiple non-constant indexes may be applied on constant and we want to merge them
             return Bits3val.__getitem__(v, key)
         elif key._is_full_valid() and int(key) == 0 and v._dtype == BIT or v._dtype == BIT_N:
             return v
-
-        resT = BIT
 
     elif isinstance(key, RtlSignalBase):
         t = key._dtype
