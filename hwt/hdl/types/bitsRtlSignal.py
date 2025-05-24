@@ -26,8 +26,9 @@ from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and
     vld_mask_for_or
 
 
-class HBitsRtlSignal(RtlSignal):
 
+class HBitsRtlSignal(RtlSignal):
+    
     @internal
     def _cast_sign(self, signed: Optional[bool]) -> Self:
         """
