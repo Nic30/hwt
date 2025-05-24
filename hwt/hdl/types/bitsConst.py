@@ -3,6 +3,7 @@ from operator import eq
 from typing import Union, Self
 
 from hdlConvertorAst.to.hdlUtils import bit_string
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import HwtOps
@@ -27,7 +28,8 @@ class HBitsConst(HConst, Bits3val):
     :attention: operator on signals are using value operator functions as well
     """
     _BOOL = HBits(1, name="bool")
-    _SIGNED_FOR_SLICE_CONCAT_RESULT = None
+    _SIGNED_FOR_SLICE_RESULT = NOT_SPECIFIED
+    _SIGNED_FOR_CONCAT_RESULT = None
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None) -> Self:
