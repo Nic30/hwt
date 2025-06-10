@@ -4,4 +4,4 @@
 from hwtLib.tests.all import suite, unittestMain
 
 if __name__ == '__main__':
-    unittestMain()
+    unittestMain(suite)
