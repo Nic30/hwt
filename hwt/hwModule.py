@@ -1,6 +1,6 @@
 from copy import copy
 from natsort.natsort import natsorted
-from typing import Optional, List, Dict, Tuple, Set, Union
+from typing import Optional, Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._structural import HdlCompInst, HdlModuleDec
@@ -80,7 +80,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         self._hdl_module_name: Optional[str] = None
         assert hdlName is None or isinstance(hdlName, str), hdlName
         self._hdlNameOverride = hdlName
-        self._lazy_loaded: List[Union[HwModule, HwIOBase]] = []
+        self._lazy_loaded: list[Union[HwModule, HwIOBase]] = []
         self._rtlCtx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
         self._loadConfig()
@@ -248,7 +248,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
     def _updateHwParamsFrom(self, otherObj: PropDeclrCollector,
                           updater=_default_param_updater,
-                          exclude: Optional[Tuple[Set[str], Set[str]]]=None,
+                          exclude: Optional[tuple[set[str], set[str]]]=None,
                           prefix=""):
         """
         :note: doc in
@@ -281,7 +281,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
 
 def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
-                           ports: List[HdlPortItem], new_m: HwModule):
+                           ports: list[HdlPortItem], new_m: HwModule):
     new_io._direction = orig_io._direction
     if orig_io._hdlPort is not None:
         s = orig_io._sigInside
@@ -338,9 +338,9 @@ def copy_HdlModuleDec(orig_m: HwModule, new_m: HwModule):
     hwModDec.ports[:] = natsorted(hwModDec.ports, key=lambda x: x.name)
 
 
-def _sharedCompBuildHwIOMapList(replacement: List[HwIOBase],
-                                          substituted: List[HwIOBase],
-                                          res: Dict[HwIOBase, HwIOBase]):
+def _sharedCompBuildHwIOMapList(replacement: list[HwIOBase],
+                                          substituted: list[HwIOBase],
+                                          res: dict[HwIOBase, HwIOBase]):
     assert len(replacement) == len(substituted)
     for r, s in zip(replacement, substituted):
         assert r._name == s._name, (r._name, s._name)
