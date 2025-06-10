@@ -175,6 +175,9 @@ class SignalOps(object):
         if name == "_dtype" or name == "_setAttrListener" or self._setAttrListener is not None:
             raise AttributeError(name)
 
-        sigProp = getattr(self._sig, name)
+        try:
+            sigProp = getattr(self._sig, name)
+        except AttributeError:
+            raise AttributeError(name) from None
         return sigProp
 
