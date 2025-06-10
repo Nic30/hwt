@@ -110,7 +110,10 @@ def synthesised(m: HwModule, target_platform=DummyPlatform()):
     """
     sm = StoreManager(DummySerializerConfig,
                       _filter=SerializerFilterDoNotExclude())
+    
     if not hasattr(m, "_hwIOs"):
+        m._target_platform = target_platform
+        m._store_manager = sm
         m._loadHwDeclarations()
 
     for _ in m._to_rtl(target_platform, sm):
