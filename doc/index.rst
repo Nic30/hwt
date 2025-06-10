@@ -1,9 +1,9 @@
-Welcome to HWToolkit (hwt) generated documentation!
+Welcome to hwt (HWToolkit) generated documentation!
 ===================================================
 
 This documentation is automatically generated from actual source code.
 
-What is HWToolkit (hwt)
+What is hwt (HWToolkit)
 -----------------------
 
 * Is a Hardware Construction Framework. It is similar to a HCLs like Chisel3 but it is rather set of object with a normal
@@ -47,6 +47,8 @@ E.g. hwtLib.examples.simple.SimpleHwModule is a good starting point.
 
 Component in HWT is a class which inherits from HwModule class.
 Object of such a class can be converted to a vhdl/Verilog by from hwt.synth.to_rtl function.
+That said, this library is regular python library without any non-pyhon dependencies,
+it does not have any executable file.
 
 You can also download this doc in `PDF
 <https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.
