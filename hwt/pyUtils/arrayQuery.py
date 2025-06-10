@@ -6,6 +6,7 @@ from types import GeneratorType
 
 from hdlConvertorAst.to.hdlUtils import iter_with_last
 from hwt.constants import NOT_SPECIFIED
+from typing import Sequence
 
 
 class DuplicitValueExc(Exception):
@@ -127,21 +128,21 @@ def flatten(iterables, level=inf):
         yield iterables
 
 
-def grouper(n, iterable, padvalue=None):
+def grouper(n: int, iterable: Sequence, padvalue=None):
     """grouper(3, 'abcdefg', 'x') -->
        ('a','b','c'), ('d','e','f'), ('g','x','x')
     """
     return zip_longest(*[iter(iterable)] * n, fillvalue=padvalue)
 
 
-def areSetsIntersets(setA, setB):
+def areSetsIntersets(setA: set, setB: set):
     """
     Check if intersection of sets is not empty
     """
     return any(x in setA for x in setB)
 
 
-def balanced_reduce(arr, opFn):
+def balanced_reduce(arr: Sequence, opFn):
     while len(arr) > 1:
         nextArr = []
         for a, b in grouper(2, arr, NOT_SPECIFIED):
