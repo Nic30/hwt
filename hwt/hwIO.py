@@ -1,6 +1,5 @@
 from copy import copy
-from typing import Dict, Optional, Union, List, Generator, Callable, Tuple, Set, \
-    Self
+from typing import Optional, Union, Generator, Callable, Self
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -71,7 +70,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     _NAME_SEPARATOR = "_"
 
     def __init__(self, masterDir=DIRECTION.OUT,
-                 hdlName:Optional[Union[str, Dict[str, str]]]=None,
+                 hdlName:Optional[Union[str, dict[str, str]]]=None,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
@@ -115,7 +114,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
 
         return self
 
-    def __call__(self, other, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
+    def __call__(self, other, exclude=None, fit=False) -> list[HdlAssignmentContainer]:
         """
         :attention: it is not call of function it is operator of assignment
         """
@@ -160,7 +159,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             for sHwIO in self._hwIOs:
                 sHwIO._cleanRtlSignals(lockNonExternal=lockNonExternal)
 
-    def _connectTo(self, master, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
+    def _connectTo(self, master, exclude=None, fit=False) -> list[HdlAssignmentContainer]:
         """
         connect to another interface interface (on RTL level)
         works like self <= master in VHDL
@@ -251,7 +250,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     @internal
     def _signalsForHwIO(self,
                              ctx: RtlNetlist,
-                             res: Optional[Dict[RtlSignal, DIRECTION]],
+                             res: Optional[dict[RtlSignal, DIRECTION]],
                              name_scope: Optional[NameScope],
                              prefix='', typeTransform=None,
                              reverse_dir=False):
@@ -322,7 +321,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         return HObjList._getFullName(self)
 
     def _updateHwParamsFrom(self, otherObj, updater=_default_param_updater,
-                          exclude:Optional[Tuple[Set[str], Set[str]]]=None, prefix=""):
+                          exclude:Optional[tuple[set[str], set[str]]]=None, prefix=""):
         """
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateHwParamsFrom`
         """
