@@ -87,6 +87,7 @@ class RtlNetlistPassRemoveUnconnectedSignals(RtlNetlistPass):
 
                 for i in inputs:
                     if isinstance(i, RtlSignalBase) and i not in seen:
+                        assert i._rtlCtx is not None, (netlist.parent, e, "input does not have netlist assigned", i)
                         assert i._rtlCtx is netlist, (netlist.parent, e, "all inputs must be in the same netlist", i)
                         seen.add(i)
                         toSearch.append(i)
