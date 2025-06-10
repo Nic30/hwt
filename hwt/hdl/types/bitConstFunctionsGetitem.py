@@ -340,6 +340,7 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
             # index directly in the member of concatenation
             # fold concat(a, x)[i] -> x[i]
             v, key = bitsGetitem_foldBitGetOnConcat(v, key, _index, iAmResultOfOp)
+            iamConst = isinstance(v, HConst)
             st = v._dtype
             if isinstance(key, HBits.getConstCls()) and int(key) == 0 and (
                     v._dtype.bit_length() == 1 and not v._dtype.force_vector
