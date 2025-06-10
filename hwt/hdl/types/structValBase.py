@@ -5,6 +5,7 @@ from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.defs import STR
+from hwt.hwIO import HwIO
 from hwt.mainBases import RtlSignalBase
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -85,7 +86,7 @@ class HStructConstBase(HConst):
                 else:
                     v = val.get(f.name, None)
 
-                if not isinstance(v, (HConst, RtlSignalBase)):
+                if not isinstance(v, (HConst, HwIO, RtlSignalBase)):
                     v = f.dtype.from_py(v)
 
                 setattr(self, f.name, v)
