@@ -10,7 +10,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
 @internal
-def nameAvailabilityCheck(obj, propName, prop):
+def nameAvailabilityCheck(obj: "PropDeclrCollector", propName: str, prop: object):
     """
     Check if not redefining property on obj
     but allow to cast current property to a HwParam
@@ -315,16 +315,18 @@ class PropDeclrCollector(object):
         items._parent = self
         items._name = name
         items._on_append = self._registerArray_append
+        items._onParentPropertyPath = onParentPropertyPath
         for i, item in enumerate(items):
-            self._registerArray_append(items, item, onParentPropertyPath, i)
+            self._registerArray_append(items, item, i)
 
     @internal
-    def _registerArray_append(self, h_obj_list: HObjList, item: Self, onParentPropertyPath: tuple[Union[str, int], ...], index: int):
+    def _registerArray_append(self, h_obj_list: HObjList, item: Self, index: int):
         """
         Register a single object in the list
         """
         setattr(self, f"{h_obj_list._name:s}_{index:d}", item)
-        item._onParentPropertyPath = (*onParentPropertyPath, index)
+        if isinstance(item, PropDeclrCollector):
+            item._onParentPropertyPath = (*h_obj_list._onParentPropertyPath, index)
 
     # implementation phase
     @internal
