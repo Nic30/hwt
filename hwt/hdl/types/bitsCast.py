@@ -114,8 +114,18 @@ def reinterpret_bits_to_hstruct__HConst(val: HConst, hStructT: HStruct):
 
 
 @internal
-def transfer_signals(src: HwIOBase, dst: HwIOBase):
-    if src._hwIOs:
+def transfer_signals(src: Union[HwIOBase, HObjList], dst: Union[HwIOBase, HObjList]):
+    if isinstance(src, HObjList):
+        assert len(src) == len(dst)
+        for si, di in zip(src, dst):
+            transfer_signals(si, di)
+
+    elif isinstance(src, (RtlSignal, HConst)):
+        assert not dst._hwIOs, (src, dst)
+        dst._sig = src
+
+    elif src._hwIOs:
+        # HwIOBase
         assert len(src._hwIOs) == len(dst._hwIOs), (src, dst)
         for si, di in zip(src._hwIOs, dst._hwIOs):
             transfer_signals(si, di)
@@ -127,7 +137,7 @@ def transfer_signals(src: HwIOBase, dst: HwIOBase):
 @internal
 def reinterpret_bits_to_hstruct__RtlSignal(val: RtlSignal, hStructT: HStruct):
     """
-    Reinterpret signal of type HBits to signal of type HStruct
+    Reinterpret signal of type :class:`HBits` to signal of type :class:`HStruct`
     """
     container = HdlType_to_HwIO().apply(hStructT)
     container._loadHwDeclarations()
@@ -139,14 +149,7 @@ def reinterpret_bits_to_hstruct__RtlSignal(val: RtlSignal, hStructT: HStruct):
             v = val[(width + offset):offset]
             v = v._reinterpret_cast(t)
             current = getattr(container, f.name)
-            if isinstance(v, HwIOBase):
-                transfer_signals(v, current)
-            elif isinstance(v, HObjList):
-                raise NotImplementedError()
-            elif isinstance(v, (RtlSignal, HConst)):
-                current._sig = v
-            else:
-                raise NotImplementedError()
+            transfer_signals(v, current)
 
         offset += width
 
