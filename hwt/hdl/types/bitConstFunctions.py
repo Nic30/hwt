@@ -134,6 +134,8 @@ def bitsCmp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
             else:
                 return HOperatorNode.withRes(op, [self, other], BOOL)
 
+        elif t.strict_width and ot.strict_width and t.bit_length() != ot.bit_length():
+            pass 
         elif t.signed != ot.signed:
             # handle sign casts
             if t.signed is None:
