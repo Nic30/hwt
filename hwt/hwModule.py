@@ -58,6 +58,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         and the component from :func:`~._shared_component_with` is used instead
     :ivar ~._target_platform: meta-informations about target platform
     :ivar ~._name: a name of this component
+    :ivar ~._onParentPropertyPath: :see: :class:`HwIO`
     :ivar ~._hdl_module_name: a name of HDL module for this component
         (vhdl entity name, Verilog module name)
     """
@@ -76,6 +77,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
     def __init__(self, hdlName:Optional[str]=None):
         self._parent: Optional[HwModule] = None
         self._name: Optional[str] = None
+        self._onParentPropertyPath: Optional[tuple[Union[str, int], ...]] = None
         self._shared_component_with = None
         self._hdl_module_name: Optional[str] = None
         assert hdlName is None or isinstance(hdlName, str), hdlName
@@ -113,11 +115,11 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
             u._loadHwDeclarations()
 
     @internal
-    def _registerHwIOInHwImpl(self, hwIOName, hwIO):
+    def _registerHwIOInHwImpl(self, hwIOName: str, hwIO: HwIOBase, onParentPath: tuple[Union[str, int], ...]):
         """
         Register interface in implementation phase
         """
-        self._registerHwIO(hwIOName, hwIO, isPrivate=True)
+        self._registerHwIO(hwIOName, hwIO, onParentPath, True)
         self._loadHwIODeclarations(hwIO, False)
         hwIO._signalsForHwIO(
             self._rtlCtx, None, self._store_manager.name_scope)

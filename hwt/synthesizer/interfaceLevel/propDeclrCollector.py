@@ -1,5 +1,5 @@
 from types import MethodType
-from typing import Tuple, Set, Optional, Callable
+from typing import Tuple, Set, Optional, Callable, Union, Self
 
 from hdlConvertorAst.translate.common.name_scope import WithNameScope
 from hwt.doc_markers import internal
@@ -13,7 +13,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 def nameAvailabilityCheck(obj, propName, prop):
     """
     Check if not redefining property on obj
-    but allow to cast current property to a parameter
+    but allow to cast current property to a HwParam
     """
     cur = getattr(obj, propName, None)
     if cur is not None and (not isinstance(prop, HwParam) or cur is not prop._initval):
@@ -262,7 +262,7 @@ class PropDeclrCollector(object):
 
     # declaration phase
     @internal
-    def _registerSubmodule(self, mName:str, submodule:"HwModule"):
+    def _registerSubmodule(self, mName:str, submodule:"HwModule", onParentPropertyPath: tuple[Union[str, int], ...]):
         """
         Register unit object on interface level object
         """
@@ -270,10 +270,11 @@ class PropDeclrCollector(object):
         assert submodule._parent is None
         submodule._parent = self
         submodule._name = mName
+        submodule._onParentPropertyPath = onParentPropertyPath
         self._subHwModules.append(submodule)
 
     @internal
-    def _registerHwIO(self, hwIOName, hwIO, isPrivate=False):
+    def _registerHwIO(self, hwIOName: str, hwIO: HwIOBase, onParentPropertyPath: tuple[Union[str, int], ...], isPrivate:bool):
         """
         Register HwIO object on interface level object
         """
@@ -281,8 +282,8 @@ class PropDeclrCollector(object):
         assert hwIO._parent is None
         hwIO._parent = self
         hwIO._name = hwIOName
+        hwIO._onParentPropertyPath = onParentPropertyPath
         hwIO._rtlCtx = self._rtlCtx
-
         # _setAsExtern() not used because _hwIOs are not initialized yet
         if isPrivate:
             self._private_hwIOs.append(hwIO)
@@ -297,16 +298,17 @@ class PropDeclrCollector(object):
             object.__setattr__(self, name, prop)
             return prop
 
+        onParentPropertyPath = (name,)
         if isinstance(prop, HwIOBase):
-            self._registerHwIO(name, prop)
+            self._registerHwIO(name, prop, onParentPropertyPath, False)
         elif isinstance(prop, HwModuleBase):
-            self._registerSubmodule(name, prop)
+            self._registerSubmodule(name, prop, onParentPropertyPath)
         elif isinstance(prop, HObjList):
-            self._registerArray(name, prop)
+            self._registerArray(name, prop, onParentPropertyPath)
         return prop
 
     @internal
-    def _registerArray(self, name: str, items: HObjList):
+    def _registerArray(self, name: str, items: HObjList, onParentPropertyPath: tuple[Union[str, int], ...]):
         """
         Register array of items on interface level object
         """
@@ -314,14 +316,15 @@ class PropDeclrCollector(object):
         items._name = name
         items._on_append = self._registerArray_append
         for i, item in enumerate(items):
-            self._registerArray_append(items, item, i)
+            self._registerArray_append(items, item, onParentPropertyPath, i)
 
     @internal
-    def _registerArray_append(self, h_obj_list: HObjList, item, index: int):
+    def _registerArray_append(self, h_obj_list: HObjList, item: Self, onParentPropertyPath: tuple[Union[str, int], ...], index: int):
         """
         Register a single object in the list
         """
         setattr(self, f"{h_obj_list._name:s}_{index:d}", item)
+        item._onParentPropertyPath = (*onParentPropertyPath, index)
 
     # implementation phase
     @internal
@@ -331,12 +334,12 @@ class PropDeclrCollector(object):
         self._setAttrListener = None
 
     @internal
-    def _registerSubmoduleInImpl(self, name: str, m: HwModuleBase):
+    def _registerSubmoduleInImpl(self, name: str, m: HwModuleBase, onParentPropertyPath: tuple[Union[str, int], ...]):
         """
         :attention: unit has to be parametrized before it is registered
             (some components can change interface by parametrization)
         """
-        self._registerSubmodule(name, m)
+        self._registerSubmodule(name, m, onParentPropertyPath)
         m._loadHwDeclarations()
         sm = self._store_manager
         with WithNameScope(sm, sm.name_scope.parent):
@@ -345,7 +348,7 @@ class PropDeclrCollector(object):
         m._signalsForSubHwModuleEntity(self._rtlCtx, "sig_" + name)
 
     @internal
-    def _registerHwIOInHwImpl(self, hwIOName: str, hwio: HwIOBase):
+    def _registerHwIOInHwImpl(self, hwIOName: str, hwio: HwIOBase, onParentPropertyPath: tuple[Union[str, int], ...]):
         """
         Register interface in implementation phase
         """
@@ -364,16 +367,17 @@ class PropDeclrCollector(object):
         """
         Handle property definitions in _impl phase
         """
+        onParentPropertyPath = (name, )
         if isinstance(prop, HwIOBase):
             if prop._parent is self:
                 return prop
-            self._registerHwIOInHwImpl(name, prop)
+            self._registerHwIOInHwImpl(name, prop, onParentPropertyPath)
         elif isinstance(prop, HwModuleBase):
             if prop._parent is self:
                 return prop
-            self._registerSubmoduleInImpl(name, prop)
+            self._registerSubmoduleInImpl(name, prop, onParentPropertyPath)
         elif isinstance(prop, HObjList):
             if prop._parent is self:
                 return prop
-            self._registerArray(name, prop)
+            self._registerArray(name, prop, onParentPropertyPath)
         return prop

@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, Union, Generator, Callable, Self
+from typing import Optional, Union, Generator, Callable, Self, Collection
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -17,7 +17,6 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwtSimApi.agents.base import AgentBase
 from ipCorePackager.constants import DIRECTION, INTF_DIRECTION
-
 
 from hwt.synthesizer.interfaceLevel.implDependent import\
     HwIOImplDependentFns
@@ -38,6 +37,8 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     :ivar ~._hwParams: [] of parameter
     :ivar ~._hwIOs: [] sub interfaces
     :ivar ~._name: name assigned during synthesis
+    :ivar ~._onParentPropertyPath: path composed of property name and indexes in on parent to identify
+        object location in parent properties
     :ivar ~._parent: parent object (HwModule or HwIO instance)
     :ivar ~._isExtern: If true synthesizer sets it as external port of unit
     :ivar ~._associatedClk: clock Signal (interface) associated with
@@ -84,6 +85,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         self._associatedClk: Optional[HwIO] = None
         self._associatedRst: Optional[HwIO] = None
         self._parent: Optional["HwModule"] = None
+        self._onParentPropertyPath: Optional[tuple[Union[str, int], ...]] = None
         self._name: Optional[str] = None
 
         super().__init__()
@@ -114,11 +116,13 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
 
         return self
 
-    def __call__(self, other, exclude=None, fit=False) -> list[HdlAssignmentContainer]:
+    def __call__(self, other: Union[Self, HConst, object], exclude:Optional[Collection[Union[Self, HConst]]]=None,
+                 fit:bool=False) -> list[HdlAssignmentContainer]:
         """
         :attention: it is not call of function it is operator of assignment
         """
         assert self._direction != INTF_DIRECTION.MASTER
+        return self._connectTo(other, exclude, fit)
         try:
             return self._connectTo(other, exclude, fit)
         except Exception as e:
@@ -159,7 +163,8 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             for sHwIO in self._hwIOs:
                 sHwIO._cleanRtlSignals(lockNonExternal=lockNonExternal)
 
-    def _connectTo(self, master, exclude=None, fit=False) -> list[HdlAssignmentContainer]:
+    def _connectTo(self, master: Union[Self, HConst, object], exclude:Optional[Collection[Union[Self, HConst]]]=None,
+                   fit:bool=False) -> list[HdlAssignmentContainer]:
         """
         connect to another interface interface (on RTL level)
         works like self <= master in VHDL
@@ -167,17 +172,22 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         return list(self._connectToIter(master, exclude, fit))
 
     @internal
-    def _connectToIter(self, master, exclude, fit) -> Generator[HdlAssignmentContainer, None, None]:
+    def _connectToIter(self, master: Union[Self, HConst, object], exclude:Optional[Collection[Union[Self, HConst]]],
+                       fit: bool) -> Generator[HdlAssignmentContainer, None, None]:
         if exclude and (self in exclude or master in exclude):
             return
 
         if self._hwIOs:
-            seenMasterHwIOs = []
+            masterIsHwIO = isinstance(master, HwIO)
+            if masterIsHwIO:
+                seenMasterHwIOs = set()
+            else:
+                seenMasterPropCnt = 0
             for hio in self._hwIOs:
                 if exclude and hio in exclude:
                     mHwIO = getattr(master, hio._name, None)
                     if mHwIO is not None:
-                        seenMasterHwIOs.append(mHwIO)
+                        seenMasterHwIOs.add(mHwIO)
                     continue
                 if master is None:
                     mHwIO = hio._dtype.from_py(None)
@@ -185,13 +195,28 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                     try:
                         mHwIO = getattr(master, hio._name)
                     except AttributeError:
-                        raise IntfLvlConfErr("Invalid interface structure", hio, "<=", master, "src missing", hio._name)
+                        if not hio._onParentPropertyPath:
+                            raise IntfLvlConfErr("Invalid interface structure", hio, "<=", master, "src missing", hio._name)
+                        try:
+                            mHwIO = master
+                            for attrOrIndex in hio._onParentPropertyPath:
+                                if isinstance(attrOrIndex, int):
+                                    mHwIO = mHwIO[attrOrIndex]
+                                else:
+                                    assert isinstance(attrOrIndex, str), attrOrIndex
+                                    mHwIO = getattr(mHwIO, attrOrIndex)
+                        except (AttributeError, KeyError, IndexError):
+                            raise IntfLvlConfErr("Invalid interface structure", hio, "<=", master, "src missing", hio._name,
+                                                 "and _onParentPropertyPath is invalid", hio._onParentPropertyPath)
 
-                seenMasterHwIOs.append(mHwIO)
+                if masterIsHwIO:
+                    seenMasterHwIOs.add(mHwIO)
+                else:
+                    seenMasterPropCnt += 1
                 if exclude and mHwIO in exclude:
                     continue
 
-                if isinstance(mHwIO, HConst):
+                if isinstance(mHwIO, (HConst, RtlSignal)):
                     # HStruct values
                     if (hio._masterDir in (DIRECTION.OUT, DIRECTION.INOUT) and hio._direction == INTF_DIRECTION.MASTER) or\
                         (hio._masterDir == DIRECTION.IN and hio._direction == INTF_DIRECTION.SLAVE):
@@ -217,26 +242,32 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                                                    exclude,
                                                    fit)
             if master is None:
-                masterHwIOCnt = len(self._hwIOs)
-            elif isinstance(master, HConst):
-                masterHwIOCnt = len(master._dtype.fields)
+                pass  # no check for prop cnt
             else:
-                masterHwIOCnt = len(master._hwIOs)
-
-            if len(seenMasterHwIOs) != masterHwIOCnt:
-                if exclude:
-                    # there is a possibility that the master interface was excluded,
-                    # but we did not see it as the interface of the same name was not present on self
-                    for hio in self._hwIOs:
-                        if hio in exclude or hio not in seenMasterHwIOs:
-                            continue
-                        else:
-                            # hio is an interface which is extra on master and is missing an equivalent on slave
-                            raise InterfaceStructureErr(self, master, exclude)
+                if masterIsHwIO:
+                    masterHwIOCnt = len(master._hwIOs)
                 else:
-                    raise InterfaceStructureErr(self, master, exclude)
+                    masterHwIOCnt = len(master._dtype.fields)
+                    for f in master._dtype.fields:
+                        arrSize = getattr(f.dtype, "size", None)
+                        if arrSize is not None:
+                            masterHwIOCnt += arrSize - 1  # array items are packed under 1 property on HConst but are stored in separate properties in HwIO
+
+                if (masterIsHwIO and len(seenMasterHwIOs) != masterHwIOCnt) or (not masterIsHwIO and seenMasterPropCnt != masterHwIOCnt):
+                    if exclude:
+                        # there is a possibility that the master interface was excluded,
+                        # but we did not see it as the interface of the same name was not present on self
+                        for hio in self._hwIOs:
+                            if hio in exclude or hio not in seenMasterHwIOs:
+                                continue
+                            else:
+                                # hio is an interface which is extra on master and is missing an equivalent on slave
+                                raise InterfaceStructureErr(self, master, exclude)
+                    else:
+                        raise InterfaceStructureErr(self, master, exclude)
+
         else:
-            if not isinstance(master, HConst) and master._hwIOs:
+            if not isinstance(master, (HConst, RtlSignal)) and master._hwIOs:
                 raise InterfaceStructureErr(self, master, exclude)
 
             dstSig = toHVal(self)
@@ -249,11 +280,11 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
 
     @internal
     def _signalsForHwIO(self,
-                             ctx: RtlNetlist,
-                             res: Optional[dict[RtlSignal, DIRECTION]],
-                             name_scope: Optional[NameScope],
-                             prefix='', typeTransform=None,
-                             reverse_dir=False):
+                        ctx: RtlNetlist,
+                        res: Optional[dict[RtlSignal, DIRECTION]],
+                        name_scope: Optional[NameScope],
+                        prefix='', typeTransform=None,
+                        reverse_dir=False):
         """
         Generate RtlSignal _sig and HdlPortInstance _hdlPort
         for each interface which has no subinterface
@@ -355,7 +386,6 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             t = f" {self._dtype}"
         else:
             t = ""
-
 
         if hasattr(self, '_width'):
             w = " _width=%s" % str(self._width)

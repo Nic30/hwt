@@ -46,10 +46,22 @@ class InterfaceStructureErr(IntfLvlConfErr):
         dst = self.dst
         src = self.src
         exclude = self.exclude
-        for sHwIO in src._hwIOs:
-            io2 = getattr(dst, sHwIO._name, None)
-            if io2 is None and (not exclude or sHwIO not in exclude):
-                missing_on_dst.append(sHwIO._name)
+        srcHwIos = getattr(src, "_hwIOs", None)
+        if srcHwIos is None:
+            # src is likely a constant
+            try:
+                for f in src._dtype.fields:
+                    io2 = getattr(dst, f.name, None)
+                    if io2 is None and (not exclude or io2 not in exclude):
+                        missing_on_dst.append(f.name)
+            except AttributeError:
+                # the type of src is unexpected, can not produce any good err msg.
+                pass
+        else:
+            for sHwIO in srcHwIos:
+                io2 = getattr(dst, sHwIO._name, None)
+                if io2 is None and (not exclude or sHwIO not in exclude):
+                    missing_on_dst.append(sHwIO._name)
 
         for sHwIO in dst._hwIOs:
             io2 = getattr(src, sHwIO._name, None)
