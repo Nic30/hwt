@@ -2,6 +2,7 @@ from typing import Union
 
 from hwt.code import Concat
 from hwt.doc_markers import internal
+from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
@@ -24,10 +25,19 @@ def hstruct_reinterpret_to_bits(self: HStruct, sigOrConst: Union[RtlSignalBase, 
             part = getattr(sigOrConst, f.name)
             if isinstance(part, HwIOSignal):
                 part = part._sig
-            if not isinstance(part, (HConst, RtlSignalBase, HwIOBase)):
+
+            if isinstance(part, HObjList):
+                elmTyFlat = HBits(f.dtype.element_t.bit_length())
+                for partPart in part:
+                    pp = partPart._reinterpret_cast(elmTyFlat)
+                    parts.append(pp)
+                continue
+            elif not isinstance(part, (HConst, RtlSignalBase, HwIOBase)):
                 part = f.dtype.from_py(part)
             elif not isinstance(part._dtype, toType.__class__):
                 part = part._reinterpret_cast(toType.__class__(part._dtype.bit_length()))
+            # else add part as is
+            assert isinstance(part._dtype, HBits), part
 
         parts.append(part)
 
