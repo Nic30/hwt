@@ -328,8 +328,14 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             _op0 = self.as_hdl_operand(self._as_Bits(op0))
             if resultSign is None:
                 # prefer downto notation over resize with casts
-                _sliceOp = HdlOp(HdlOpType.DOWNTO, [self.as_hdl_int(int(op1) - 1),
-                                                    self.as_hdl_int(0)])
+                op1 = int(op1)
+                assert op1 >= 1, op
+                if op1 == 1 and not op.result._dtype.force_vector:
+                    _sliceOp = self.as_hdl_int(0)
+                else:
+                    _sliceOp = HdlOp(HdlOpType.DOWNTO, [self.as_hdl_int(op1 - 1),
+                                                        self.as_hdl_int(0)])
+
                 return HdlOp(HdlOpType.INDEX, [_op0, _sliceOp])
 
             signedForVhdlResize = resultSign  # it does not matter if trunc is signed/unsigned, but we preffer less casting
