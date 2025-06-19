@@ -9,7 +9,7 @@ from hwtSimApi.agents.clk import ClockAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 from pyMathBitPrecise.bit_utils import apply_set_and_clear, mask, \
-    byte_mask_to_bit_mask_int
+    byte_mask_to_bit_mask_int, bit_mask_to_byte_mask_int
 
 
 @staticmethod
@@ -31,11 +31,13 @@ def storeToRamMaskedByIndex(ram:dict[int, Union[tuple[int, int], HBitsConst]],
     cur = ram.get(index)
     if cur is not None:
         # merge previous and new data
-        data = apply_set_and_clear(cur[0], data, bitmask, isInHBits=isInHBits)
-        if not isInHBits:
+        if isInHBits:
+            data = apply_set_and_clear(cur, data & bitmask, bitmask)
+        else:
+            data = apply_set_and_clear(cur[0], data & bitmask, bitmask)
             bitmask |= cur[1]
 
-    # print(f"storing   {index:08x}: ({data:064x}, {bitmask:064x}) {bit_mask_to_byte_mask_int(bitmask, 256):08x}")
+    # print(f"storing   {index:02x}: ({data if isinstance(data, int) else data.val:04x}, {int(bitmask):04x}) {bit_mask_to_byte_mask_int(int(bitmask), 32):01x}")
     if isInHBits:
         ram[index] = data
     else:
