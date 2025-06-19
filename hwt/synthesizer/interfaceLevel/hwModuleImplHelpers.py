@@ -34,9 +34,14 @@ def HwIO_getName(top: HwModuleBase, io: Union[HwIOBase, RtlSignal,
         while parent is not None:
             if parent is top:
                 break
-
-            prefix.append(parent._name)
+            try:
+                prefix.append(parent._name)
+            except AttributeError:
+                prefix.append(repr(parent))
+                break
+                
             parent = parent._parent
+
         n = io._getFullName()
         if prefix:
             prefix.reverse()
