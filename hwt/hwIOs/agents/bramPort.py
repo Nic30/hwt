@@ -226,7 +226,8 @@ class HwIOBramPort_noClkAgent(SyncAgentBase):
                     if self.HAS_BE:
                         maskWidth = hwIO.we._dtype.bit_length()
                         wMaskExt = byte_mask_to_bit_mask_int(wMask, maskWidth)
-                        self._debugOutput.write(f"{self.hwIO._getFullName(),}, after {self.sim.now}, write 0x{int(addr):x} {wData}, 0x{wMask:x}\n")
+                        if self._debugOutput is not None:
+                            self._debugOutput.write(f"{self.hwIO._getFullName(),}, after {self.sim.now}, write 0x{int(addr):x} {wData}, 0x{wMask:x}\n")
                         storeToRamMaskedByIndex(self.mem, int(addr), wData, HBits(maskWidth * 8).from_py(wMaskExt), isInHBits=True)
                     else:
                         if self._debugOutput is not None:
