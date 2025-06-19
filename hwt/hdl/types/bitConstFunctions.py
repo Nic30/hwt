@@ -15,7 +15,6 @@ from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val, Bits3val
 
-
 HBitsAnyCompatibleValue = Union["HBitsRtlSignal", "HBitsConst", int, None]
 HBitsAnyIndexCompatibleValue = Union[int, slice, RtlSignalBase[HSlice], RtlSignalBase[HBits], None]
 AnyHBitsValue = Union["HBitsRtlSignal", "HBitsConst"]
@@ -135,7 +134,7 @@ def bitsCmp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
                 return HOperatorNode.withRes(op, [self, other], BOOL)
 
         elif t.strict_width and ot.strict_width and t.bit_length() != ot.bit_length():
-            pass 
+            pass
         elif t.signed != ot.signed:
             # handle sign casts
             if t.signed is None:
@@ -439,6 +438,7 @@ def bitsRem(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
         subResT, resT = _bitsMulModGetResultType(myT, other._dtype)
         o = HOperatorNode.withRes(op, [self, other], subResT)
         return o._auto_cast(resT)
+
 
 @internal
 def bitsLshift(self: AnyHBitsValue, other: HBitsAnyCompatibleValue) -> AnyHBitsValue:
