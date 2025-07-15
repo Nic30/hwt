@@ -325,8 +325,8 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
                 _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
 
-            _op0 = self.as_hdl_operand(self._as_Bits(op0))
             if resultSign is None:
+                _op0 = self.as_hdl_operand(self._as_Bits(op0))
                 # prefer downto notation over resize with casts
                 op1 = int(op1)
                 assert op1 >= 1, op
@@ -340,13 +340,16 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
 
             signedForVhdlResize = resultSign  # it does not matter if trunc is signed/unsigned, but we preffer less casting
         else:
-            _op0 = self.as_hdl_operand(self._as_Bits(op0))
+        #    _op0 = self.as_hdl_operand(self._as_Bits(op0))
+            op0 = self._as_Bits(op0)
 
         op0T = op0._dtype
         if o != HwtOps.TRUNC and\
            op0T.signed is None and\
            op0T.bit_length() == 1 and\
            not op0T.force_vector:
+            
+            _op0 = self.as_hdl_operand(op0)
             # use aggregate expression
             if o == HwtOps.SEXT:
                 msb = _op0
@@ -361,8 +364,11 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         else:
             # use vhdl RESIZE()
             if resultSign != signedForVhdlResize:
-                _op0 = self.apply_cast(self._sign_flag_to_cast_id[signedForVhdlResize], _op0)
-
+                op0 = op0._cast_sign(signedForVhdlResize)
+                
+            # :note: this must be done after sign casts on on RtlNetlist level because
+            #  otherwise the operands of cast may not recognize that tmp variable must be used for operand 
+            _op0 = self.as_hdl_operand(op0)
             _op1 = self.as_hdl_int(op1)
             res = hdl_call(self.RESIZE, [_op0, _op1])
 
