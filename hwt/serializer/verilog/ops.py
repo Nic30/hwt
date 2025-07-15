@@ -27,9 +27,8 @@ class ToHdlAstVerilog_ops():
     }
 
     def _operandIsAnotherOperand(self, operand):
-        if isinstance(operand, RtlSignal) and operand._isUnnamedExpr\
-                and isinstance(operand._rtlObjectOrigin, HOperatorNode):
-            return True
+        return isinstance(operand, RtlSignal) and operand._isUnnamedExpr\
+                and isinstance(operand._rtlObjectOrigin, HOperatorNode)
 
     def as_hdl_operand(self, operand: Union[RtlSignal, HConst], i: int,
                        operator: HOperatorNode):
@@ -137,10 +136,12 @@ class ToHdlAstVerilog_ops():
                     msb,
                 ])
             else:
-                msb = HdlOp(HdlOpType.INDEX, [
-                    self.as_hdl_operand(ops[0], 0, op),
-                    self.as_hdl_int(srcWidth - 1),
-                ])
+                msb = self.as_hdl_operand(ops[0][srcWidth - 1], 0, op)
+                # :note: can not construct HdlOp directly because verilog slice operator can not be applied to any value without tmp variable 
+                #HdlOp(HdlOpType.INDEX, [
+                #    self.as_hdl_operand(ops[0], 0, op),
+                #    self.as_hdl_int(srcWidth - 1),
+                #])
             if prefixLen == 1:
                 prefix = msb
             else:
