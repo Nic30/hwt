@@ -26,9 +26,8 @@ from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and
     vld_mask_for_or
 
 
-
 class HBitsRtlSignal(RtlSignal):
-    
+
     @internal
     def _cast_sign(self, signed: Optional[bool]) -> Self:
         """
@@ -343,7 +342,7 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
-    def __lshift__(self, other: Union[int, "HBitsConst"]) -> Union[Self, "HBitsRtlSignal"]:
+    def __lshift__(self, other: Union[int, "HBitsConst"]) -> Union[Self, "HBitsConst"]:
         try:
             return bitsLshift(self, other)
         except Exception as e:
@@ -351,7 +350,7 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
-    def __rshift__(self, other: Union[int, "HBitsConst"]) -> Union[Self, "HBitsRtlSignal"]:
+    def __rshift__(self, other: Union[int, "HBitsConst"]) -> Union[Self, "HBitsConst"]:
         try:
             return bitsRshift(self, other)
         except Exception as e:
@@ -401,7 +400,7 @@ class HBitsRtlSignal(RtlSignal):
             e_simplified = copy(e)
             raise e_simplified
 
-    def __mod__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
+    def __mod__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsConst"]:
         try:
             return bitsRem(self, True, other)
         except Exception as e:
@@ -431,6 +430,11 @@ class HBitsRtlSignal(RtlSignal):
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
+
+    def __abs__(self):
+        if not self._dtype.signed:
+            return self
+        return (self < 0)._ternary(-self, self)
 
     def getMsb(self) -> Self:
         return self[self._dtype.bit_length() - 1]

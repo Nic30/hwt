@@ -294,6 +294,11 @@ class HBitsConst(HConst, Bits3val):
             e_simplified = copy(e)
             raise e_simplified
 
+    def __abs__(self):
+        if not self._dtype.signed:
+            return self
+        return (self < 0)._ternary(-self, self)
+
     def getMsb(self) -> Self:
         return self[self._dtype.bit_length() - 1]
 
