@@ -24,8 +24,11 @@ class HwIODirectionFns():
     def _setAsExtern(self, isExtern: bool):
         """Set interface as external"""
         self._isExtern = isExtern
+        if not isExtern:
+            self._direction = INTF_DIRECTION.UNKNOWN
         for chHwIO in self._hwIOs:
             chHwIO._setAsExtern(isExtern)
+            
 
     @internal
     def _reverseDirection(self):
