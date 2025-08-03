@@ -2,12 +2,14 @@ from copy import copy
 import math
 from typing import List, Union
 
+from hwt.doc_markers import hwt_expr_producer
 from hwt.hdl.const import HConst
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.mainBases import HwIOBase
 from hwt.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
+
 
 AnyHValue = Union[HConst, RtlSignalBase, HwIOBase]
 
@@ -142,6 +144,7 @@ def shiftIntArray(values: List[Union[int, "HBitsConst"]], item_width: int, shift
     return new_v
 
 
+@hwt_expr_producer
 def hMin(a: AnyHValue, b: AnyHValue):
     c = a < b
     if isinstance(c, bool):
@@ -150,6 +153,7 @@ def hMin(a: AnyHValue, b: AnyHValue):
         return c._ternary(a, b)
 
 
+@hwt_expr_producer
 def hMax(a: AnyHValue, b: AnyHValue):
     c = a > b
     if isinstance(c, bool):
