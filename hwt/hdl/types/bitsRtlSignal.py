@@ -208,6 +208,10 @@ class HBitsRtlSignal(RtlSignal):
             return self
 
         try:
+            if newWidth == 1 and self._dtype.signed is None:
+                # fold x._trunc(1) to x[0]
+                return self[0]
+
             resTy = self._dtype._createMutated(bit_length=w - cutBitCnt)
             while True:
                 # fold trunc((trunc(x))) -> trunc(x)
@@ -216,6 +220,9 @@ class HBitsRtlSignal(RtlSignal):
                 if selfOp == HwtOps.TRUNC:
                     self = self.singleDriver().operands[0]
                     continue
+                elif selfOp == HwtOps.BitsAsSigned or selfOp == HwtOps.BitsAsUnsigned:
+                    # fold x._signed()._trunc() to x._trunc()._signed()
+                    return selfOp._evalFn(self.singleDriver().operands[0]._trunc(newWidth))
                 elif selfOp == HwtOps.CONCAT:
                     concLowBits = self.singleDriver().operands[0]
                     concLowBitsWidth = concLowBits._dtype.bit_length()

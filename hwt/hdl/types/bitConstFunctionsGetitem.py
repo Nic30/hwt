@@ -237,6 +237,9 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
     if iAmResultOfOp == HwtOps.TRUNC:
         # fold trunc(x)[i] to x[i]
         return v.singleDriver().operands[0][key]
+    elif iAmResultOfOp == HwtOps.BitsAsSigned or iAmResultOfOp == HwtOps.BitsAsUnsigned:
+        # fold x._signed()[i] to x[i]._signed()
+        return iAmResultOfOp._evalFn(v.singleDriver().operands[0][key])
 
     HBits = v._dtype.__class__
     if isSLICE:
@@ -317,9 +320,12 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
 
         # check index range
         _index = int(key)
+        # if _index == 0 and not st.force_vector:
+        #     # fold x[0] -> x._trunc(1)
+        #     return v._trunc(1)
+
         if _index < 0 or _index > vWidth - 1:
             raise IndexError(_index)
-
         if iAmResultOfOp == HwtOps.INDEX:
             # index directly in parent signal
             # fold x[a:b][i] -> x[b+i]
