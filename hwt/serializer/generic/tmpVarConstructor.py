@@ -73,13 +73,17 @@ class TmpVarConstructor():
         self.extraVarsHdl.sort(key=lambda x: not isinstance(x, HdlIdDef))
 
 
+class TmpVarNotConstructableError(NotImplementedError):
+    pass
+
+
 class NoTmpVars():
 
     def create_var_cached(self, suggestedName, dtype, *args, **kwargs):
-        raise NotImplementedError(
+        raise TmpVarNotConstructableError(
             "Can not create a tmp variable (%s of type %r) in this code section" % (suggestedName, dtype))
 
     def create_cached(self, suggestedName, dtype, *args, **kwargs):
-        raise NotImplementedError(
+        raise TmpVarNotConstructableError(
             "Can not create a tmp variable (%s of type %r) in this code section" % (suggestedName, dtype))
 
