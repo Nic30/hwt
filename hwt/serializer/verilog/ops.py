@@ -136,12 +136,12 @@ class ToHdlAstVerilog_ops():
                     msb,
                 ])
             else:
-                msb = self.as_hdl_operand(ops[0][srcWidth - 1], 0, op)
-                # :note: can not construct HdlOp directly because verilog slice operator can not be applied to any value without tmp variable 
-                #HdlOp(HdlOpType.INDEX, [
+                msb = self.as_hdl_operand(ops[0][srcWidth - 1]._vec(), 0, op)
+                # :note: can not construct HdlOp directly because verilog slice operator can not be applied to any value without tmp variable
+                # HdlOp(HdlOpType.INDEX, [
                 #    self.as_hdl_operand(ops[0], 0, op),
                 #    self.as_hdl_int(srcWidth - 1),
-                #])
+                # ])
             if prefixLen == 1:
                 prefix = msb
             else:
@@ -149,10 +149,15 @@ class ToHdlAstVerilog_ops():
                     self.as_hdl_int(prefixLen),
                     msb,
                 ])
-        return HdlOp(HdlOpType.CONCAT, [
+        res = HdlOp(HdlOpType.CONCAT, [
             prefix,
             self.as_hdl_operand(ops[0], 0, op)
         ])
+        resT = op.result._dtype
+        if isinstance(resT, HBits) and resT.signed:
+            _, tmpVar = self.tmpVars.create_var_cached(f"tmp_{op.operator.id}_signCast", resT, def_val=res)
+            return hdl_call(self.SIGNED, [tmpVar, ])
+        return res
 
     def as_hdl_HOperatorNode_INDEX(self, op: HOperatorNode):
         ops = op.operands
