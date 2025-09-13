@@ -24,6 +24,19 @@ from hwtSimApi.hdlSimulator import HdlSimulator
 from ipCorePackager.constants import DIRECTION
 
 
+class BoundedMethodProxy():
+
+    def __init__(self, newInstance, method):
+        self.newInstance = newInstance
+        self.method = method
+
+    def __call__(self, *args, **kwargs):
+        return self.method(self.newInstance, *args, **kwargs)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__:s} {self.newInstance} {self.method}>"
+
+
 class HwIOStruct(HwIO):
     """
     Create dynamic interface based on HStruct or HUnion description
@@ -54,7 +67,7 @@ class HwIOStruct(HwIO):
         self._dtype = structT
         assert self._dtype.fields, "Needs to have at least some members (otherwise this interface is useless)"
         self._instantiateFieldFn = instantiateFieldFn
-        self._fieldsToHwIOs = {}
+        self._fieldsToHwIOs: dict[TypePath, HwIO] = {}
 
     @override
     def hwDeclr(self):
@@ -169,7 +182,19 @@ class HwIOStruct(HwIO):
             raise AttributeError(name)
 
         sigMethod = getattr(rtlSignalCls, name)
-        return lambda *args, **kwargs: sigMethod(self, *args, **kwargs)  # bound method to this instance
+        return BoundedMethodProxy(self, sigMethod)  # bound method to this instance
+
+    def __copy__(self):
+        """
+        Create new instance of interface of same type and configuration
+        """
+        hwIO = self.__class__(self._dtype,
+                 self._field_path,
+                 self._instantiateFieldFn,
+                 masterDir=self._masterDir,
+                 loadConfig=hasattr(self, '_hwParams'))
+        hwIO._updateHwParamsFrom(self)
+        return hwIO
 
 
 class HdlType_to_HwIO():
