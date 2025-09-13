@@ -125,6 +125,14 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     @internal
     @staticmethod
+    def _get_rtl_instance_name_from_submodule_name(name: str):
+        name = name.replace(".", "_") + "_inst"
+        if name.startswith("_"):
+            return "v" + name
+        return name
+
+    @internal
+    @staticmethod
     def get_trace_formatter(t)\
             ->Tuple[str, int, Callable[[RtlSignalBase, HConst], str]]:
         """
@@ -175,7 +183,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                         isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 
                 for sm in obj._subHwModules:
-                    m = getattr(model, sm._name.replace(".", "_") + "_inst")
+                    m = getattr(model, self._get_rtl_instance_name_from_submodule_name(sm._name))
                     if sm._shared_component_with is not None:
                         sm, _, _ = sm._shared_component_with
                     isEmpty &= self._collect_empty_hiearchy_containers(sm, m, res)
@@ -221,7 +229,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
                     # register interfaces from all subunits
                     for sm in obj._subHwModules:
-                        m = getattr(model, sm._name.replace(".", "_") + "_inst")
+                        m = getattr(model, self._get_rtl_instance_name_from_submodule_name(sm._name))
                         if sm._shared_component_with is not None:
                             sm, _, _ = sm._shared_component_with
                         self._wave_register_signals(sm, m, subScope, empty_hiearchy_containers)
