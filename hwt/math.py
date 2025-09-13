@@ -10,7 +10,6 @@ from hwt.mainBases import HwIOBase
 from hwt.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
 
-
 AnyHValue = Union[HConst, RtlSignalBase, HwIOBase]
 
 
@@ -34,6 +33,16 @@ def toPow2Ceil(x: int):
     while 2 ** i < x:
         i += 1
     return 2 ** i
+
+
+def toPow2Floor(n: int):
+    """
+    Get the largest 2**N where 2**N <= x
+    """
+    if n < 1:
+        return 0
+    exponent = int(math.log2(n))
+    return 2 ** exponent
 
 
 def addressAlignBestEffort(record_width: int, bus_data_width: int):
