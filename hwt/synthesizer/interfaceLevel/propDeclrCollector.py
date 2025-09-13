@@ -7,6 +7,7 @@ from hwt.hObjList import HObjList
 from hwt.hwParam import HwParam
 from hwt.mainBases import HwModuleBase, HwIOBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.typePath import TypePath
 
 
 @internal
@@ -144,7 +145,7 @@ class PropDeclrCollector(object):
         """
         Load params in hwConfig()
         """
-        if not hasattr(self, '_params'):
+        if not hasattr(self, '_hwParams'):
             self._hwParams = []
 
         self._setAttrListener = self._paramCollector
@@ -262,7 +263,7 @@ class PropDeclrCollector(object):
 
     # declaration phase
     @internal
-    def _registerSubmodule(self, mName:str, submodule:"HwModule", onParentPropertyPath: tuple[Union[str, int], ...]):
+    def _registerSubmodule(self, mName:str, submodule:"HwModule", onParentPropertyPath: TypePath):
         """
         Register unit object on interface level object
         """
@@ -274,7 +275,7 @@ class PropDeclrCollector(object):
         self._subHwModules.append(submodule)
 
     @internal
-    def _registerHwIO(self, hwIOName: str, hwIO: HwIOBase, onParentPropertyPath: tuple[Union[str, int], ...], isPrivate:bool):
+    def _registerHwIO(self, hwIOName: str, hwIO: HwIOBase, onParentPropertyPath: TypePath, isPrivate:bool):
         """
         Register HwIO object on interface level object
         """
@@ -282,6 +283,7 @@ class PropDeclrCollector(object):
         assert hwIO._parent is None
         hwIO._parent = self
         hwIO._name = hwIOName
+        assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
         hwIO._onParentPropertyPath = onParentPropertyPath
         hwIO._rtlCtx = self._rtlCtx
         # _setAsExtern() not used because _hwIOs are not initialized yet
@@ -298,7 +300,7 @@ class PropDeclrCollector(object):
             object.__setattr__(self, name, prop)
             return prop
 
-        onParentPropertyPath = (name,)
+        onParentPropertyPath = TypePath(name,)
         if isinstance(prop, HwIOBase):
             self._registerHwIO(name, prop, onParentPropertyPath, False)
         elif isinstance(prop, HwModuleBase):
@@ -308,13 +310,14 @@ class PropDeclrCollector(object):
         return prop
 
     @internal
-    def _registerArray(self, name: str, items: HObjList, onParentPropertyPath: tuple[Union[str, int], ...]):
+    def _registerArray(self, name: str, items: HObjList, onParentPropertyPath: TypePath):
         """
         Register array of items on interface level object
         """
         items._parent = self
         items._name = name
         items._on_append = self._registerArray_append
+        assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
         items._onParentPropertyPath = onParentPropertyPath
         for i, item in enumerate(items):
             self._registerArray_append(items, item, i)
@@ -326,7 +329,7 @@ class PropDeclrCollector(object):
         """
         setattr(self, f"{h_obj_list._name:s}_{index:d}", item)
         if isinstance(item, PropDeclrCollector):
-            item._onParentPropertyPath = (*h_obj_list._onParentPropertyPath, index)
+            item._onParentPropertyPath = h_obj_list._onParentPropertyPath / index
 
     # implementation phase
     @internal
@@ -336,7 +339,7 @@ class PropDeclrCollector(object):
         self._setAttrListener = None
 
     @internal
-    def _registerSubmoduleInImpl(self, name: str, m: HwModuleBase, onParentPropertyPath: tuple[Union[str, int], ...]):
+    def _registerSubmoduleInImpl(self, name: str, m: HwModuleBase, onParentPropertyPath: TypePath):
         """
         :attention: unit has to be parametrized before it is registered
             (some components can change interface by parametrization)
@@ -350,7 +353,7 @@ class PropDeclrCollector(object):
         m._signalsForSubHwModuleEntity(self._rtlCtx, "sig_" + name)
 
     @internal
-    def _registerHwIOInHwImpl(self, hwIOName: str, hwio: HwIOBase, onParentPropertyPath: tuple[Union[str, int], ...]):
+    def _registerHwIOInHwImpl(self, hwIOName: str, hwio: HwIOBase, onParentPropertyPath: TypePath):
         """
         Register interface in implementation phase
         """
@@ -369,7 +372,7 @@ class PropDeclrCollector(object):
         """
         Handle property definitions in _impl phase
         """
-        onParentPropertyPath = (name, )
+        onParentPropertyPath = TypePath(name, )
         if isinstance(prop, HwIOBase):
             if prop._parent is self:
                 return prop

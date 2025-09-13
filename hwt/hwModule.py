@@ -13,6 +13,7 @@ from hwt.synthesizer.interfaceLevel.hwModuleImplHelpers import HwModuleImplHelpe
     _default_param_updater
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.synthesizer.typePath import TypePath
 from ipCorePackager.constants import DIRECTION
 
 
@@ -77,7 +78,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
     def __init__(self, hdlName:Optional[str]=None):
         self._parent: Optional[HwModule] = None
         self._name: Optional[str] = None
-        self._onParentPropertyPath: Optional[tuple[Union[str, int], ...]] = None
+        self._onParentPropertyPath: Optional[TypePath] = None
         self._shared_component_with = None
         self._hdl_module_name: Optional[str] = None
         assert hdlName is None or isinstance(hdlName, str), hdlName
@@ -115,7 +116,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
             u._loadHwDeclarations()
 
     @internal
-    def _registerHwIOInHwImpl(self, hwIOName: str, hwIO: HwIOBase, onParentPath: tuple[Union[str, int], ...]):
+    def _registerHwIOInHwImpl(self, hwIOName: str, hwIO: HwIOBase, onParentPath: TypePath):
         """
         Register interface in implementation phase
         """

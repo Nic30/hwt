@@ -15,8 +15,10 @@ from hwt.synthesizer.interfaceLevel.directionFns import \
     HwIODirectionFns
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.typePath import TypePath
 from hwtSimApi.agents.base import AgentBase
 from ipCorePackager.constants import DIRECTION, INTF_DIRECTION
+
 
 from hwt.synthesizer.interfaceLevel.implDependent import\
     HwIOImplDependentFns
@@ -85,7 +87,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         self._associatedClk: Optional[HwIO] = None
         self._associatedRst: Optional[HwIO] = None
         self._parent: Optional["HwModule"] = None
-        self._onParentPropertyPath: Optional[tuple[Union[str, int], ...]] = None
+        self._onParentPropertyPath: Optional[TypePath] = None
         self._name: Optional[str] = None
 
         super().__init__()
@@ -198,13 +200,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                         if not hio._onParentPropertyPath:
                             raise IntfLvlConfErr("Invalid interface structure", hio, "<=", master, "src missing", hio._name)
                         try:
-                            mHwIO = master
-                            for attrOrIndex in hio._onParentPropertyPath:
-                                if isinstance(attrOrIndex, int):
-                                    mHwIO = mHwIO[attrOrIndex]
-                                else:
-                                    assert isinstance(attrOrIndex, str), attrOrIndex
-                                    mHwIO = getattr(mHwIO, attrOrIndex)
+                            mHwIO = hio._onParentPropertyPath.getOnObject(master)
                         except (AttributeError, KeyError, IndexError):
                             raise IntfLvlConfErr("Invalid interface structure", hio, "<=", master, "src missing", hio._name,
                                                  "and _onParentPropertyPath is invalid", hio._onParentPropertyPath)
