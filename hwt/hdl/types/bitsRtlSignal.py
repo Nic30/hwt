@@ -429,10 +429,31 @@ class HBitsRtlSignal(RtlSignal):
                 # all case values of ternary has to have same type
                 vFalse = vFalse._auto_cast(vTrue._dtype)
 
-            return HOperatorNode.withRes(
-                HwtOps.TERNARY,
-                [self, vTrue, vFalse],
-                vTrue._dtype)
+            if vTrue._dtype.isScalar():
+                return HOperatorNode.withRes(
+                    HwtOps.TERNARY,
+                    [self, vTrue, vFalse],
+                    vTrue._dtype)
+            else:
+                # elementwise
+                res = copy(vTrue)
+                if isinstance(res, RtlSignal):
+                    raise NotImplementedError(vTrue)
+                elif isinstance(res, HwIOBase):
+                    res._hwIOs = []
+                    for iTrue in vTrue._hwIOs:
+                        iFalse = iTrue._onParentPropertyPath.getOnObject(vFalse)
+                        newI = self._ternary(iTrue, iFalse)
+                        iTrue._onParentPropertyPath.setOnObject(res, newI)
+                        res._hwIOs.append(newI)
+                    _fieldsToHwIOs = getattr(res, "_fieldsToHwIOs", None)
+                else:
+                    for i, (t, f) in enumerate(zip(vTrue, vFalse)):
+                        res[i] = self._ternary(t, f)
+                if _fieldsToHwIOs is not None:
+                    res._fieldsToHwIOs = {p: p.getOnObject(res) for p in _fieldsToHwIOs.keys()}
+                return res
+
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
