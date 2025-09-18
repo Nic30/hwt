@@ -28,6 +28,8 @@ class SetList(Generic[T], list):
             return True
 
     def extend(self, items: Sequence[T]):
+        if self is items:
+            return # will not add any item because all items are already there
         for item in items:
             self.append(item)
 
