@@ -27,7 +27,7 @@ def getSignalName(sig: RtlSignalBase):
 
 
 def HwIO_getName(top: HwModuleBase, io: Union[HwIOBase, RtlSignal,
-                                              Tuple[Union[HwIOBase, RtlSignal]]]):
+                                              Tuple[Union[HwIOBase, RtlSignal]]]) -> str:
     if isinstance(io, HwIOBase):
         prefix = []
         parent = io._parent
