@@ -7,7 +7,7 @@ from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.bitsCastUtils import fitTo_t
+from hwt.hdl.types.bitsCastUtils import fitTo_t, BitWidthErr
 from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.hdlType import HdlType, default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
@@ -109,6 +109,8 @@ def reinterpret_bits_to_hstruct__HConst(val: HConst, hStructT: HStruct):
             setattr(container, f.name, v)
 
         offset += width
+    if offset != val._dtype.bit_length():
+        raise BitWidthErr("Src type contains more bits than dst", val._dtype.bit_length(), hStructT.bit_length(), val._dtype, hStructT)
 
     return container
 
@@ -152,6 +154,8 @@ def reinterpret_bits_to_hstruct__RtlSignal(val: RtlSignal, hStructT: HStruct):
             transfer_signals(v, current)
 
         offset += width
+    if offset != val._dtype.bit_length():
+        raise BitWidthErr("Src type contains more bits than dst", val._dtype.bit_length(), hStructT.bit_length(), val._dtype, hStructT)
 
     return container
 
@@ -180,7 +184,11 @@ def reinterpretBits__HConst(curType: HBits, val: HConst, toType: HdlType):
     if isinstance(toType, HBits):
         if curType.signed != toType.signed:
             val = val._cast_sign(toType.signed)
-        return fitTo_t(val, toType)
+        val = fitTo_t(val, toType)  # , extend=False, shrink=False
+        if val._dtype == toType:
+            return val
+        else:
+            return convertBits__HConst(val._dtype, val, toType)
     elif isinstance(toType, HStruct):
         return reinterpret_bits_to_hstruct__HConst(val, toType)
     elif isinstance(toType, HUnion):
@@ -200,7 +208,11 @@ def reinterpretBits__RtlSignal(curType: HBits, sig: RtlSignal, toType: HdlType):
     if isinstance(toType, HBits):
         if curType.signed != toType.signed:
             sig = sig._cast_sign(toType.signed)
-        return fitTo_t(sig, toType)
+        sig = fitTo_t(sig, toType)
+        if sig._dtype == toType:
+            return sig
+        else:
+            return convertBits__RtlSignal(sig._dtype, sig, toType)
     elif sig._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):
             return reinterpret_bits_to_hstruct__RtlSignal(sig, toType)

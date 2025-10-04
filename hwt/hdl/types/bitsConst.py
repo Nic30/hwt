@@ -39,15 +39,16 @@ class HBitsConst(HConst, Bits3val):
     @internal
     def _cast_sign(self, signed:Union[bool, None]) -> Self:
         try:
-            v = Bits3val._cast_sign(self, signed)
-            if v is self:
+            t = self._dtype
+            v = Bits3val._cast_sign(self, signed,
+                                    name=None,
+                                    force_vector=t.bit_length() == 1 if signed else t.force_vector)
+            if self._dtype == v._dtype:
+                # no change of type, use this instance
+                return self
+            else:
                 return v
-            if signed is not None:
-                if v._dtype is self._dtype:
-                    # can modify shared type instance
-                    v._dtype = copy(v._dtype)
-                v._dtype.force_vector = v._dtype.bit_length() == 1
-            return v
+
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -139,7 +140,7 @@ class HBitsConst(HConst, Bits3val):
 
     def _eq(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.EQ, BIT.from_py(1), eq)
+            return bitsCmp(self, True, other, HwtOps.EQ, _b1, eq)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -147,7 +148,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __ne__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.NE, BIT.from_py(0))
+            return bitsCmp(self, True, other, HwtOps.NE, _b0)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -155,7 +156,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __lt__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.SLT if self._dtype.signed else HwtOps.ULT, BIT.from_py(0), evalFn=HwtOps.LT._evalFn)
+            return bitsCmp(self, True, other, HwtOps.SLT if self._dtype.signed else HwtOps.ULT, _b0, evalFn=HwtOps.LT._evalFn)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -163,7 +164,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __gt__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.SGT if self._dtype.signed else HwtOps.UGT, BIT.from_py(0), evalFn=HwtOps.GT._evalFn)
+            return bitsCmp(self, True, other, HwtOps.SGT if self._dtype.signed else HwtOps.UGT, _b0, evalFn=HwtOps.GT._evalFn)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -171,7 +172,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __ge__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.SGE if self._dtype.signed else HwtOps.UGE, BIT.from_py(1), evalFn=HwtOps.GE._evalFn)
+            return bitsCmp(self, True, other, HwtOps.SGE if self._dtype.signed else HwtOps.UGE, _b1, evalFn=HwtOps.GE._evalFn)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -179,7 +180,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __le__(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
-            return bitsCmp(self, True, other, HwtOps.SLE if self._dtype.signed else HwtOps.ULE, BIT.from_py(1), evalFn=HwtOps.LE._evalFn)
+            return bitsCmp(self, True, other, HwtOps.SLE if self._dtype.signed else HwtOps.ULE, _b1, evalFn=HwtOps.LE._evalFn)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -351,3 +352,7 @@ class HBitsConst(HConst, Bits3val):
 
     def __repr__(self) -> str:
         return Bits3val.__repr__(self)
+
+
+_b1 = BIT.from_py(1)
+_b0 = BIT.from_py(0)
