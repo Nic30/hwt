@@ -142,10 +142,11 @@ class HwtOps():
     ADD = HOperatorDef(add)
     SUB = HOperatorDef(sub)
     POW = HOperatorDef(power)
-    UREM = HOperatorDef(lambda a, b: a._unsigned() % b._unsigned())
-    SREM = HOperatorDef(lambda a, b: a._signed() % b._signed())
+    # see  https://stackoverflow.com/questions/25848879/difference-between-mod-and-rem-operators-in-vhdl
+    UREM = HOperatorDef(lambda a, b: a._unsigned() % b._unsigned())  # "rem operator"
+    SREM = HOperatorDef(lambda a, b: a._signed() % b._signed())  # "modulo operator"
     # MUL bit_length and sign of src0, src1 and dst is the same
-    # sign/unsign variant with double result width is recognized from sext/zext of operands in final phases of serialization 
+    # sign/unsign variant with double result width is recognized from sext/zext of operands in final phases of serialization
     MUL = HOperatorDef(mul)
 
     NOT = HOperatorDef(inv, allowsAssignTo=True)
@@ -172,7 +173,7 @@ class HwtOps():
     EQ = HOperatorDef(eqFn)
     NE = HOperatorDef(ne)
     # :note: for compare operands without U/S the info about sign is stored in type of operands
-    #     for U/S variant the signed flag in the type is ignored and signines is forced by operator definition 
+    #     for U/S variant the signed flag in the type is ignored and signines is forced by operator definition
     GT = HOperatorDef(gt)
     GE = HOperatorDef(ge)
     LT = HOperatorDef(lt)
@@ -187,7 +188,7 @@ class HwtOps():
     SLT = HOperatorDef(lambda a, b: a._signed() < b._signed())
     SGT = HOperatorDef(lambda a, b: a._signed() > b._signed())
     SGE = HOperatorDef(lambda a, b: a._signed() >= b._signed())
-    
+
     # :note: INDEX is used for arrays and also for bit vectors
     INDEX = HOperatorDef(getitem, allowsAssignTo=True)
     TERNARY = HOperatorDef(ternaryFn)
