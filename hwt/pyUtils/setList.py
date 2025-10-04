@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Set, Sequence, Optional
+from typing import Generic, TypeVar, Set, Sequence, Optional, Union
 
 T = TypeVar('T')
 
@@ -29,7 +29,7 @@ class SetList(Generic[T], list):
 
     def extend(self, items: Sequence[T]):
         if self is items:
-            return # will not add any item because all items are already there
+            return  # will not add any item because all items are already there
         for item in items:
             self.append(item)
 
@@ -71,14 +71,18 @@ class SetList(Generic[T], list):
         c.extend(self)
         return c
 
-    def __setitem__(self, i: int, v: T):
+    def __setitem__(self, i: Union[int, slice], v: Union[T, Sequence[T]]):
         if isinstance(i, slice):
-            for item in self[i]:
-                self.__s.remove(item)
-            v = SetList(v)
-            list.__setitem__(self, i, v)
-            self.__s.update(v)
-            
+            if i.start is None and i.step is None and i.stop is None:
+                self.clear()
+                self.extend(v)
+            else:
+                for item in self[i]:
+                    self.__s.remove(item)
+                v = SetList(v)
+                list.__setitem__(self, i, v)
+                self.__s.update(v)
+
         else:
             assert isinstance(i, int)
             cur = self[i]
