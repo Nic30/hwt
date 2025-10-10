@@ -5,6 +5,7 @@ from typing import Optional, Union
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._structural import HdlCompInst, HdlModuleDec
 from hwt.doc_markers import internal
+from hwt.hObjList import HObjList
 from hwt.hdl.portItem import HdlPortItem
 from hwt.mainBases import HwIOBase
 from hwt.synthesizer.dummyPlatform import DummyPlatform
@@ -303,6 +304,9 @@ def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
             raise NotImplementedError(d)
         new_io._hdlPort = pi
         new_io._sigInside = s
+    elif isinstance(orig_io, HObjList):
+        for hwIO, n_i in zip(orig_io, new_io):
+            copy_HdlModuleDec_HwIO(hwIO, n_i, ports, new_m)
     else:
         for hwIO in orig_io._hwIOs:
             n_i = getattr(new_io, hwIO._name)
@@ -310,6 +314,12 @@ def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
 
 
 def copy_HdlModuleDec(orig_m: HwModule, new_m: HwModule):
+    """
+    Copy the HdlModuleDec for HwModule from existing HwModule.
+    This is used when the HwModule implementation was resolved as
+    shared with some other already existing HwModule.
+    (Happens when the body is the same and we want to avoid transpilling the same code again.) 
+    """
     assert not new_m._rtlCtx.statements
     assert not new_m._rtlCtx.hwIOs
     assert not new_m._rtlCtx.signals
