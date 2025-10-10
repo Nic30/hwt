@@ -314,14 +314,11 @@ class PropDeclrCollector(object):
         """
         Register array of items on interface level object
         """
-        if items is self:
-            assert name is None, self
-        else:
-            items._parent = self
-            items._name = name
-            items._on_append = self._registerArray_append
-            assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
-            items._onParentPropertyPath = onParentPropertyPath
+        items._parent = self
+        items._name = name
+        items._on_append = self._registerArray_append
+        assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
+        items._onParentPropertyPath = onParentPropertyPath
 
         for i, item in enumerate(items):
             self._registerArray_append(items, item, i)
@@ -331,11 +328,16 @@ class PropDeclrCollector(object):
         """
         Register a single object in the list
         """
+        saListerner = self._setAttrListener
         if arr is self:
-            setattr(self, f"{index:d}", item)
+            # register item in the array (parrent)
+            if saListerner:
+                item = saListerner(f"{index:d}", item)
+
             if isinstance(item, PropDeclrCollector):
-                item._onParentPropertyPath = TypePath((index,))
+                item._onParentPropertyPath = TypePath(index,)
         else:
+            # register item for a list which is stored inside of parent
             setattr(self, f"{arr._name:s}_{index:d}", item)
             if isinstance(item, PropDeclrCollector):
                 item._onParentPropertyPath = arr._onParentPropertyPath / index

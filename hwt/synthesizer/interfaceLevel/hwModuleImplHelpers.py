@@ -3,14 +3,14 @@ from typing import Union, Optional, Tuple
 
 from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
-from hwt.hwIOs.std import HwIOSignal, HwIOClk, HwIORst, HwIORst_n
-from hwt.hwIOs.hwIOStruct import HdlType_to_HwIO, HwIOStruct
-from hwt.hObjList import HObjList
 from hwt.hdl.operatorDefs import HOperatorDef
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
+from hwt.hwIOs.hwIOArray import HwIOArray
+from hwt.hwIOs.hwIOStruct import HdlType_to_HwIO, HwIOStruct
+from hwt.hwIOs.std import HwIOSignal, HwIOClk, HwIORst, HwIORst_n
 from hwt.mainBases import HwModuleBase, HwIOBase
 from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
@@ -64,7 +64,7 @@ def _default_param_updater(self, myP: "HwParam", otherP_val):
 def _normalize_default_value_dict_for_HwIO_array(root_val: dict,
                                                 val: Union[dict, list, None],
                                                 name_prefix: str,
-                                                hobj_list: HObjList,
+                                                hobj_list: HwIOArray,
                                                 neutral_value):
     """
     This function is called to convert data in format
@@ -74,7 +74,7 @@ def _normalize_default_value_dict_for_HwIO_array(root_val: dict,
         # into
         {"x_0": 3, "x_1": 4}
 
-    This is required because the items of HObjList are stored in _hwIOs as a separate items
+    This is required because the items of HwIOArray are stored in _hwIOs as a separate items
     and thus we can not resolve the value association otherwise.
     """
 
@@ -89,14 +89,14 @@ def _normalize_default_value_dict_for_HwIO_array(root_val: dict,
             continue
 
         elm_name = f"{name_prefix:s}_{i:d}"
-        if isinstance(intf, HObjList):
+        if isinstance(intf, HwIOArray):
             _normalize_default_value_dict_for_HwIO_array(root_val, _val, elm_name, intf, neutral_value)
         else:
             root_val[elm_name] = _val
 
 
 @internal
-def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
+def _instantiate_signals(hwIO: Union[HwIOSignal, HwIOArray, HwIOStruct],
                          clk: HwIOClk, rst: Union[HwIORst, HwIORst_n],
                          def_val:Union[int, None, dict, list],
                          nop_val:Union[int, None, dict, list],
@@ -110,7 +110,7 @@ def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
             clk, rst, def_val, nop_val, nextSig)
         hwIO._sig._hwIO = hwIO
 
-    elif isinstance(hwIO, HObjList):
+    elif isinstance(hwIO, HwIOArray):
         intf_len = len(hwIO)
         if isinstance(def_val, dict):
             for k in def_val.keys():
@@ -149,7 +149,7 @@ def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
             for k in tuple(def_val.keys()):
                 _i = getattr(hwIO, k, NOT_SPECIFIED)
                 assert _i is not NOT_SPECIFIED, ("Default value for", hwIO, " specifies ", k, " which is not present on interface")
-                if isinstance(_i, HObjList):
+                if isinstance(_i, HwIOArray):
                     _normalize_default_value_dict_for_HwIO_array(
                         def_val, def_val[k], k, _i, None)
 
@@ -157,7 +157,7 @@ def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
             for k in tuple(nop_val.keys()):
                 _i = getattr(hwIO, k, NOT_SPECIFIED)
                 assert _i is not NOT_SPECIFIED, ("Nop value for", hwIO, " specifies ", k, " which is not present on interface")
-                if isinstance(_i, HObjList):
+                if isinstance(_i, HwIOArray):
                     _normalize_default_value_dict_for_HwIO_array(
                         nop_val, nop_val[k],
                         k, _i, NOT_SPECIFIED)
@@ -182,8 +182,8 @@ def _instantiate_signals(hwIO: Union[HwIOSignal, HObjList, HwIOStruct],
 
 
 @internal
-def _loadHwDeclarations(intf_or_list: Union[HObjList, HwIOBase], suggested_name: str):
-    if isinstance(intf_or_list, HObjList):
+def _loadHwDeclarations(intf_or_list: HwIOBase, suggested_name: str):
+    if isinstance(intf_or_list, HwIOArray):
         for i, intf in enumerate(intf_or_list):
             _loadHwDeclarations(intf, f"{suggested_name:s}_{i:d}")
     else:
@@ -193,7 +193,7 @@ def _loadHwDeclarations(intf_or_list: Union[HObjList, HwIOBase], suggested_name:
 
 def HwIO_without_registration(
         parent:HwModuleBase,
-        container: Union[HwIOBase, HObjList],
+        container: HwIOBase,
         suggested_name:str,
         def_val: Union[int, None, dict, list]=None,
         nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED,

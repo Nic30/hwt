@@ -1,4 +1,5 @@
 from copy import copy
+from itertools import zip_longest
 from typing import Sequence, Optional, Union, Self
 
 from hwt.doc_markers import internal
@@ -25,21 +26,26 @@ class HwIOArray(HObjList[Optional[HwIO]], HwIO):
                  loadConfig=True):
         HObjList.__init__(self, items)
         HwIO.__init__(self, masterDir=masterDir, hdlName=hdlName, loadConfig=loadConfig)
+        self._on_append = self._registerArray_append
 
     @override
     def hwDeclr(self):
-        self._registerArray(None, self, TypePath())
+        for i, item in enumerate(self):
+            self._registerArray_append(self, item, i)
 
+    @override
     def __hash__(self):
         # :note: __hash__, __eq__ are overriden because HObjList by default is non hashable
         return id(self)
 
+    @override
     def __eq__(self, other:object) -> bool:
         """
         HwIO is an unique object representig IO of the component that is only the same object should equal to self
         """
         return other is self
 
+    @override
     def __copy__(self):
         c = self.__class__(copy(i) for i in self)
         if self:
@@ -50,6 +56,7 @@ class HwIOArray(HObjList[Optional[HwIO]], HwIO):
     def _registerSubmodule(self, mName:str, submodule:"HwModule", onParentPropertyPath: TypePath):
         raise AssertionError(self, "should not have submodules", mName, submodule, onParentPropertyPath)
 
+    @override
     def __call__(self, other: Self, exclude=None, fit=False):
         """
         () operator behaving as assignment operator
@@ -75,6 +82,9 @@ class HwIOArray(HObjList[Optional[HwIO]], HwIO):
         # rst = self._getAssociatedRst()
         self._ag = HwIOArrayAgent(sim, self)  # , (rst, rst._dtype.negated)
 
+    def __repr__(self, *args, **kwargs) -> str:
+        return HwIO.__repr__(self, *args, **kwargs)
+
 
 class HwIOArrayAgent(AgentBase):
     """
@@ -87,6 +97,17 @@ class HwIOArrayAgent(AgentBase):
         AgentBase.__init__(self, sim, hwIO)
         for subHwIO in hwIO._hwIOs:
             subHwIO._initSimAgent(sim)
+
+    def extendDataFromTuples(self, dataTuples: Sequence[tuple]):
+        hwIOAgData = [hwio._ag.data for hwio in self.hwIO._hwIOs]
+        hwIOsCnt = len(hwIOAgData)
+        for dTuple in dataTuples:
+            assert len(dTuple) == hwIOsCnt, (dTuple, hwIOsCnt)
+            for v, hioData in zip(dTuple, hwIOAgData):
+                hioData.append(v)
+
+    def getDataAsTuples(self):
+        yield from zip_longest(*(hio._ag.data for hio in self.hwIO._hwIOs))
 
     def set_data(self, d: Union[HStructConstBase, list]):
         hwIO = self.hwIO
