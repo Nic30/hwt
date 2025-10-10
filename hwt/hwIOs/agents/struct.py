@@ -14,8 +14,8 @@ class HwIOStructAgent(AgentBase):
 
     def __init__(self, sim: HdlSimulator, hwIO: "HwIOStruct"):
         AgentBase.__init__(self, sim, hwIO)
-        for hwIO in hwIO._hwIOs:
-            hwIO._initSimAgent(sim)
+        for subHwIO in hwIO._hwIOs:
+            subHwIO._initSimAgent(sim)
 
     def set_data(self, d: Union[HStructConstBase, list]):
         hwIO = self.hwIO

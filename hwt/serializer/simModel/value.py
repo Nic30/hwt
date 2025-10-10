@@ -169,10 +169,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         else:
             _o = o.hdlConvertoAstOp
             if _o is None:
-                try:
-                    o = self.op_transl_dict[o]
-                except:
-                    raise
+                o = self.op_transl_dict[o]
             else:
                 o = _o
 
