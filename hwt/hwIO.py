@@ -7,6 +7,7 @@ from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bitsCastUtils import fitTo
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import HwIOBase
@@ -185,6 +186,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                 seenMasterHwIOs = set()
             else:
                 seenMasterPropCnt = 0
+
             for hio in self._hwIOs:
                 if exclude and hio in exclude:
                     mHwIO = getattr(master, hio._name, None)
@@ -243,11 +245,11 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                 if masterIsHwIO:
                     masterHwIOCnt = len(master._hwIOs)
                 else:
-                    masterHwIOCnt = len(master._dtype.fields)
-                    for f in master._dtype.fields:
-                        arrSize = getattr(f.dtype, "size", None)
-                        if arrSize is not None:
-                            masterHwIOCnt += arrSize - 1  # array items are packed under 1 property on HConst but are stored in separate properties in HwIO
+                    if isinstance(master._dtype, HArray):
+                        masterHwIOCnt = len(master)
+                    else:
+                        # assert isinstance(master._dtype, HStruct)
+                        masterHwIOCnt = len(master._dtype.fields)
 
                 if (masterIsHwIO and len(seenMasterHwIOs) != masterHwIOCnt) or (not masterIsHwIO and seenMasterPropCnt != masterHwIOCnt):
                     if exclude:
