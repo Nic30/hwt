@@ -3,7 +3,6 @@ from typing import Optional, Union, Set
 
 from hwt.code import And, Or
 from hwt.doc_markers import internal
-from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.hdlType import HdlType
@@ -15,6 +14,7 @@ from hwt.hwIOs.agents.rdSync import HwIODataRdAgent
 from hwt.hwIOs.agents.rdVldSync import HwIODataRdVldAgent
 from hwt.hwIOs.agents.struct import HwIOStructAgent
 from hwt.hwIOs.agents.vldSync import HwIODataVldAgent
+from hwt.hwIOs.hwIOArray import HwIOArray
 from hwt.hwIOs.std import HwIODataVld, HwIODataRd, HwIOSignal, HwIORdVldSync
 from hwt.hwParam import HwParam
 from hwt.pyUtils.typingFuture import override
@@ -217,8 +217,8 @@ class HdlType_to_HwIO():
         elif dtype.isScalar():
             return HwIOSignal(dtype=dtype, masterDir=masterDir)
         elif isinstance(dtype, HArray):
-            return HObjList(self.apply(dtype.element_t, masterDir=masterDir)
-                            for _ in range(dtype.size))
+            return HwIOArray(self.apply(dtype.element_t, masterDir=masterDir)
+                             for _ in range(dtype.size))
         else:
             raise NotImplementedError(dtype)
 
@@ -247,19 +247,14 @@ class HwIO_to_HdlType():
         """
         assert exclude is None or hwIO not in exclude
         if isinstance(hwIO, HwIO) and hwIO._hwIOs:
-            if exclude is None:
-                return HStruct(
-                    *((self.apply(sHwIO, const=const), sHwIO._name)
-                      for sHwIO in hwIO._hwIOs)
-                )
+            if isinstance(hwIO, HwIOArray):
+                assert hwIO, "HwIOArray must have atleast some items to resolve type"
+                return self.apply(hwIO[0], const=const, exclude=exclude)[len(hwIO)]
             else:
                 return HStruct(
                     *((self.apply(sHwIO, const=const, exclude=exclude), sHwIO._name)
-                      for sHwIO in hwIO._hwIOs if sHwIO not in exclude)
+                      for sHwIO in hwIO._hwIOs if exclude is None or sHwIO not in exclude)
                 )
-        elif isinstance(hwIO, HObjList):
-            assert hwIO, "HObjList must have atleast some items to resolve type"
-            return self.apply(hwIO[0], const=const, exclude=exclude)[len(hwIO)]
         else:
             t = hwIO._dtype
             if t.const != const:

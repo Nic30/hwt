@@ -90,7 +90,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         self._onParentPropertyPath: Optional[TypePath] = None
         self._name: Optional[str] = None
 
-        super().__init__()
+        # super().__init__()
         self._masterDir: DIRECTION = masterDir
         # HwIO is instantiated inside of :class:`hwt.hwModule.HwModule` first,
         # master direction actually means slave from outside view
@@ -179,7 +179,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         if exclude and (self in exclude or master in exclude):
             return
 
-        if self._hwIOs:
+        if self._hwIOs or isinstance(self, HObjList):
             masterIsHwIO = isinstance(master, HwIO)
             if masterIsHwIO:
                 seenMasterHwIOs = set()
@@ -296,7 +296,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         :param typeTransform: optional function (type) returns modified type
             for signal
         """
-        if self._hwIOs:
+        if self._hwIOs or isinstance(self, HObjList):
             for hwIO in self._hwIOs:
                 hwIO._signalsForHwIO(ctx, res, name_scope,
                                           prefix=prefix,

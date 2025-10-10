@@ -75,7 +75,7 @@ def reconnectHwModuleSignalsToModel(synthesisedHwModuleOrHwIO: HwModuleOrHwIOBas
     obj = synthesisedHwModuleOrHwIO
 
     for hwio in obj._hwIOs:
-        if hwio._hwIOs:
+        if hwio._hwIOs or isinstance(hwio, HObjList):
             reconnectHwModuleSignalsToModel(hwio, rtl_simulator)
         else:
             # reconnect signal from model

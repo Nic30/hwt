@@ -12,6 +12,7 @@ from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.hdlType import HdlType, default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
+from hwt.hwIOs.hwIOArray import HwIOArray
 from hwt.hwIOs.hwIOStruct import HdlType_to_HwIO
 from hwt.mainBases import HwIOBase
 from hwt.synthesizer.exceptions import TypeConversionErr
@@ -168,7 +169,7 @@ def reinterpret_bits_to_harray(sigOrConst: Union[RtlSignal, HConst], hArrayT: HA
         a = hArrayT.from_py(None)
         a.vld_mask = int(sigOrConst._is_full_valid())
     else:
-        a = HObjList([None for _ in range(hArrayT.size)])
+        a = HwIOArray(None for _ in range(hArrayT.size))
 
     for i, item in enumerate(iterBits(sigOrConst,
                                       bitsInOne=elmWidth,

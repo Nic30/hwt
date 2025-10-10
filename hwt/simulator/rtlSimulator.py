@@ -7,6 +7,7 @@ from types import ModuleType
 from typing import Union, Optional, Set, Tuple, Callable
 
 from hwt.doc_markers import internal
+from hwt.hObjList import HObjList
 from hwt.hdl.const import HConst
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.enum import HEnum
@@ -170,7 +171,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                                    res: Set[Union[HwModule, HwIO]]):
         hwIOs = getattr(obj, "_hwIOs", None)
         isEmpty = True
-        if hwIOs:
+        if hwIOs or isinstance(obj, HObjList):
             for chHwIO in hwIOs:
                 isEmpty &= self._collect_empty_hiearchy_containers(chHwIO, model, res)
 

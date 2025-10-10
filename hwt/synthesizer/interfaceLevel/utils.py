@@ -2,6 +2,7 @@ from collections.abc import Container, Callable
 from typing import Union, Optional
 
 from hwt.constants import DIRECTION
+from hwt.hObjList import HObjList
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.mainBases import HwIOBase
@@ -19,12 +20,12 @@ class NotSpecifiedError(Exception):
     pass
 
 
-def HwIO_walkSignals(hio: HwIOBase):
-    if hio._hwIOs:
-        for sHwIO in hio._hwIOs:
+def HwIO_walkSignals(hwio: HwIOBase):
+    if hwio._hwIOs or isinstance(hwio, HObjList):
+        for sHwIO in hwio._hwIOs:
             yield from HwIO_walkSignals(sHwIO)
     else:
-        yield hio
+        yield hwio
 
 
 def HwIO_connectPacked(srcPacked: RtlSignalBase,

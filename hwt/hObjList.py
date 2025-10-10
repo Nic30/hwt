@@ -1,13 +1,13 @@
-from typing import TypeVar, Generic, Iterable, List, Union, Tuple, Optional
+from typing import TypeVar, Iterable, List, Union, Tuple, Optional, \
+    Self
 
-from hwt.hdl.statements.statement import HdlStatement
 from hwt.mainBases import HwIOBase, HwModuleBase
 
 
 T = TypeVar("T", HwIOBase, HwModuleBase, None)
 
 
-class HObjList(list, Generic[T]):
+class HObjList(list[T]):
     """
     Regular list with some interface/unit methods delegated on items.
 
@@ -30,13 +30,8 @@ class HObjList(list, Generic[T]):
         self._parent: Optional[Union["HwModule", "Interface"]] = None
         self._hdlNameOverride: Optional[str] = hdlNameOverride
 
-    def _on_append(self, self_obj: "HObjList", item: T, index: int):
+    def _on_append(self, self_obj: Self, item: T, index: int):
         pass
-
-    def _m(self) -> "HObjList":
-        for item in self:
-            item._m()
-        return self
 
     def append(self, item: T):
         if self._on_append is not HObjList._on_append:
@@ -166,27 +161,8 @@ class HObjList(list, Generic[T]):
                 o._updateHwParamsFrom(*args, **kwargs)
         return self
 
-    def _cleanRtlSignals(self):
+    def _cleanRtlSignals(self, lockNonExternal=True):
         for o in self:
             if isinstance(o, (HwIOBase, HwModuleBase, HObjList)):
-                o._cleanRtlSignals()
+                o._cleanRtlSignals(lockNonExternal=lockNonExternal)
 
-    def __call__(self, other: List[T], exclude=None, fit=False):
-        """
-        () operator behaving as assignment operator
-        """
-        if not isinstance(other, (list, tuple)):
-            raise TypeError(other)
-        if len(self) != len(other):
-            raise ValueError("Different number of interfaces in list",
-                             len(self), len(other))
-
-        statements = []
-        for a, b in zip(self, other):
-            stms = a(b, exclude=exclude, fit=fit)
-            if isinstance(stms, HdlStatement):
-                statements.append(stms)
-            else:
-                statements += stms
-
-        return statements

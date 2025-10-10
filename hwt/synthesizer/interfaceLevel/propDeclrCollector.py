@@ -1,5 +1,5 @@
 from types import MethodType
-from typing import Tuple, Set, Optional, Callable, Union, Self
+from typing import Tuple, Set, Optional, Callable, Self
 
 from hdlConvertorAst.translate.common.name_scope import WithNameScope
 from hwt.doc_markers import internal
@@ -40,13 +40,13 @@ class MakeParamsShared(object):
         exclude = self.exclude
         prefix = self.prefix
 
-        def MakeParamsSharedWrap(self, iName, i):
+        def MakeParamsSharedWrap(self: "HwModule", iName: str, i: object):
             if isinstance(i, (HwIOBase, HwModuleBase, HObjList)):
                 i._updateHwParamsFrom(self, exclude=exclude, prefix=prefix)
             return orig(iName, i)
 
         self.module._setAttrListener = MethodType(MakeParamsSharedWrap,
-                                                self.module)
+                                                  self.module)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -310,26 +310,35 @@ class PropDeclrCollector(object):
         return prop
 
     @internal
-    def _registerArray(self, name: str, items: HObjList, onParentPropertyPath: TypePath):
+    def _registerArray(self, name: Optional[str], items: HObjList[Self], onParentPropertyPath: TypePath):
         """
         Register array of items on interface level object
         """
-        items._parent = self
-        items._name = name
-        items._on_append = self._registerArray_append
-        assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
-        items._onParentPropertyPath = onParentPropertyPath
+        if items is self:
+            assert name is None, self
+        else:
+            items._parent = self
+            items._name = name
+            items._on_append = self._registerArray_append
+            assert isinstance(onParentPropertyPath, TypePath), onParentPropertyPath
+            items._onParentPropertyPath = onParentPropertyPath
+
         for i, item in enumerate(items):
             self._registerArray_append(items, item, i)
 
     @internal
-    def _registerArray_append(self, h_obj_list: HObjList, item: Self, index: int):
+    def _registerArray_append(self, arr: HObjList[Self], item: Self, index: int):
         """
         Register a single object in the list
         """
-        setattr(self, f"{h_obj_list._name:s}_{index:d}", item)
-        if isinstance(item, PropDeclrCollector):
-            item._onParentPropertyPath = h_obj_list._onParentPropertyPath / index
+        if arr is self:
+            setattr(self, f"{index:d}", item)
+            if isinstance(item, PropDeclrCollector):
+                item._onParentPropertyPath = TypePath((index,))
+        else:
+            setattr(self, f"{arr._name:s}_{index:d}", item)
+            if isinstance(item, PropDeclrCollector):
+                item._onParentPropertyPath = arr._onParentPropertyPath / index
 
     # implementation phase
     @internal
@@ -372,7 +381,7 @@ class PropDeclrCollector(object):
         """
         Handle property definitions in _impl phase
         """
-        onParentPropertyPath = TypePath(name, )
+        onParentPropertyPath = TypePath(name,)
         if isinstance(prop, HwIOBase):
             if prop._parent is self:
                 return prop
