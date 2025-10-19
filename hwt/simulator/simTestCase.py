@@ -240,9 +240,9 @@ class SimTestCase(unittest.TestCase):
             t_name = self.getTestName()
             u_name = dut._getDefaultName()
             unique_name = f"{t_name:s}__{u_name:s}"
+        self.dut = dut
         self.compileSim(dut, build_dir, unique_name,
                         onAfterToRtl, target_platform)
-        self.dut = dut
         SimTestCase.setUp(self)
         return self.dut
 
