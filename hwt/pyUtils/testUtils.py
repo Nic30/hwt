@@ -1,6 +1,6 @@
 from itertools import product
 
-
+# [todo] https://docs.python.org/3/library/unittest.html#distinguishing-test-iterations-using-subtests
 class TestMatrix():
     """
     Class which instance is a decorator which executes unittest.TestCase
