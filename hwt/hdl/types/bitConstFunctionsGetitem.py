@@ -345,18 +345,23 @@ def bitsGetitem(v: AnyHBitsValue, iamConst:bool, key: HBitsAnyIndexCompatibleVal
         else:
             # index directly in the member of concatenation
             # fold concat(a, x)[i] -> x[i]
-            v, key = bitsGetitem_foldBitGetOnConcat(v, key, _index, iAmResultOfOp)
+            _v, _key = bitsGetitem_foldBitGetOnConcat(v, key, _index, iAmResultOfOp)
+            changed = v is not _v or _key is not key
+            v = _v
+            key = _key
             iamConst = isinstance(v, HConst)
             st = v._dtype
             if isinstance(key, HBits.getConstCls()) and int(key) == 0 and (
                     v._dtype.bit_length() == 1 and not v._dtype.force_vector
                 ):
                 return v
+            elif changed:
+                return v[key]
 
         if iamConst:
             # at the end because multiple non-constant indexes may be applied on constant and we want to merge them
             return Bits3val.__getitem__(v, key)
-        elif key._is_full_valid() and int(key) == 0 and v._dtype == BIT or v._dtype == BIT_N:
+        elif key._is_full_valid() and int(key) == 0 and (v._dtype == BIT or v._dtype == BIT_N):
             return v
 
     elif isinstance(key, RtlSignalBase):
