@@ -32,6 +32,7 @@ class HwIOArray(HObjList[Optional[HwIO]], HwIO):
     def hwDeclr(self):
         for i, item in enumerate(self):
             self._registerArray_append(self, item, i)
+        assert len(self) - sum(1 if item is None else 0 for item in self) == len(self._hwIOs), (self, len(self), len(self._hwIOs))
 
     @override
     def __hash__(self):
