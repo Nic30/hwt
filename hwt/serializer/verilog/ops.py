@@ -199,7 +199,10 @@ class ToHdlAstVerilog_ops():
                 # optionally drop zext/sext and add casts
                 ops = matchFullWidthMul(op0, op1)
 
-            _o = self.op_transl_dict[o]
+            _o = o.hdlConvertoAstOp
+            if _o is None:
+                _o = self.op_transl_dict[o]
+
             res = HdlOp(_o, [self.as_hdl_operand(o2, i, op)
                               for i, o2 in enumerate(ops)])
 
