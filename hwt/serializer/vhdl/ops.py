@@ -413,7 +413,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         op2 = self.as_hdl_operand(_op1)
         return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
 
-    def as_hdl_HOperatorNode_asVhdlFn(self, op: HOperatorNode, vhldFn: HdlValueId, isArithmetical):
+    def as_hdl_HOperatorNode_asVhdlFn(self, op: HOperatorNode, vhldFn: HdlValueId, isArithmetical: Optional[bool]):
         ops = op.operands
         op0, op1 = ops
         _op0 = self.as_hdl_Value(op0)
