@@ -4,12 +4,12 @@ from typing import Type, Optional, Union
 
 from hdlConvertorAst.hdlAst import HdlModuleDef
 from hdlConvertorAst.hdlAst._bases import iHdlObj
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec
 from hdlConvertorAst.translate.common.name_scope import NameScope
+from hwt.hwModule import HdlConstraintList
 from hwt.pyUtils.setList import SetList
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter
-from hwt.hwModule import HdlConstraintList
-from hdlConvertorAst.hdlAst._structural import HdlModuleDec
 
 
 class StoreManager(object):
