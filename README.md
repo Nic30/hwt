@@ -134,6 +134,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [Hardcaml](https://github.com/janestreet/hardcaml) - OCaml, HCL
 * [magia-hdl](https://github.com/magia-hdl/magia) - 2023-?, Python, HCL
 * [Metron](https://github.com/aappleby/Metron) - C++, C++ -> SystemVerilog syntax translator
+* [librelane](https://github.com/librelane/librelane) - python, ASIC implementation flow infrastructure 
 
 ### Dictionary
 * IR - Internal Representation
