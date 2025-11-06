@@ -182,7 +182,7 @@ class ToHdlAstVerilog_ops():
         o = op.operator
 
         if o == HwtOps.TERNARY:
-            return self.as_hdl_HOperatorNode_TERNARY(op)
+            return self.as_hdl_HOperatorNode_TERNARY(op, ops)
         elif o == HwtOps.RISING_EDGE or o == HwtOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
         elif o in (HwtOps.BitsAsUnsigned, HwtOps.BitsAsVec, HwtOps.BitsAsSigned):
