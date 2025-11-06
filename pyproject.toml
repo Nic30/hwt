@@ -46,6 +46,6 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/Nic30/hwt"
-Documentation = "http://hwtoolkit.readthedocs.io/en/latest/?badge=latest"
+Documentation = "https://hwtoolkit.readthedocs.io/en/latest/?badge=latest"
 Repository = "https://github.com/Nic30/hwt.git"
 "Bug Tracker" = "https://github.com/Nic30/hwt/issues"
