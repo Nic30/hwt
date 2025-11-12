@@ -1,3 +1,4 @@
+from operator import ne, eq
 from typing import Callable, Union, Optional
 
 from hwt.doc_markers import internal
@@ -13,7 +14,8 @@ from hwt.math import isPow2, log2ceil
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
-    bitsArithOp__val, Bits3val
+    bitsArithOp__val, Bits3val, bitsCmp__val_NE, bitsCmp__val_EQ
+
 
 HBitsAnyCompatibleValue = Union["HBitsRtlSignal", "HBitsConst", int, None]
 HBitsAnyIndexCompatibleValue = Union[int, slice, RtlSignalBase[HSlice], RtlSignalBase[HBits], None]
@@ -110,7 +112,12 @@ def bitsCmp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
 
     if selfIsHConst and otherIsConst:
         if type_compatible:
-            return bitsCmp__val(self, other, evalFn)
+            if evalFn == ne:
+                return bitsCmp__val_NE(self, other)
+            elif evalFn == eq:
+                return bitsCmp__val_EQ(self, other)
+            else:
+                return bitsCmp__val(self, other, evalFn)
     else:
         if type_compatible:
             # try to reduce useless cmp
