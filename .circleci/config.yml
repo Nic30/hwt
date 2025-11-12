@@ -8,7 +8,7 @@ jobs:
   install-test-deploy:
     executor:
       name: python/default
-      tag: '3.12.11'
+      tag: '3.13.7'
     resource_class: small
     steps:
       - checkout
