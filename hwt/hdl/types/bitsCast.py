@@ -149,7 +149,10 @@ def reinterpret_bits_to_hstruct__RtlSignal(val: RtlSignal, hStructT: HStruct):
         t = f.dtype
         width = t.bit_length()
         if f.name is not None:
-            v = val[(width + offset):offset]
+            if offset == 0 and val._dtype.bit_length() == width:
+                v = val
+            else:
+                v = val[(width + offset):offset]
             v = v._reinterpret_cast(t)
             current = getattr(container, f.name)
             transfer_signals(v, current)
