@@ -416,15 +416,17 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
     def as_hdl_HOperatorNode_asVhdlFn(self, op: HOperatorNode, vhldFn: HdlValueId, isArithmetical: Optional[bool]):
         ops = op.operands
         op0, op1 = ops
-        _op0 = self.as_hdl_Value(op0)
         op0Signed = op0._dtype.signed
         if isArithmetical:
             if not op0Signed:
-                _op0 = self.apply_cast(self.SIGNED, _op0)
+                op0 = op0._cast_sign(True)
+                _, op0 = self.tmpVars.create_var_cached("tmpOpFnArgCast_", op0._dtype, def_val=op0)
         else:
             if op0Signed or op0Signed is None:
-                _op0 = self.apply_cast(self.UNSIGNED, _op0)
+                op0 = op0._cast_sign(False)
+                _, op0 = self.tmpVars.create_var_cached("tmpOpFnArgCast_", op0._dtype, def_val=op0)
 
+        _op0 = self.as_hdl_Value(op0)
         _op1 = self.as_hdl_HOperatorNode_indexRhs(op1)
         res = hdl_call(vhldFn, [_op0, _op1])
         resSigned = op.result._dtype.signed
