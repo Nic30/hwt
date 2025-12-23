@@ -82,3 +82,22 @@ def field_path_get_type(root: HdlType, field_path: TypePath):
             assert isinstance(p, str), p
             t = t.field_by_name[p].dtype
     return t
+
+
+def HStruct_tuple_to_dict(v: tuple, t: HdlType, call_to_py_on_scalars=True) -> dict:
+    """
+    Convert a tuple of items for HStruct field to a dictionary field name to field value,
+    recursively.
+    """
+    if isinstance(t, HStruct):
+        assert len(v) == len(t.fields), (len(v), t)
+        return {f.name: HStruct_tuple_to_dict(vItem, f.dtype, call_to_py_on_scalars=call_to_py_on_scalars) for f, vItem in zip(t.fields, v)}
+    elif isinstance(t, HArray):
+        assert len(v) == t.size, (len(v), t)
+        return [HStruct_tuple_to_dict(vItem, t.element_t, call_to_py_on_scalars=call_to_py_on_scalars) for vItem in v]
+    else:
+        assert t.isScalar(), t
+        if call_to_py_on_scalars:
+            return v.to_py()
+        else:
+            return v
