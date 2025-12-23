@@ -301,13 +301,20 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
 
         return res
 
+    def _as_hdl_HOperatorNode_castArg(self, op0: Union[HBitsConst, HBitsRtlSignal]):
+        if isinstance(op0, RtlSignalBase) and op0._isUnnamedExpr:
+            _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
+        return op0
+
     def as_hdl_HOperatorNode_indexRhs(self, op1: Union[HBitsConst, HBitsRtlSignal]):
         if isinstance(op1._dtype, HBits) and op1._dtype != INT:
             if op1._dtype.signed is None:
                 if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
                     _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", HBits(1, force_vector=True), def_val=op1)
-                _op1 = self.as_hdl_operand(op1)
-                _op1 = self.apply_cast(self.UNSIGNED, _op1)
+                    _op1 = self.as_hdl_operand(op1)
+                    _op1 = self.apply_cast(self.UNSIGNED, _op1)
+                else:
+                    _op1 = self.as_hdl_operand(op1._unsigned())
             else:
                 _op1 = self.as_hdl_operand(op1)
 
@@ -348,7 +355,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
            op0T.signed is None and\
            op0T.bit_length() == 1 and\
            not op0T.force_vector:
-            
+
             _op0 = self.as_hdl_operand(op0)
             # use aggregate expression
             if o == HwtOps.SEXT:
@@ -365,9 +372,9 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             # use vhdl RESIZE()
             if resultSign != signedForVhdlResize:
                 op0 = op0._cast_sign(signedForVhdlResize)
-                
+
             # :note: this must be done after sign casts on on RtlNetlist level because
-            #  otherwise the operands of cast may not recognize that tmp variable must be used for operand 
+            #  otherwise the operands of cast may not recognize that tmp variable must be used for operand
             _op0 = self.as_hdl_operand(op0)
             _op1 = self.as_hdl_int(op1)
             res = hdl_call(self.RESIZE, [_op0, _op1])
