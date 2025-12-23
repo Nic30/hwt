@@ -162,8 +162,6 @@ class HStructConstBase(HConst):
         return False
 
     def to_py(self):
-        if not self._is_full_valid():
-            raise ValueError(f"Value of {self} is not fully defined")
         d = {}
         for f in self._dtype.fields:
             if f.name is not None:
