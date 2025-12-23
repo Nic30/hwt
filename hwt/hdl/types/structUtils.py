@@ -9,7 +9,6 @@ from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStructField, HStruct
 from hwt.synthesizer.typePath import TypePath
 
-
 filed_filter_t = Dict[Union[int, str], "filed_filter_t"]
 
 
@@ -43,7 +42,7 @@ def HdlType_select(t: HStruct, fieldsToUse: filed_filter_t):
         for f in t.fields:
             name = None
             subfields = []
-    
+
             if f.name is not None:
                 try:
                     if isinstance(fieldsToUse, dict):
@@ -54,20 +53,20 @@ def HdlType_select(t: HStruct, fieldsToUse: filed_filter_t):
                             name = f.name
                 except KeyError:
                     name = None
-    
+
             if name is not None and subfields:
                 new_t = HdlType_select(f.dtype, subfields)
                 template.append(HStructField(new_t, name))
             else:
                 template.append(HStructField(f.dtype, name))
-    
+
             if f.name is not None:
                 foundNames.add(f.name)
-    
+
         if isinstance(fieldsToUse, dict):
             fieldsToUse = set(fieldsToUse.keys())
         assert fieldsToUse.issubset(foundNames)
-    
+
         return t.__class__(*template)
 
 
