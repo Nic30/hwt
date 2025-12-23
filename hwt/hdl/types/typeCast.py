@@ -7,7 +7,6 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.variables import HdlSignalItem
 from hwt.mainBases import HwIOBase, RtlSignalBase
 
-
 defaultPyConversions = {
     int: INT,
     str: STR,
@@ -50,3 +49,4 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None) -> Union[HConst, RtlS
             raise TypeError(f"Unknown hardware type for instance of {op.__class__}")
 
         return hType.from_py(op)
+
