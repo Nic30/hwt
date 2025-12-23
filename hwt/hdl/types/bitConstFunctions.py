@@ -450,7 +450,7 @@ def bitsRem(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
 @internal
 def bitsLshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> AnyHBitsValue:
     """
-    shift left with 0 padding
+    shift left by a constant amount with 0 padding
     """
     if not isinstance(shiftAmount, int) and not shiftAmount._is_full_valid():
         return self._dtype.from_py(None)
@@ -471,7 +471,7 @@ def bitsLshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
 @internal
 def bitsRshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> AnyHBitsValue:
     """
-    shift right
+    shift right by a constant amount
 
     :note: arithmetic shift if type is signed else logical shift with 0 padding
     """
@@ -493,5 +493,5 @@ def bitsRshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
         else:
             return self._dtype.from_py(0)
     else:
-        assert shiftAmount == 0
+        assert shiftAmount == 0, shiftAmount
         return self

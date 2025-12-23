@@ -99,7 +99,7 @@ class HArrayConst(HConst):
 
             for k, v in val.items():
                 if not isinstance(k, int):
-                    k = int(k)
+                    k = int(k)  # expecting {index: value} dict
 
                 if k >= size:
                     raise ValueError("Initialization value dictionary contains index which is larger than size of initialized array", typeObj, k)
@@ -128,9 +128,6 @@ class HArrayConst(HConst):
         return cls(typeObj, elements, vld_mask)
 
     def to_py(self):
-        if not self._is_full_valid():
-            raise ValidityError(f"Value of {self} is not fully defined")
-
         v = self.val
         invalid_elm = self._dtype.element_t.from_py(None)
         return [v.get(i, invalid_elm).to_py()
