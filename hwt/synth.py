@@ -78,7 +78,7 @@ def _HwModule_constraints_copy_recursively(m: HwModule, path_orig: ComponentPath
                 su, ComponentPath(*path_orig, su), ComponentPath(*path_new, su))
 
 
-def to_rtl_str(hmodule_or_cls: HwModule,
+def to_rtl_str(hwmodule_or_cls: HwModule,
                serializer_cls=Vhdl2008Serializer, name: str=None,
                target_platform=DummyPlatform()):
     """
@@ -86,18 +86,18 @@ def to_rtl_str(hmodule_or_cls: HwModule,
     """
     buff = StringIO()
     store_manager = SaveToStream(serializer_cls, buff)
-    to_rtl(hmodule_or_cls, store_manager, name, target_platform)
+    to_rtl(hwmodule_or_cls, store_manager, name, target_platform)
     return buff.getvalue()
 
 
-def serializeAsIpcore(hmodule: HwModule, folderName=".", name=None,
+def serializeAsIpcore(m: HwModule, folderName=".", name=None,
                       serializer_cls=Vhdl2008Serializer,
                       target_platform=DummyPlatform()):
     """
     Create an IPCore package
     """
     from hwt.serializer.ip_packager import IpPackager
-    p = IpPackager(hmodule, name=name,
+    p = IpPackager(m, name=name,
                    serializer_cls=serializer_cls,
                    target_platform=target_platform)
     p.createPackage(folderName)
