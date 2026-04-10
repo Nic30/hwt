@@ -1,0 +1,107 @@
+from collections import deque
+from typing import Generic, TypeVar, Sequence, Optional, Union
+
+T = TypeVar('T')
+
+
+class SetDeque(Generic[T], deque):
+    """
+    Deque of unique items
+
+    :see: https://docs.python.org/3/tutorial/datastructures.html
+    """
+    __slots__ = ["__s"]
+
+    def __init__(self, initSeq: Optional[Sequence[T]]=None):
+        super(SetDeque, self).__init__()
+        self.__s: set[T] = set()
+        if initSeq is not None:
+            for item in initSeq:
+                self.append(item)
+
+    def append(self, item: T) -> bool:
+        """
+        :return: True if the item was newly added
+        """
+        if item in self.__s:
+            return False
+        else:
+            self.__s.add(item)
+            deque.append(self, item)
+            return True
+
+    def extend(self, items: Sequence[T]):
+        if self is items:
+            return  # will not add any item because all items are already there
+        for item in items:
+            self.append(item)
+
+    def insert(self, i: int, x: T):
+        super(SetDeque, self).insert(i, x)
+        self.__s.add(x)
+
+    def _get_set(self) -> set[T]:
+        return self.__s
+
+    def intersection_set(self, other: set[T]):
+        return self.__s.intersection(other._get_set())
+
+    def discard(self, item: T) -> bool:
+        """
+        :return: True if the item was previously in this deque
+        """
+        if item in self.__s:
+            self.remove(item)
+            return True
+        else:
+            return False
+
+    def remove(self, item: T):
+        # To raise ValueError instead of KeyError for set
+        res = deque.remove(self, item)
+        self.__s.remove(item)
+        return res
+
+    def pop(self, *args, **kwargs) -> T:
+        item = deque.pop(self, *args, **kwargs)
+        self.__s.remove(item)
+        return item
+
+    def popleft(self) -> T:
+        item = deque.popleft(self)
+        self.__s.remove(item)
+        return item
+
+    def clear(self):
+        deque.clear(self)
+        self.__s.clear()
+
+    def copy(self):
+        c = SetDeque()
+        c.extend(self)
+        return c
+
+    def __setitem__(self, i: Union[int, slice], v: Union[T, Sequence[T]]):
+        if isinstance(i, slice):
+            if i.start is None and i.step is None and i.stop is None:
+                self.clear()
+                self.extend(v)
+            else:
+                for item in self[i]:
+                    self.__s.remove(item)
+                v = SetDeque(v)
+                deque.__setitem__(self, i, v)
+                self.__s.update(v)
+
+        else:
+            assert isinstance(i, int)
+            cur = self[i]
+            self.__s.remove(cur)
+            deque.__setitem__(self, i, v)
+            self.__s.add(v)
+
+    def __copy__(self):
+        return self.copy()
+
+    def __contains__(self, key) -> bool:
+        return key in self.__s
