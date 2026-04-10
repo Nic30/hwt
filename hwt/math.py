@@ -155,6 +155,9 @@ def shiftIntArray(values: List[Union[int, "HBitsConst"]], item_width: int, shift
 
 @hwt_expr_producer
 def hMin(a: AnyHValue, b: AnyHValue):
+    minOpFn = getattr(a, "__min__", None)
+    if minOpFn:
+        return minOpFn(b)
     c = a < b
     if isinstance(c, bool):
         return a if c else b
@@ -164,6 +167,9 @@ def hMin(a: AnyHValue, b: AnyHValue):
 
 @hwt_expr_producer
 def hMax(a: AnyHValue, b: AnyHValue):
+    opFn = getattr(a, "__max__", None)
+    if opFn:
+        return opFn(b)
     c = a > b
     if isinstance(c, bool):
         return a if c else b
