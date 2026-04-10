@@ -1,6 +1,7 @@
 from hwt.simulator.agentBase import SyncAgentBase
 from hwtSimApi.agents.rdVldSync import DataRdVldAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
+from hwt.pyUtils.typingFuture import override
 
 
 class HwIODataRdVldAgent(SyncAgentBase, DataRdVldAgent):
@@ -28,27 +29,34 @@ class HwIODataRdVldAgent(SyncAgentBase, DataRdVldAgent):
     def get_ready_signal(cls, hwIO: "HwIODataRdVld"):
         return hwIO.rd._sigInside
 
+    @override
     def get_ready(self):
         return self._rd.read()
 
+    @override
     def set_ready(self, val):
         self._rd.write(val)
 
     @classmethod
+    @override
     def get_valid_signal(cls, hwIO: "HwIODataRdVld"):
         return hwIO.vld._sigInside
 
+    @override
     def get_valid(self):
         """get "valid" signal"""
         return self._vld.read()
 
+    @override
     def set_valid(self, val):
         return self._vld.write(val)
 
+    @override
     def get_data(self):
         """extract data from interface"""
         return self.hwIO.data.read()
 
+    @override
     def set_data(self, data):
         """write data to interface"""
         self.hwIO.data.write(data)
@@ -76,12 +84,14 @@ class UniversalRdVldSyncAgent(HwIODataRdVldAgent):
         self._signals = tuple(signals)
         self._sigCnt = len(signals)
 
+    @override
     def get_data(self):
         if self._sigCnt == 1:
             return self._signals[0].read()
         else:
             return tuple(sig.read() for sig in self._signals)
 
+    @override
     def set_data(self, data):
         if data is None:
             for sig in self._signals:
@@ -112,9 +122,11 @@ class HwIORdVldSyncAgent(HwIODataRdVldAgent):
         mode are just values of simulation time when item was collected
     """
 
+    @override
     def set_data(self, data):
         pass
 
+    @override
     def get_data(self):
         return self.sim.now
 
