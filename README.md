@@ -135,6 +135,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [magia-hdl](https://github.com/magia-hdl/magia) - 2023-?, Python, HCL
 * [Metron](https://github.com/aappleby/Metron) - C++, C++ -> SystemVerilog syntax translator
 * [librelane](https://github.com/librelane/librelane) - python, ASIC implementation flow infrastructure 
+* [spade](https://gitlab.com/spade-lang/spade/) - rust, custom language with IR for simplified manual pipelining
 
 ### Dictionary
 * IR - Internal Representation
