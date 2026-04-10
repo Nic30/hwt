@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Set, Sequence, Optional, Union
+from typing import Generic, TypeVar, Sequence, Optional, Union
 
 T = TypeVar('T')
 
@@ -6,12 +6,14 @@ T = TypeVar('T')
 class SetList(Generic[T], list):
     """
     List of unique items
+
+    :see: https://docs.python.org/3/tutorial/datastructures.html
     """
     __slots__ = ["__s"]
 
     def __init__(self, initSeq: Optional[Sequence[T]]=None):
         super(SetList, self).__init__()
-        self.__s: Set[T] = set()
+        self.__s: set[T] = set()
         if initSeq is not None:
             for item in initSeq:
                 self.append(item)
@@ -37,10 +39,10 @@ class SetList(Generic[T], list):
         super(SetList, self).insert(i, x)
         self.__s.add(x)
 
-    def _get_set(self) -> Set[T]:
+    def _get_set(self) -> set[T]:
         return self.__s
 
-    def intersection_set(self, other: Set[T]):
+    def intersection_set(self, other: set[T]):
         return self.__s.intersection(other._get_set())
 
     def discard(self, item: T) -> bool:
@@ -54,8 +56,10 @@ class SetList(Generic[T], list):
             return False
 
     def remove(self, item: T):
+        # To raise ValueError instead of KeyError for set
+        res = list.remove(self, item)
         self.__s.remove(item)
-        return list.remove(self, item)
+        return res
 
     def pop(self, *args, **kwargs) -> T:
         item = list.pop(self, *args, **kwargs)
