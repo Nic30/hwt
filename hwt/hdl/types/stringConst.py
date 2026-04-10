@@ -4,10 +4,13 @@ from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from typing import Optional
+from hwt.pyUtils.typingFuture import override
 
 
 class HStringRtlSignal(RtlSignal):
 
+    @override
     def _eq(self, other):
         other = toHVal(other, self._dtype)
         assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
@@ -18,9 +21,9 @@ class HStringConst(HConst):
     """
     Value class for hdl HString type
     """
-
+    @override
     @classmethod
-    def from_py(cls, typeObj, val, vld_mask=None):
+    def from_py(cls, typeObj: "HString", val: Optional[str], vld_mask:Optional[int]=None):
         """
         :param val: python string or None
         :param typeObj: instance of HString HdlType
@@ -40,11 +43,13 @@ class HStringConst(HConst):
 
         return cls(typeObj, val, vld)
 
-    def to_py(self):
+    @override
+    def to_py(self) -> str:
         if not self._is_full_valid():
             raise ValueError(f"Value of {self} is not fully defined")
         return self.val
 
+    @override
     def _eq(self, other):
         other = toHVal(other, self._dtype)
 

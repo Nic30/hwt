@@ -70,7 +70,7 @@ class HFloatConst(HConst, FloattVal):
     def _is_full_valid(self):
         return self.vld_mask == 1
 
-    def to_py(self):
+    def to_py(self) -> float:
         """
         Convert to python slice object
         """

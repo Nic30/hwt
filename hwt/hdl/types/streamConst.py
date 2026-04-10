@@ -47,7 +47,7 @@ class HStreamConst(HConst):
 
         return cls(typeObj, elements, vld_mask)
 
-    def to_py(self):
+    def to_py(self) -> list:
         if not self._is_full_valid():
             raise ValueError(f"Value of {self} is not fully defined")
         return [v.to_py() for v in self.val]

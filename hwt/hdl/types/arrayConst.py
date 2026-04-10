@@ -13,7 +13,6 @@ from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from pyMathBitPrecise.bit_utils import ValidityError
 
 
 def _HArrayGetitem(self: Union["HArrayRtlSignal", "HArrayConst"], iamVal: bool, key):
@@ -127,7 +126,7 @@ class HArrayConst(HConst):
 
         return cls(typeObj, elements, vld_mask)
 
-    def to_py(self):
+    def to_py(self) -> list:
         v = self.val
         invalid_elm = self._dtype.element_t.from_py(None)
         return [v.get(i, invalid_elm).to_py()

@@ -7,6 +7,7 @@ from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.defs import STR
 from hwt.hwIO import HwIO
 from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -75,8 +76,11 @@ class HStructConstBase(HConst):
                     ("struct value specifies undefined members",
                      set(val.keys()).difference(set(self.__slots__)))
             else:
-                assert len(val) == len(self.__slots__), ("struct value has different number of values than initialization value", len(val), len(self.__slots__))
-
+                if hasattr(val, '__len__'):
+                    assert len(val) == len(self.__slots__), ("struct value has different number of values than initialization value", len(val), len(self.__slots__))
+                else:
+                    raise AssertionError("struct value initialization expects sequence got:", val, " T:", typeObj)
+                    
         if isinstance(val, dict):
             for f in self._dtype.fields:
                 if f.name is None:
@@ -132,6 +136,7 @@ class HStructConstBase(HConst):
 
         return self.__class__(self._dtype, d, skipCheck=True)
 
+    @override
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         """
@@ -145,6 +150,7 @@ class HStructConstBase(HConst):
             val = None
         return cls(typeObj, val)
 
+    @override
     def _is_full_valid(self):
         for f in self._dtype.fields:
             if f.name is not None:
@@ -153,6 +159,7 @@ class HStructConstBase(HConst):
                     return False
         return True
 
+    @override
     def _is_partially_valid(self) -> bool:
         for f in self._dtype.fields:
             if f.name is not None:
@@ -161,7 +168,8 @@ class HStructConstBase(HConst):
                     return True
         return False
 
-    def to_py(self):
+    @override
+    def to_py(self) -> dict[str, object]:
         d = {}
         for f in self._dtype.fields:
             if f.name is not None:

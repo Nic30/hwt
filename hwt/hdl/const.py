@@ -4,7 +4,6 @@ from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.mainBases import RtlSignalBase
 
-
 T = TypeVar("T", bound="HdlType")
 
 
@@ -76,7 +75,14 @@ class HConst(Generic[T]):
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None) -> Self:
         raise NotImplementedError(
-            f"from_py fn is not implemented for", cls)
+            "from_py method is not implemented for", cls)
+
+    def to_py(self):
+        """
+        Cast HConst back to pythonic value like int/float/list[int] etc.
+        """
+        raise NotImplementedError(
+            "to_py method is not implemented for", cls)
 
     def __eq__(self, other):
         if isinstance(other, HConst):
@@ -87,6 +93,9 @@ class HConst(Generic[T]):
             return super().__eq__(other)
 
     def _eq(self, other):
+        """
+        :see: :meth:`SignalOps._eq`
+        """
         raise TypeError()
 
     def __ne__(self, other):
@@ -101,7 +110,7 @@ class HConst(Generic[T]):
         seen.add(self)
 
 
-def areHConsts(*items):
+def areHConsts(*items) -> bool:
     """
     :return: True if all arguments are instances of HConst class else False
     """

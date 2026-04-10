@@ -53,7 +53,7 @@ class HSliceConst(HConst):
         v = self.val
         return v.start._is_partially_valid() and v.stop._is_partially_valid()
 
-    def to_py(self):
+    def to_py(self) -> slice:
         """
         Convert to python slice object
         """

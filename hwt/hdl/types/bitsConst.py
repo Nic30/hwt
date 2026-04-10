@@ -1,6 +1,6 @@
 from copy import copy
 from operator import eq
-from typing import Union, Self
+from typing import Union, Self, Optional
 
 from hdlConvertorAst.to.hdlUtils import bit_string
 from hwt.constants import NOT_SPECIFIED
@@ -18,6 +18,7 @@ from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdl.types.sliceUtils import slice_to_HSlice
 from hwt.hdl.types.typeCast import toHVal
+from hwt.pyUtils.typingFuture import override
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
@@ -35,6 +36,13 @@ class HBitsConst(HConst, Bits3val):
     def from_py(cls, typeObj, val, vld_mask=None) -> Self:
         val, vld_mask = typeObj._normalize_val_and_mask(val, vld_mask)
         return cls(typeObj, val, vld_mask=vld_mask)
+
+    @override
+    def to_py(self) -> Optional[int]:
+        if self._is_full_valid():
+            return int(self)
+        else:
+            return None
 
     @internal
     def _cast_sign(self, signed:Union[bool, None]) -> Self:
