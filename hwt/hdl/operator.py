@@ -168,7 +168,7 @@ class HOperatorNode(HdlObject):
                     k: OperatorCaheKeyType
                     if v is res:
                         if op is inp:
-                            # this operand is  originally replaced "inp" the cache key must be transfered
+                            # this operand is  originally replaced "inp" the cache key must be transferred
                             # from original operand to a new replacement
                             op._usedOps.pop(k)
                             replacement._usedOps[k] = v

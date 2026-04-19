@@ -239,7 +239,7 @@ class HwIODataRdVld(HwIORdVldSync):
     """
     HwIO data+ready+valid signal, if rd=1 slave is ready to accept data,
     if vld=1 master is sending data,
-    if rd=1 and vld=1 then data is transfered otherwise master
+    if rd=1 and vld=1 then data is transferred otherwise master
     and slave has to wait on each other
 
     :attention: one rd/vld is set it must not go down until transaction is made
