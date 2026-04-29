@@ -403,8 +403,8 @@ def bitsArithOp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatib
             if otherIsHConst and other._is_full_valid() and int(other) == 0:
                 # x +- 0 -> x
                 return self
-            elif selfIsHConst and self._is_full_valid() and int(self) == 0:
-                # 0 +- x -> x
+            elif op  == HwtOps.ADD and selfIsHConst and self._is_full_valid() and int(self) == 0:
+                # 0 + x -> x
                 return other._auto_cast(t0)
 
         else:

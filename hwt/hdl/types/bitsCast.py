@@ -246,9 +246,6 @@ def HBits_reinterpret_cast_to_Harray(sigOrConst: Union[RtlSignal, HConst], hArra
 
 @internal
 def HBits_reinterpret_cast__HConst(curType: HBits, v: HConst, toType: HdlType):
-    if curType == toType:
-        return v
-
     if isinstance(toType, HBits):
         if curType.const == toType.const:
             if curType.bit_length() == toType.bit_length():
@@ -270,6 +267,10 @@ def HBits_reinterpret_cast__RtlSignal(curType: HBits, v: RtlSignal, toType: HdlT
     (f.e. bits to struct, union or array)
     """
     if isinstance(toType, HBits):
+        if curType.signed != toType.signed:
+            v = v._cast_sign(toType.signed)
+        if v._dtype == toType:
+            return v
         res = HBits_auto_cast__RtlSignal_try_reinterpret_flags(curType, v, toType, False, True)
         if res is not None:
             return res

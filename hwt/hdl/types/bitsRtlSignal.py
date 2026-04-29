@@ -371,13 +371,15 @@ class HBitsRtlSignal(RtlSignal):
             raise e_simplified
 
     def __neg__(self) -> Self:
-        if self._dtype.signed is None:
-            self = self._unsigned()
-
         resT = self._dtype
-
+        needsCast = not self._dtype.signed
+        if needsCast:
+            self = self._signed()
         o = HOperatorNode.withRes(HwtOps.MINUS_UNARY, [self], self._dtype)
-        return o._auto_cast(resT)
+        if needsCast:
+            return o._auto_cast(resT)
+        else:
+            return o
 
     # arithmetic
     def __sub__(self, other: HBitsAnyCompatibleValue) -> Union["HBitsConst", Self]:
