@@ -23,7 +23,6 @@ from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.utils import freq_to_period
 from ipCorePackager.constants import DIRECTION
 
-
 T = TypeVar("T", bound=HdlType)
 
 
@@ -89,7 +88,7 @@ def HwIOVectSignal(width: int,
     """
     Create basic :class:`.HwIOSignal` interface where type is vector
     """
-    return HwIOSignal(HBits(width, signed, force_vector=width==1),
+    return HwIOSignal(HBits(width, signed, force_vector=width == 1),
                   masterDir,
                   hdlName,
                   loadConfig)
@@ -143,10 +142,11 @@ class HwIORst_n(HwIOSignal[HBits]):
                  dtype=BIT_N,
                  hdlName:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig=True):
-        super(HwIORst_n, self).__init__(masterDir=masterDir,
-                                    dtype=dtype,
-                                    hdlName=hdlName,
-                                    loadConfig=loadConfig)
+        super(HwIORst_n, self).__init__(
+            masterDir=masterDir,
+            dtype=dtype,
+            hdlName=hdlName,
+            loadConfig=loadConfig)
 
     @override
     def _getIpCoreIntfClass(self):

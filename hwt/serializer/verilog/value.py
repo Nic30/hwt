@@ -8,6 +8,7 @@ from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_d
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.types.bitConstFunctions import AnyHBitsValue
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BOOL, BIT
@@ -28,7 +29,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     def as_hdl_HBoolConst(self, val: HBitsConst):
         return self.as_hdl_int(val.val)
 
-    def as_hdl_cond(self, c, forceBool):
+    def as_hdl_cond(self, c: AnyHBitsValue, forceBool: bool):
         assert isinstance(c, (RtlSignalBase, HConst))
         if not forceBool or c._dtype == BOOL:
             return self.as_hdl(c)
@@ -37,7 +38,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
         elif isinstance(c._dtype, HBits):
             return self.as_hdl(c != 0)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(c)
 
     def as_hdl_HEnumConst(self, val: HEnumConst):
         i = val._dtype._allValues.index(val.val)

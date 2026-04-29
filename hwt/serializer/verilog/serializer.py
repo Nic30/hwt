@@ -99,6 +99,7 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                 t = HdlTypeAuto
             else:
                 t = self.as_hdl_HdlType(v._dtype)
+
             new_v.type = t
             assert new_v.value is not None, g
             new_v.value = self.as_hdl_Value(v)

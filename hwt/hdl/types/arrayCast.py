@@ -9,7 +9,6 @@ from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import TypeConversionErr
 from pyMathBitPrecise.bit_utils import get_bit_range, mask
 
-
 HArrayAnyValue = Union["HArrayConst", "HArrayRtlSignal"]
 
 

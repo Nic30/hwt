@@ -12,7 +12,7 @@ class HArray(HdlType):
     :ivar ~.size: number of items
     """
 
-    def __init__(self, element_t, size, const=False):
+    def __init__(self, element_t: HdlType, size: int, const:bool=False):
         super(HArray, self).__init__(const=const)
         self.element_t = element_t
         self.size = size

@@ -99,7 +99,7 @@ class HStruct(HdlType):
     .. code-block::python
         # type definition
         t = HStruct(
-            (BIT, "a"),
+            (BIT, "a"), # lower address/sooner in stream
             (BIT, "b"),
         )
         # constant instantiation 

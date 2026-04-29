@@ -26,7 +26,7 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     :ivar ~._valueWidthRequired: flag which tells if the values are required to have
         the width specified
     """
-    _keywords_dict = {kw: LanguageKeyword() for kw in HWT_KEYWORDS}
+    _keywords_dict: dict[str, LanguageKeyword] = {kw: LanguageKeyword() for kw in HWT_KEYWORDS}
 
     def __init__(self, name_scope: Optional[NameScope]=None):
         super(ToHdlAstHwt, self).__init__(name_scope=name_scope)
