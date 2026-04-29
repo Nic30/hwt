@@ -1,4 +1,5 @@
 from hwt.constants import NOT_SPECIFIED
+from hwt.hdl.types.defs import BIT, BIT_N
 from hwt.hwIOs.std import HwIOClk, HwIORst_n, HwIORst
 from hwt.mainBases import HwModuleBase, HwIOBase, HwModuleOrHwIOBase
 
@@ -63,7 +64,7 @@ def propagateClkRstn(obj: HwModuleOrHwIOBase):
     for m in obj._subHwModules:
         _tryConnect(clk, m, 'clk')
         _tryConnect(rst_n, m, 'rst_n')
-        _tryConnect(~rst_n, m, 'rst')
+        _tryConnect(~rst_n._reinterpret_cast(BIT), m, 'rst')
 
 
 def propagateClkRst(obj: HwModuleOrHwIOBase):
@@ -78,7 +79,7 @@ def propagateClkRst(obj: HwModuleOrHwIOBase):
         if dstClk is not None:
             assert dstClk.FREQ == clk.FREQ, (clk, "->", dstClk, clk.FREQ, dstClk.FREQ)
 
-        _tryConnect(~rst, m, 'rst_n')
+        _tryConnect((~rst)._reinterpret_cast(BIT_N), m, 'rst_n')
         _tryConnect(rst, m, 'rst')
 
 
@@ -91,7 +92,7 @@ def propagateRstn(obj: HwModuleOrHwIOBase):
 
     for m in obj._subHwModules:
         _tryConnect(rst_n, m, 'rst_n')
-        _tryConnect(~rst_n, m, 'rst')
+        _tryConnect(~rst_n._reinterpret_cast(BIT), m, 'rst')
 
 
 def propagateRst(obj: HwModuleOrHwIOBase):
@@ -102,5 +103,5 @@ def propagateRst(obj: HwModuleOrHwIOBase):
     rst = obj.rst
 
     for m in obj._subHwModules:
-        _tryConnect(~rst, m, 'rst_n')
+        _tryConnect((~rst)._reinterpret_cast(BIT_N), m, 'rst_n')
         _tryConnect(rst, m, 'rst')

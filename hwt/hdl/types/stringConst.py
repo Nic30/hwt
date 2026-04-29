@@ -1,11 +1,12 @@
+from typing import Optional
+
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.typeCast import toHVal
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from typing import Optional
 from hwt.pyUtils.typingFuture import override
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class HStringRtlSignal(RtlSignal):
@@ -14,7 +15,7 @@ class HStringRtlSignal(RtlSignal):
     def _eq(self, other):
         other = toHVal(other, self._dtype)
         assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
-        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BIT)
 
 
 class HStringConst(HConst):
@@ -56,7 +57,7 @@ class HStringConst(HConst):
         if isinstance(self, HConst):
             eq = self.val == other.val
             vld = int(self.vld_mask and other.vld_mask)
-            return BOOL.getConstCls()(BOOL, int(eq), vld)
+            return BIT.getConstCls()(BIT, int(eq), vld)
 
         else:
             return HStringRtlSignal._eq(other)

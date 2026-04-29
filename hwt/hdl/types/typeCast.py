@@ -2,7 +2,7 @@
 from typing import Optional, Any, Union
 
 from hwt.hdl.const import HConst
-from hwt.hdl.types.defs import INT, STR, BOOL, SLICE, FLOAT64
+from hwt.hdl.types.defs import INT, STR, BIT, SLICE, FLOAT64
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.variables import HdlSignalItem
 from hwt.mainBases import HwIOBase, RtlSignalBase
@@ -10,7 +10,7 @@ from hwt.mainBases import HwIOBase, RtlSignalBase
 defaultPyConversions = {
     int: INT,
     str: STR,
-    bool: BOOL,
+    bool: BIT,
     slice: SLICE,
     float: FLOAT64
 }
@@ -34,11 +34,11 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None) -> Union[HConst, RtlS
             if op >= 1 << 31:
                 raise TypeError(
                     f"Number {op:d} is too big to fit in 32 bit integer of HDL"
-                    " use Bits type instead")
+                    " use HBits type instead")
             elif op < -(1 << 31):
                 raise TypeError(
                     f"Number {op:d} is too small to fit in 32 bit integer"
-                    " of HDL use Bits type instead")
+                    " of HDL use HBits type instead")
 
         try:
             hType = defaultPyConversions[type(op)]

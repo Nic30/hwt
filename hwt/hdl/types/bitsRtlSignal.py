@@ -9,13 +9,14 @@ from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.bitConstFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp, bitsFloordiv, bitsMul, bitsLshift, \
-    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue, bitsRem
+    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue, bitsRem, \
+    bitsIsOn, HBits_common_operand_type_checks_for_self
 from hwt.hdl.types.bitConstFunctionsGetitem import _get_operator_i_am_the_result_of, \
     bitsGetitem, _fold_concat_of_msb_using_sext
 from hwt.hdl.types.bitConst_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor, reduceSigCheckFnAnd, reduceSigCheckFnOr, reduceSigCheckFnXor
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import HwIOBase
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
@@ -104,9 +105,7 @@ class HBitsRtlSignal(RtlSignal):
             resT = HBits(resWidth, signed=self._dtype.signed, force_vector=resWidth == 1)
             # is instance of signal
 
-            if other._dtype == BOOL:
-                other = other._auto_cast(BIT)
-            elif isinstance(other._dtype, HBits):
+            if isinstance(other._dtype, HBits):
                 if other._dtype.signed is not None:
                     other = other._vec()
             else:
@@ -257,6 +256,7 @@ class HBitsRtlSignal(RtlSignal):
         raise TypeError("To assign a member of hdl array/vector/list/... use a[index](c) instead of a[index] = c")
 
     def __invert__(self) -> Self:
+        HBits_common_operand_type_checks_for_self(self)
         try:
             # try reduce double negation
             d = self.singleDriver()
@@ -271,7 +271,12 @@ class HBitsRtlSignal(RtlSignal):
 
     # comparisons
     def _isOn(self) -> Self:
-        return self._auto_cast(BOOL)
+        try:
+            return bitsIsOn(self)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _eq(self, other: HBitsAnyCompatibleValue) -> Union["HBitsConst", Self]:
         try:
@@ -366,8 +371,8 @@ class HBitsRtlSignal(RtlSignal):
             raise e_simplified
 
     def __neg__(self) -> Self:
-        if not self._dtype.signed:
-            self = self._signed()
+        if self._dtype.signed is None:
+            self = self._unsigned()
 
         resT = self._dtype
 
@@ -468,10 +473,10 @@ class HBitsRtlSignal(RtlSignal):
         return self[self._dtype.bit_length() - 1]
 
     def _onFallingEdge(self) -> Self:
-        return HOperatorNode.withRes(HwtOps.FALLING_EDGE, [self], BOOL)
+        return HOperatorNode.withRes(HwtOps.FALLING_EDGE, [self], BIT)
 
     def _onRisingEdge(self) -> Self:
-        return HOperatorNode.withRes(HwtOps.RISING_EDGE, [self], BOOL)
+        return HOperatorNode.withRes(HwtOps.RISING_EDGE, [self], BIT)
 
     def __len__(self) -> int:
         return self._dtype.bit_length()

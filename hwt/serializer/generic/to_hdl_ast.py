@@ -7,7 +7,8 @@ from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
     HdlCompInst, HdlEnumDef, HdlOp
 from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
-from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
+from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope, \
+    LanguageKeyword
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
 from hwt.hdl.const import HConst
@@ -52,7 +53,7 @@ class ToHdlAst():
     # isisnstance
     ALL_STATEMENT_CLASSES = [*ALL_STATEMENT_CLASSES, HdlStmCodeBlockContainer]
     TMP_VAR_CONSTRUCTOR = TmpVarConstructor
-    _keywords_dict = {}
+    _keywords_dict: dict[str, LanguageKeyword] = {}
 
     @classmethod
     def getBaseNameScope(cls):
@@ -162,8 +163,8 @@ class ToHdlAst():
     def as_hdl_If(self, *args, **kwargs) -> HdlStmIf:
         return self.as_hdl_IfContainer(*args, **kwargs)
 
-    def as_hdl_cond(self, v, force_bool) -> iHdlExpr:
-        if force_bool and v._dtype != BOOL:
+    def as_hdl_cond(self, v, force_bool:bool) -> iHdlExpr:
+        if v._dtype.negated or v._dtype.bit_length() != 1 or (force_bool and v._dtype != BOOL):
             v = v._isOn()
         return self.as_hdl(v)
 
@@ -263,7 +264,7 @@ class ToHdlAst():
 
     def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmCase:
         s = HdlStmCase()
-        s.switch_on = self.as_hdl_cond(sw.switchOn, False)
+        s.switch_on = self.as_hdl(sw.switchOn)
         s.cases = cases = []
         for key, statements in sw.cases:
             key = self.as_hdl_Value(key)

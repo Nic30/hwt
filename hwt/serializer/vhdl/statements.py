@@ -2,35 +2,23 @@ from copy import copy
 
 from hdlConvertorAst.hdlAst import HdlStmCase
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
+from hwt.hdl.commonConstants import b1, b0
 from hwt.hdl.const import HConst
-from hwt.hdl.operator import HOperatorNode
-from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.hdl.variables import HdlSignalItem
-from hwt.serializer.exceptions import SerializerException
 from hwt.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
+from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.vhdl.ops import getOperandOperatorWithBitsFlagCastIgnore
 
 
 class ToHdlAstVhdl2008_statements():
-    
-    @staticmethod
-    def _expandBitsOperandType(v):
-        if v._dtype == BIT and isinstance(v, RtlSignalBase) and v._isUnnamedExpr:
-            try:
-                d = v.singleDriver()
-            except SignalDriverErr:
-                d = None
-            if d is not None and isinstance(d, HOperatorNode) and d.operator is HwtOps.INDEX and d.operands[0]._dtype == BOOL:
-                return BOOL
-        return v._dtype
-    
+
     def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         _dst = dst = a.dst
         assert isinstance(dst, HdlSignalItem)
@@ -42,47 +30,60 @@ class ToHdlAstVhdl2008_statements():
                 dst = dst[i]
 
         src = a.src
-        dst_t = dst._dtype
-        correct = False
-        src_t = self._expandBitsOperandType(src)
-            
+        if self._analyze_boolean(dst):
+            dst_t = BOOL
+        else:
+            dst_t = dst._dtype
+        if self._analyze_boolean(src):
+            src_t = BOOL
+        else:
+            src_t = src._dtype
         if dst_t == src_t:
             correct = True
         else:
-            src = a.src
-            if (isinstance(dst_t, HBits) and isinstance(src_t, HBits)):
-                # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
-                while not (dst_t == src_t):
-                    # while is used because the casting could be required multiple times
-                    correct = False
-                    if dst_t.bit_length() == src_t.bit_length() == 1:
-                        if dst_t.force_vector and not src_t.force_vector:
-                            dst = dst[0]
-                            correct = True
-                        elif not dst_t.force_vector and src_t.force_vector:
-                            src = src[0]
-                            correct = True
-                        elif src_t == BOOL:
-                            src = src._ternary(BIT.from_py(1), BIT.from_py(0))
-                            correct = True
-                    elif not src_t.strict_width:
-                        if isinstance(src, HConst):
-                            src = copy(src)
-                            if a.indexes:
+            src, _ = getOperandOperatorWithBitsFlagCastIgnore(src)
+            if self._analyze_boolean(src):
+                src_t = BOOL
+            else:
+                src_t = src._dtype
+
+            if dst_t == src_t:
+                correct = True
+            else:
+                correct = False
+                src = a.src
+                if isinstance(dst_t, HBits) and isinstance(src_t, HBits):
+                    # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
+                    while not (dst_t == src_t):
+                        # while is used because the casting could be required multiple times
+                        correct = False
+                        if dst_t.bit_length() == src_t.bit_length() == 1:
+                            if dst_t.force_vector and not src_t.force_vector:
+                                dst = dst[0]
+                                correct = True
+                            elif not dst_t.force_vector and src_t.force_vector:
+                                src = src[0]
+                                correct = True
+                            elif src_t == BOOL:
+                                src = src._ternary(b1, b0)
+                                correct = True
+                        elif not src_t.strict_width:
+                            if isinstance(src, HConst):
+                                src = copy(src)
+                                if a.indexes:
+                                    raise NotImplementedError()
+
+                                src._dtype = dst_t
+                                correct = True
+                            else:
                                 raise NotImplementedError()
 
-                            src._dtype = dst_t
-                            correct = True
-                        else:
-                            raise NotImplementedError()
-                            pass
+                        src_t = src._dtype
+                        dst_t = dst._dtype
 
-                    src_t = src._dtype
-                    dst_t = dst._dtype
-
-                    if not correct:
-                        # automatic type cast can not be performed
-                        break
+                        if not correct:
+                            # automatic type cast can not be performed
+                            break
         if correct:
             src = self.as_hdl(src)
             hdl_a = HdlStmAssign(src, self.as_hdl(dst))
@@ -99,7 +100,7 @@ class ToHdlAstVhdl2008_statements():
         if isinstance(switchOn, RtlSignalBase) and switchOn._isUnnamedExpr:
             _, switchOn = self.tmpVars.create_var_cached("tmpTypeConv_", switchOn._dtype, def_val=switchOn)
 
-        s.switch_on = self.as_hdl_cond(switchOn, False)
+        s.switch_on = self.as_hdl(switchOn)
         s.cases = cases = []
         for key, statements in sw.cases:
             key = self.as_hdl_Value(key)

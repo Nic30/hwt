@@ -42,6 +42,7 @@ IGNORED_OPERATORS = {
     HwtOps.BitsAsSigned,
     HwtOps.BitsAsUnsigned,
     HwtOps.BitsAsVec,
+    HwtOps.BitsFlagCast,
     HwtOps.RISING_EDGE,
     HwtOps.FALLING_EDGE,
 }

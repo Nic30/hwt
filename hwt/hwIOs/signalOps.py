@@ -1,4 +1,7 @@
+from typing import Optional
+
 from hwt.doc_markers import internal
+from hwt.hdl.types.hdlType import HdlType
 
 
 class SignalOps(object):
@@ -7,11 +10,11 @@ class SignalOps(object):
     These operands are delegated on RtlSignal object for this interface
     """
 
-    def _auto_cast(self, toT):
+    def _auto_cast(self, toT: HdlType):
         return self._sig._auto_cast(toT)
 
     @internal
-    def _cast_sign(self, signed):
+    def _cast_sign(self, signed: Optional[bool]):
         return self._sig._cast_sign(signed)
 
     def _signed(self):
@@ -23,7 +26,10 @@ class SignalOps(object):
     def _vec(self):
         return self._cast_sign(None)
 
-    def _reinterpret_cast(self, toT):
+    def _explicit_cast(self, toT: HdlType):
+        return self._sig._explicit_cast(toT)
+
+    def _reinterpret_cast(self, toT: HdlType):
         return self._sig._reinterpret_cast(toT)
 
     # events
@@ -36,7 +42,7 @@ class SignalOps(object):
     # comparison
     def _isOn(self):
         """
-        convert this signal to hBool
+        convert this signal to 1 bit value which is 1 if the value is considered active (1 if not negated 0 if negated)
         """
         return self._sig._isOn()
 
@@ -72,27 +78,27 @@ class SignalOps(object):
 
     # bitwise
     def __invert__(self):
-        """~ operator - logical negation for one bit signals and hBool
+        """~ operator - logical negation for one bit signals
            bitwise inversion for wider signals """
         return self._sig.__invert__()
 
     def __and__(self, other):
         """
-        & operator - logical 'and' for one bit signals and hBool
+        & operator - logical 'and' for one bit signals
         bitwise and for wider signals
         """
         return self._sig.__and__(other)
 
     def __xor__(self, other):
         """
-        ^ operator - logical '!=' for one bit signals and hBool
+        ^ operator - logical '!=' for one bit signals
         bitwise and for wider signals
         """
         return self._sig.__xor__(other)
 
     def __or__(self, other):
         """
-        | operator - logical 'or' for one bit signals and hBool
+        | operator - logical 'or' for one bit signals
         bitwise and for wider signals
         """
         return self._sig.__or__(other)

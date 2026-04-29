@@ -39,6 +39,14 @@ class HConst(Generic[T]):
         """
         return self._dtype.auto_cast_HConst(self, toType)
 
+    def _explicit_cast(self, toType: "HdlType"):
+        """
+        Cast value or signal of this type to another friendly type.
+
+        :param toType: instance of HdlType to cast into
+        """
+        return self._dtype.explicit_cast_HConst(self, toType)
+
     def _reinterpret_cast(self, toType: "HdlType"):
         """
         Cast value or signal of this type to another type of same size.

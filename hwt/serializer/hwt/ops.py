@@ -20,7 +20,7 @@ class ToHdlAstHwt_ops():
 
         with ValueWidthRequirementScope(self, o == HwtOps.CONCAT):
             if o in self._cast_ops:
-                op0 = hdl_getattr(self.as_hdl(ops[0]), "_reinterpret_cast")
+                op0 = hdl_getattr(self.as_hdl(ops[0]), "_explicit_cast")
                 op1 = self.as_hdl_HdlType(op.result._dtype)
                 return hdl_call(op0, [op1, ])
             elif o == HwtOps.EQ:

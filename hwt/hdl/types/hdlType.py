@@ -67,6 +67,7 @@ class HdlType():
             return castFn(self, v, toType)
         except TypeConversionErr:
             pass
+
         return toType._reverse_auto_cast_HConst(v, self)
 
     def auto_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
@@ -86,7 +87,54 @@ class HdlType():
             return castFn(self, v, toType)
         except TypeConversionErr:
             pass
+
         return toType._reverse_auto_cast_RtlSignal(v, self)
+
+    def explicit_cast_HConst(self, v: "HConst", toType: Self) -> "HConst":
+        """
+        Cast constant of this type to another friendly type.
+
+        :param v: constant to cast
+        :param toType: instance of HdlType to cast into
+        """
+        if v._dtype == toType:
+            return v
+
+        try:
+            castFn = self._explicit_cast_HConst_fn
+        except AttributeError:
+            castFn = self.get_explicit_cast_HConst_fn()
+            self._explicit_cast_HConst_fn = castFn
+
+        try:
+            return castFn(self, v, toType)
+        except TypeConversionErr:
+            pass
+
+        return toType._reverse_explicit_cast_HConst(v, self)
+
+    def explicit_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
+        """
+        Cast value or signal of this type to another type of same size.
+
+        :param v: signal to cast
+        :param toType: instance of HdlType to cast into
+        """
+        if v._dtype == toType:
+            return v
+
+        try:
+            castFn = self._explicit_cast_RtlSignal_fn
+        except AttributeError:
+            castFn = self.get_explicit_cast_RtlSignal_fn()
+            self._explicit_cast_RtlSignal_fn = castFn
+
+        try:
+            return castFn(self, v, toType)
+        except TypeConversionErr:
+            pass
+
+        return toType._reverse_reinterpret_cast_RtlSignal(v, self)
 
     def reinterpret_cast_HConst(self, v: "HConst", toType: Self) -> "HConst":
         """
@@ -108,6 +156,7 @@ class HdlType():
             return castFn(self, v, toType)
         except TypeConversionErr:
             pass
+
         return toType._reverse_reinterpret_cast_HConst(v, self)
 
     def reinterpret_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
@@ -137,6 +186,7 @@ class HdlType():
     # reverse casts which are doing the same thing but cast methods are implemented on dst type
     # :note: this is there to allow casting old types(self) to a new types(toType)
     #   when old type does not know anything about new type
+
     def _reverse_auto_cast_HConst(self, v: "HConst", fromType: Self) -> "HConst":
         try:
             castFn = self._reverse_auto_cast_HConst_fn
@@ -152,6 +202,24 @@ class HdlType():
         except AttributeError:
             castFn = self.get_reverse_auto_cast_RtlSignal_fn()
             self._reverse_auto_cast_RtlSignal_fn = castFn
+
+        return castFn(self, v, fromType)
+
+    def _reverse_explicit_cast_HConst(self, v: "HConst", fromType: Self) -> "HConst":
+        try:
+            castFn = self._reverse_explicit_cast_HConst_fn
+        except AttributeError:
+            castFn = self.get_reverse_explicit_cast_HConst_fn()
+            self._reverse_explicit_cast_HConst_fn = castFn
+
+        return castFn(self, v, fromType)
+
+    def _reverse_explicit_cast_RtlSignal(self, v: "RtlSignal", fromType: Self) -> "RtlSignal":
+        try:
+            castFn = self._reverse_explicit_cast_RtlSignal_fn
+        except AttributeError:
+            castFn = self.get_reverse_explicit_cast_RtlSignal_fn()
+            self._reverse_explicit_cast_RtlSignal_fn = castFn
 
         return castFn(self, v, fromType)
 
@@ -175,6 +243,7 @@ class HdlType():
 
     # methods for getting cast function which cast value of one type to another
     # for more details :see: methods for casting of this class
+    # auto_cast
     @internal
     @classmethod
     def get_auto_cast_HConst_fn(cls):
@@ -195,6 +264,28 @@ class HdlType():
     def get_reverse_auto_cast_HConst_fn(cls):
         return default_reverse_auto_cast_fn
 
+    # explicit_cast
+    @internal
+    @classmethod
+    def get_explicit_cast_HConst_fn(cls):
+        return default_explicit_cast_fn
+
+    @internal
+    @classmethod
+    def get_explicit_cast_RtlSignal_fn(cls):
+        return default_explicit_cast_fn
+
+    @internal
+    @classmethod
+    def get_reverse_explicit_cast_RtlSignal_fn(cls):
+        return default_reverse_explicit_cast_fn
+
+    @internal
+    @classmethod
+    def get_reverse_explicit_cast_HConst_fn(cls):
+        return default_reverse_explicit_cast_fn
+
+    # reinterpret_cast
     @internal
     @classmethod
     def get_reinterpret_cast_HConst_fn(cls):
@@ -266,6 +357,7 @@ class HdlType():
         return f"<{self.__class__.__name__:s} {name:s}>"
 
 
+# auto_cast
 @internal
 def default_auto_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
     raise TypeConversionErr("auto_cast", typeFrom, "->", toType, "is not implemented")
@@ -276,6 +368,18 @@ def default_reverse_auto_cast_fn(toType: HdlType, sigOrConst: Union["RtlSignal",
     raise TypeConversionErr("auto_cast", fromType, "->", toType, "is not implemented")
 
 
+# explicit_cast
+@internal
+def default_explicit_cast_fn(typeFrom: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
+    raise TypeConversionErr("explicit_cast", typeFrom, "->", toType, "is not implemented")
+
+
+@internal
+def default_reverse_explicit_cast_fn(toType: HdlType, sigOrConst: Union["RtlSignal", "HConst"], fromType: HdlType):
+    raise TypeConversionErr("explicit_cast", fromType, "->", toType, "is not implemented")
+
+
+# reinterpret_cast
 @internal
 def default_reinterpret_cast_fn(fromType: HdlType, sigOrConst: Union["RtlSignal", "HConst"], toType: HdlType):
     raise TypeConversionErr("reinterpret_cast", fromType, "->", toType, "is not implemented")

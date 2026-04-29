@@ -21,6 +21,7 @@ from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.ops import ToHdlAstVerilog_ops
+from hwt.serializer.vhdl.ops import getOperandOperatorWithBitsFlagCastIgnore
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -35,6 +36,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
 
     def as_hdl_operand(self, operand: Union[RtlSignal, HConst], i: int,
                        operator: HOperatorNode):
+        operand, _ = getOperandOperatorWithBitsFlagCastIgnore(operand)
         return self.as_hdl(operand)
 
     def as_hdl_HOperatorNode_INDEX(self, op: HOperatorNode):

@@ -1,6 +1,6 @@
 from natsort.natsort import natsorted
 import re
-from typing import List
+from typing import List, Generator, Optional
 
 from hdlConvertorAst.hdlAst import HdlOp, HdlModuleDec, HdlOpType, iHdlStatement
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
@@ -12,11 +12,13 @@ from hdlConvertorAst.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.pyUtils.arrayQuery import groupedby
+from hwt.serializer.generic.tmpVarConstructor import NoTmpVars
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.vhdl.ops import ToHdlAstVhdl2008_ops
 from hwt.serializer.vhdl.statements import ToHdlAstVhdl2008_statements
 from hwt.serializer.vhdl.types import ToHdlAstVhdl2008_types
 from hwt.serializer.vhdl.value import ToHdlAstVhdl2008_Value
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class VhdlNameScope(NameScope):
@@ -42,7 +44,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
     :ivar ~.name_scope: name scope used to generate a unique names for tmp variables
         (all object should be registered in namescope before serialization)
     """
-    _keywords_dict = {kw: LanguageKeyword() for kw in VHLD2008_KEYWORDS}
+    _keywords_dict: dict[str, LanguageKeyword] = {kw: LanguageKeyword() for kw in VHLD2008_KEYWORDS}
 
     DEFAULT_IMPORTS = [
         HdlLibrary("IEEE"),
@@ -52,31 +54,39 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
     ASSERT = HdlValueId("assert")
     FAILURE = HdlValueId("failure")
 
+    def __init__(self, name_scope: Optional[NameScope]=None):
+        if name_scope is None:
+            name_scope = self.getBaseNameScope()
+        self.name_scope = name_scope
+        self.tmpVars = NoTmpVars()
+        self.constCache = None
+        self._isBooleanAnalysis: dict[RtlSignal, bool] = {}
+
     @classmethod
     def getBaseNameScope(cls):
         s = VhdlNameScope.make_top(True)
         s.update(cls._keywords_dict)
         return s
 
-    @staticmethod
-    def _find_HdlCompInst(o):
+    @classmethod
+    def _find_HdlCompInst(cls, o) -> Generator[HdlCompInst, None, None]:
         if isinstance(o, (list, tuple)):
             for _o in o:
-                yield from ToHdlAstVhdl2008._find_HdlCompInst(_o)
+                yield from cls._find_HdlCompInst(_o)
         if isinstance(o, HdlCompInst):
             yield o
         elif isinstance(o, HdlStmBlock) and o.in_preproc:
-            yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
+            yield from cls._find_HdlCompInst(o.body)
         elif isinstance(o, HdlStmIf) and o.in_preproc:
             if o.if_true:
-                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.if_true)
+                yield from cls._find_HdlCompInst(o.if_true)
             for _, stms in o.elifs:
-                yield from ToHdlAstVhdl2008._find_HdlCompInst(stms)
+                yield from cls._find_HdlCompInst(stms)
             if o.if_false:
-                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.if_false)
+                yield from cls._find_HdlCompInst(o.if_false)
         elif isinstance(o, (HdlStmFor, HdlStmForIn)) and o.in_preproc:
             if o.body:
-                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
+                yield from cls._find_HdlCompInst(o.body)
 
     def _static_assert_false(self, msg:str):
         return hdl_call(self.ASSERT, [
@@ -98,12 +108,12 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         Translate hwt types and expressions to HDL AST and add explicit components
         """
         _o = super(ToHdlAstVhdl2008, self).as_hdl_HdlModuleDef(o)
-        component_insts = []
+        component_insts: list[HdlCompInst] = []
         for c in _o.objs:
             component_insts.extend(self._find_HdlCompInst(c))
 
         # select component instances with an unique module_name
-        components = [
+        components: list[HdlCompInst] = [
             x[1][0] for x in
             groupedby(component_insts, lambda c: c.module_name)
         ]

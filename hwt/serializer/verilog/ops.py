@@ -1,5 +1,5 @@
 from builtins import isinstance
-from typing import Union
+from typing import Union, Optional
 
 from hdlConvertorAst.hdlAst import HdlValueInt
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
@@ -14,7 +14,7 @@ from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import INT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
-from hwt.serializer.vhdl.ops import matchFullWidthMul
+from hwt.serializer.vhdl.ops import matchFullWidthMul, getOperandOperatorWithBitsFlagCastIgnore
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -26,10 +26,6 @@ class ToHdlAstVerilog_ops():
         HwtOps.INDEX: HdlOpType.INDEX,
     }
 
-    def _operandIsAnotherOperand(self, operand):
-        return isinstance(operand, RtlSignal) and operand._isUnnamedExpr\
-                and isinstance(operand._rtlObjectOrigin, HOperatorNode)
-
     def as_hdl_operand(self, operand: Union[RtlSignal, HConst], i: int,
                        operator: HOperatorNode):
 
@@ -37,18 +33,17 @@ class ToHdlAstVerilog_ops():
         #        is not concatenation operand should be extracted
         #        as tmp variable
         #        * maybe flatten the concatenations
+        operand, operandOperator = getOperandOperatorWithBitsFlagCastIgnore(operand)
         if operator.operator != HwtOps.CONCAT\
-                and self._operandIsAnotherOperand(operand)\
-                and operand._rtlObjectOrigin.operator == HwtOps.CONCAT:
+                and operandOperator == HwtOps.CONCAT:
             _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
             # HdlAssignmentContainer(tmpVar, operand, virtual_only=True)
             operand = tmpVar
-        elif operator.operator in (HwtOps.INDEX, HwtOps.TRUNC) and i == 0 and self._operandIsAnotherOperand(operand):
+        elif operator.operator in (HwtOps.INDEX, HwtOps.TRUNC) and i == 0 and operandOperator is not None:
             tmpVarName = "tmp_index_" if operator.operator == HwtOps.INDEX else "tmp_trunc_"
             _, tmpVar = self.tmpVars.create_var_cached(tmpVarName, operand._dtype, def_val=operand)
             operand = tmpVar
-        elif self._operandIsAnotherOperand(operand)\
-                and operand._rtlObjectOrigin.operator == HwtOps.MUL:
+        elif operandOperator == HwtOps.MUL:
             _, tmpVar = self.tmpVars.create_var_cached("tmp_mul_", operand._dtype, def_val=operand)
             operand = tmpVar
 

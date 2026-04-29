@@ -1,12 +1,12 @@
 from operator import ne, eq
-from typing import Callable, Union, Optional
+from typing import Callable, Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps, HOperatorDef, CMP_OP_SWAP
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import RtlSignalBase
@@ -16,14 +16,57 @@ from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val, Bits3val, bitsCmp__val_NE, bitsCmp__val_EQ
 
-
 HBitsAnyCompatibleValue = Union["HBitsRtlSignal", "HBitsConst", int, None]
 HBitsAnyIndexCompatibleValue = Union[int, slice, RtlSignalBase[HSlice], RtlSignalBase[HBits], None]
 AnyHBitsValue = Union["HBitsRtlSignal", "HBitsConst"]
 
 
+def HBits_common_operand_type_checks_for_self(self: AnyHBitsValue):
+    t = self._dtype
+    if t.negated:
+        raise TypeError("HBits.negated=True supports only _isOn(), ==, !=", self)
+
+
+def HBits_common_operand_type_checks_for_other(other: AnyHBitsValue, t: HBits):
+    ot = other._dtype
+    if not isinstance(ot, t.__class__):
+        raise TypeError(ot)
+    if ot.negated:
+        raise TypeError("HBits.negated=True supports only _isOn(), ==, !=", other)
+
+
+def HBits_common_operand_type_checks(self: AnyHBitsValue, other: AnyHBitsValue):
+    t = self._dtype
+    ot = other._dtype
+    if not isinstance(ot, t.__class__):
+        raise TypeError(ot)
+    if t.negated:
+        raise TypeError("HBits.negated=True supports only  _isOn(), ==, !=, LHS: ", self)
+    if ot.negated:
+        raise TypeError("HBits.negated=True supports only  _isOn(), ==, !=, RHS:", other)
+    if not isinstance(ot, HBits):
+        raise TypeError(ot, t, self, other)
+
+
+def bitsIsOn(op: AnyHBitsValue) -> AnyHBitsValue:
+    t = op._dtype
+    if t.bit_length() == 1:
+        if t.negated:
+            res = ~(op._reinterpret_cast(BIT))
+        else:
+            res = op
+    else:
+        if t.negated:
+            res = op._reinterpret_cast(op._dtype._createMutated(negated=False))._eq(t.from_py(0))
+        else:
+            res = op != t.from_py(0)
+
+    assert not res._dtype.negated, (res, res._dtype)
+    return res
+
+
 @internal
-def bitsCmp_detect_useless_cmp(op0: "HBitsRtlSignal", op1: "HBitsConst", op: HOperatorDef) -> Optional[HOperatorDef]:
+def bitsCmp_detect_useless_cmp(op0: "HBitsRtlSignal", op1: "HBitsConst", op: HOperatorDef) -> Union[None, "HBitsRtlSignal", HOperatorDef]:
     v = int(op1)
     width = op1._dtype.bit_length()
     if op0._dtype.signed:
@@ -37,24 +80,39 @@ def bitsCmp_detect_useless_cmp(op0: "HBitsRtlSignal", op1: "HBitsConst", op: HOp
         # value can not be lower than min_val
         if op == HwtOps.GE:
             # -> always True
-            return BOOL.from_py(1, 1)
+            return BIT.from_py(1, 1)
         elif op == HwtOps.LT:
             # -> always False
-            return BOOL.from_py(0, 1)
+            return BIT.from_py(0, 1)
         elif op == HwtOps.LE:
             # convert <= to == to highlight the real function
             return HwtOps.EQ
+        elif width == 1:
+            if op == HwtOps.EQ:
+                # x == 0 -> ~x
+                return ~op0
+            elif op == HwtOps.NE:
+                # x != 0 -> x
+                return op0
+
     elif v == max_val:
         # value can not be greater than max_val
         if op == HwtOps.GT:
             # always False
-            return BOOL.from_py(0, 1)
+            return BIT.from_py(0, 1)
         elif op == HwtOps.LE:
             # always True
-            return BOOL.from_py(1, 1)
+            return BIT.from_py(1, 1)
         elif op == HwtOps.GE:
             # because value can not be greater than max
             return HwtOps.EQ
+        elif width == 1:
+            if op == HwtOps.EQ:
+                # x == 1 -> x
+                return op0
+            elif op == HwtOps.NE:
+                # x != 1 -> ~x
+                return ~op0
 
 
 @internal
@@ -76,18 +134,19 @@ def bitsCmp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
     t = self._dtype
     other = toHVal(other, t)
     ot = other._dtype
-    if not isinstance(ot, t.__class__):
-        raise TypeError(ot)
+    if op in (HwtOps.EQ, HwtOps.NE) and t.negated and t == ot:
+        ot = t = t._createMutated(negated=False)
+        self = self._reinterpret_cast(t)
+        other = other._reinterpret_cast(t)
+    else:
+        HBits_common_operand_type_checks(self, other)
 
     if evalFn is None:
         evalFn = op._evalFn
 
     otherIsConst = isinstance(other, HConst)
     type_compatible = False
-    if ot == BOOL:
-        self = self._auto_cast(BOOL)
-        type_compatible = True
-    elif t == ot:
+    if t == ot:
         type_compatible = True
     # lock type width/signed to other type with
     elif not ot.strict_width or not ot.strict_sign:
@@ -121,24 +180,25 @@ def bitsCmp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
     else:
         if type_compatible:
             # try to reduce useless cmp
-            res = None
             if otherIsConst and other._is_full_valid():
                 res = bitsCmp_detect_useless_cmp(self, other, op)
             elif selfIsHConst and self._is_full_valid():
                 res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_SWAP[op])
+            else:
+                res = None
 
             if res is None:
                 pass
-            elif isinstance(res, HConst):
-                return res
-            else:
+            elif isinstance(res, HOperatorDef):
                 assert res == HwtOps.EQ, res
                 op = res
+            else:
+                return res
 
             if self is other:
                 return selfReduceVal
             else:
-                return HOperatorNode.withRes(op, [self, other], BOOL)
+                return HOperatorNode.withRes(op, [self, other], BIT)
 
         elif t.strict_width and ot.strict_width and t.bit_length() != ot.bit_length():
             pass
@@ -203,24 +263,17 @@ def bitsBitOp(self: Union[RtlSignalBase, HConst],
     """
     other = toHVal(other, self._dtype)
     otherIsHConst = isinstance(other, HConst)
-
     if selfIsHConst and otherIsHConst:
         other = other._auto_cast(self._dtype)
+        HBits_common_operand_type_checks(self, other)
         return bitsBitOp__val(self, other, op._evalFn, getVldFn)
     else:
-        s_t = self._dtype
-        o_t = other._dtype
-        if not isinstance(o_t, s_t.__class__):
-            raise TypeError(o_t)
+        s_t: HBits = self._dtype
+        o_t: HBits = other._dtype
+        HBits_common_operand_type_checks(self, other)
 
         if s_t == o_t:
             pass
-        elif o_t == BOOL and s_t != BOOL:
-            self = self._auto_cast(BOOL)
-            return op._evalFn(self, other)
-        elif o_t != BOOL and s_t == BOOL:
-            other = other._auto_cast(BOOL)
-            return op._evalFn(self, other)
         else:
             if s_t.signed is not o_t.signed and bool(s_t.signed) == bool(o_t.signed):
                 # automatically cast unsigned to vector
@@ -244,10 +297,12 @@ def bitsBitOp(self: Union[RtlSignalBase, HConst],
                     self = self[0]
                 else:
                     other = other[0]
-
+            elif s_t == o_t._createMutated(negated=s_t.negated, strict_width=s_t.strict_width, strict_sign=s_t.strict_width):
+                # differs only in flags which do not affect this operator
+                pass
             else:
-                raise TypeError("Can not apply operator %r (%r, %r)" %
-                                (op, self._dtype, other._dtype))
+                raise TypeError("Can not apply operator",
+                                op, self._dtype, other._dtype)
 
         if otherIsHConst:
             r = reduceValCheckFn(self, other)
@@ -268,13 +323,75 @@ def bitsBitOp(self: Union[RtlSignalBase, HConst],
         return HOperatorNode.withRes(op, [self, other], self._dtype)
 
 
+def HBits_auto_cast_operands_to_same_type(self: AnyHBitsValue, other: AnyHBitsValue, opForDebug):
+    t0 = self._dtype
+    t1 = other._dtype
+    if t0 != t1:
+        w0 = t0.bit_length()
+        w1 = t1.bit_length()
+        if w0 != w1:
+            if not t1.strict_width:
+                if not t0.strict_width:
+                    # pick max width
+                    if w0 < w1:
+                        self = self._auto_cast(t1._createMutated(bit_length=w1))
+                    else:
+                        other = other._auto_cast(t1._createMutated(bit_length=w0))
+                else:
+                    # resize to type of this
+                    other = other._auto_cast(t1._createMutated(bit_length=t0.bit_length()))
+
+            elif not t0.strict_width:
+                # resize self to type of result
+                self = self._auto_cast(t0)
+            else:
+                raise TypeError("incompatible width", self._dtype, opForDebug, other._dtype, self, other)
+
+        if t0.signed != t1.signed:
+            if not t1.strict_sign:
+                if not t0.strict_sign:
+                    if t0.signed is None or (not t0.signed and t1.signed is not None):
+                        # priority None < False < True
+                        self = self._cast_sign(t1.signed)
+                    else:
+                        other = other._cast_sign(t0.signed)
+                else:
+                    other = other._cast_sign(t0.signed)
+            elif not t0.strict_sign:
+                self = self._cast_sign(t1.signed)
+            else:
+                raise TypeError("incompatible sign", self._dtype, opForDebug, other._dtype, self, other)
+
+        t0 = self._dtype
+        t1 = other._dtype
+        if t0 != t1:
+            if t1.differs_only_in_strictness_flags(t1):
+                t0 = t1 = t0._createMutated(strict_width=t0.strict_width or t1.strict_width,
+                                            strict_sign=t0.strict_sign or t1.strict_sign)
+                self = self._auto_cast(t0)
+                other = other._auto_cast(t0)
+            else:
+                raise TypeError("incompatible types for operation", self._dtype, opForDebug, other._dtype, self, other)
+
+    return self, other
+
+
 @internal
 def bitsArithOp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleValue, op: HOperatorDef) -> AnyHBitsValue:
     other = toHVal(other, self._dtype)
-    if not isinstance(other._dtype, HBits):
-        raise TypeError(other._dtype)
-
+    HBits_common_operand_type_checks(self, other)
     otherIsHConst = isinstance(other, HConst)
+
+    t0 = self._dtype
+    if t0.signed is None:
+        self = self._unsigned()
+        t0 = self._dtype
+
+    t1 = other._dtype
+    if t1.signed is None:
+        other = other._unsigned()
+        t1 = other._dtype
+    self, other = HBits_auto_cast_operands_to_same_type(self, other, op)
 
     if selfIsHConst and otherIsHConst:
         return bitsArithOp__val(self, other, op._evalFn)
@@ -282,49 +399,31 @@ def bitsArithOp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatib
         if self._dtype.signed is None:
             self = self._unsigned()
 
-        if op in (HwtOps.ADD, HwtOps.SUB) and otherIsHConst and other._is_full_valid() and int(other) == 0:
-            return self
+        if op in (HwtOps.ADD, HwtOps.SUB):
+            if otherIsHConst and other._is_full_valid() and int(other) == 0:
+                # x +- 0 -> x
+                return self
+            elif selfIsHConst and self._is_full_valid() and int(self) == 0:
+                # 0 +- x -> x
+                return other._auto_cast(t0)
 
-        resT = self._dtype
-        if op == HwtOps.ADD and selfIsHConst and self._is_full_valid() and int(self) == 0:
-            return other._auto_cast(resT)
-
-        if isinstance(other._dtype, HBits):
-            t0 = self._dtype
-            t1 = other._dtype
-            if t0.bit_length() != t1.bit_length():
-                if not t1.strict_width:
-                    # resize to type of this
-                    other = other._auto_cast(t1)
-                    t1 = other._dtype
-                    pass
-                elif not t0.strict_width:
-                    # resize self to type of result
-                    self = self._auto_cast(t0)
-                    t0 = self._dtype
-                    pass
-                else:
-                    raise TypeError("%r %r %r" % (self, op, other))
-
-            if t1.signed != resT.signed:
-                other = other._cast_sign(t0.signed)
         else:
-            raise TypeError("%r %r %r" % (self, op, other))
+            raise TypeError(self, op, other)
 
         o = HOperatorNode.withRes(op, [self, other], self._dtype)
-        return o._auto_cast(resT)
+        return o._auto_cast(t0)
 
 
 @internal
 def bitsFloordiv(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleValue) -> AnyHBitsValue:
     other = toHVal(other, suggestedType=self._dtype)
+    HBits_common_operand_type_checks(self, other)
+    op = HwtOps.SDIV if self._dtype.signed else HwtOps.UDIV
+    self, other = HBits_auto_cast_operands_to_same_type(self, other, op)
     if selfIsHConst and isinstance(other, HConst):
         return Bits3val.__floordiv__(self, other)
     else:
-        if not isinstance(other._dtype, self._dtype.__class__):
-            raise TypeError()
-
-        return HOperatorNode.withRes(HwtOps.SDIV if self._dtype.signed else HwtOps.UDIV,
+        return HOperatorNode.withRes(op,
                                 [self, other],
                                 self._dtype)
 
@@ -359,11 +458,10 @@ def _bitsMulModGetResultType(myT: "HBits", otherT: "HBits"):
 def bitsMul(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleValue) -> AnyHBitsValue:
     HBits = self._dtype.__class__
     other = toHVal(other, suggestedType=self._dtype)
-    if not isinstance(other._dtype, HBits):
-        raise TypeError(other)
-
+    HBits_common_operand_type_checks(self, other)
     otherIsHConst = isinstance(other, HConst)
 
+    self, other = HBits_auto_cast_operands_to_same_type(self, other, HwtOps.MUL)
     if selfIsHConst and otherIsHConst:
         return Bits3val.__mul__(self, other)
     else:
@@ -402,11 +500,13 @@ def bitsMul(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
 def bitsRem(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleValue) -> AnyHBitsValue:
     HBits = self._dtype.__class__
     other = toHVal(other, suggestedType=self._dtype)
-    if not isinstance(other._dtype, HBits):
-        raise TypeError(other)
-
+    HBits_common_operand_type_checks(self, other)
     otherIsHConst = isinstance(other, HConst)
-
+    if self._dtype.signed:
+        op = HwtOps.SREM
+    else:
+        op = HwtOps.UREM
+    self, other = HBits_auto_cast_operands_to_same_type(self, other, op)
     if selfIsHConst and otherIsHConst:
         return Bits3val.__mod__(self, other)
     else:
@@ -430,10 +530,7 @@ def bitsRem(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
         if self._dtype.signed is None:
             self = self._unsigned()
 
-        if self._dtype.signed:
-            op = HwtOps.SREM
-        else:
-            op = HwtOps.UREM
+
 
         if isinstance(other._dtype, HBits):
             s = other._dtype.signed
@@ -452,6 +549,7 @@ def bitsLshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
     """
     shift left by a constant amount with 0 padding
     """
+    HBits_common_operand_type_checks_for_self(self)
     if isinstance(shiftAmount, HConst) and not shiftAmount._is_full_valid():
         return self._dtype.from_py(None)
 
@@ -475,6 +573,8 @@ def bitsRshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
 
     :note: arithmetic shift if type is signed else logical shift with 0 padding
     """
+
+    HBits_common_operand_type_checks_for_self(self)
     if isinstance(shiftAmount, HConst) and not shiftAmount._is_full_valid():
         return self._dtype.from_py(None)
 

@@ -197,14 +197,16 @@ class HwtOps():
     BitsAsSigned = HOperatorDef(bitsAsSignedFn, allowsAssignTo=True)
     BitsAsUnsigned = HOperatorDef(bitsAsUnsignedFn, allowsAssignTo=True)
     BitsAsVec = HOperatorDef(bitsAsVec, allowsAssignTo=True)
-
+    BitsFlagCast = HOperatorDef(bitsAsVec, allowsAssignTo=True)
+    # :note: BitsFlagCast is used to change negated, stric_width, strict_sign flags 
+    #        internally but it does not have effect on HDL
 
 for a_name in dir(HwtOps):
     o = getattr(HwtOps, a_name)
     if isinstance(o, HOperatorDef):
         o.id = a_name
 
-CAST_OPS = (HwtOps.BitsAsVec, HwtOps.BitsAsSigned, HwtOps.BitsAsUnsigned)
+CAST_OPS = (HwtOps.BitsAsVec, HwtOps.BitsAsSigned, HwtOps.BitsAsUnsigned, HwtOps.BitsFlagCast)
 BITWISE_OPS = (HwtOps.NOT, HwtOps.XOR, HwtOps.AND, HwtOps.OR)
 COMPARE_OPS = (
     HwtOps.EQ,

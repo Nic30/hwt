@@ -15,6 +15,47 @@ BITS_DEFAUTL_NEGATED = False
 class HBits(HdlType, Bits3t):
     """
     Elemental HDL type representing bits (vector or single bit)
+    
+    :see: :class:`pyMathBitPrecise.bits3t.Bits3t`
+    :ivar negated: if true the value is in negated form
+        The result of the _isOn() operator is negation of this value,
+        "~" operator returns value of same type, and or xor operands
+        ignores this flag, others do not support it. 
+        This utitilty is there to allow users to write code agnostic
+        to signal negation. For example for reset and reset_n_isOn() check can be used
+        to resolve if reset is activated.
+    :ivar ~.strict_width: if True width can not be auto_casted (in operators/assignment/...)
+    :ivar ~.strict_sign: same thing as strict_width just for signed/unsigned
+
+    casting rules
+    =============
+        * strict_width/strict_sign True has the higher priority when resolving operator result type
+        
+        * if False width/sign is allowed to change to dst type value.
+        
+        * strict_width=False:
+        
+          * assignment: auto extended/trimmed
+        
+          * multi operand operator: pick the widest type
+        
+        * strict_sign=False
+        
+          * assignment: auto cast
+        
+          * multi operand operator: signed if any operand signed
+        
+        * cast of negated flag does nothing (if )
+        
+                   | BIT       BIT_N  
+            =======| ========= =========
+            BIT    | nop       nop
+            BIT_N  | nop       nop
+
+          
+        * auto_cast - casts flags
+        * explicit_cast - resize/change sign 
+        * reinterpret_cast - raw bits as something else
     """
 
     def __init__(self, bit_length: Union[int, "AnyHBitsValue"],
@@ -23,17 +64,17 @@ class HBits(HdlType, Bits3t):
                  negated:bool=BITS_DEFAUTL_NEGATED,
                  name:Optional[str]=None,
                  const:bool=False,
-                 strict_sign:bool=True, strict_width:bool=True):
-        """
-        :param negated: if true the value is in negated form
-        """
+                 strict_sign:bool=True,
+                 strict_width:bool=True):
         self.negated = negated
+        self.strict_sign = strict_sign
+        self.strict_width = strict_width
         HdlType.__init__(self, const=const)
         bit_length = int(bit_length)
         assert bit_length > 0, bit_length
         Bits3t.__init__(self, bit_length, signed, name=name,
-                        force_vector=force_vector or bit_length == 1 and signed is not None,
-                        strict_sign=strict_sign, strict_width=strict_width)
+                        force_vector=force_vector or bit_length == 1 and signed is not None
+                       )
 
     def _createMutated(self,
                  bit_length: Union[int, "AnyHBitsValue"]=NOT_SPECIFIED,
@@ -75,7 +116,13 @@ class HBits(HdlType, Bits3t):
             strict_sign=strict_sign,
             strict_width=strict_width
         )
-
+    
+    def differs_only_in_strictness_flags(self, other: Self) -> bool:
+        return Bits3t.__eq__(self, other) and \
+             isinstance(other, self.__class__) and \
+             self.const == other.const and \
+             self.negated == other.negated
+    
     @internal
     def domain_size(self):
         """
@@ -86,28 +133,41 @@ class HBits(HdlType, Bits3t):
     @internal
     @classmethod
     def get_auto_cast_HConst_fn(cls):
-        from hwt.hdl.types.bitsCast import convertBits__HConst
-        return convertBits__HConst
+        from hwt.hdl.types.bitsCast import HBits_auto_cast__HConst
+        return HBits_auto_cast__HConst
+
+    @internal
+    @override
+    @classmethod
+    def get_explicit_cast_HConst_fn(cls):
+        from hwt.hdl.types.bitsCast import HBits_explicit_cast__HConst
+        return HBits_explicit_cast__HConst
 
     @internal
     @override
     @classmethod
     def get_reinterpret_cast_HConst_fn(cls):
-        from hwt.hdl.types.bitsCast import reinterpretBits__HConst
-        return reinterpretBits__HConst
+        from hwt.hdl.types.bitsCast import HBits_reinterpret_cast__HConst
+        return HBits_reinterpret_cast__HConst
 
     @internal
     @classmethod
     def get_auto_cast_RtlSignal_fn(cls):
-        from hwt.hdl.types.bitsCast import convertBits__RtlSignal
-        return convertBits__RtlSignal
+        from hwt.hdl.types.bitsCast import HBits_auto_cast__RtlSignal
+        return HBits_auto_cast__RtlSignal
+
+    @internal
+    @classmethod
+    def get_explicit_cast_RtlSignal_fn(cls):
+        from hwt.hdl.types.bitsCast import HBits_explicit_cast__RtlSignal
+        return HBits_explicit_cast__RtlSignal
 
     @internal
     @override
     @classmethod
     def get_reinterpret_cast_RtlSignal_fn(cls):
-        from hwt.hdl.types.bitsCast import reinterpretBits__RtlSignal
-        return reinterpretBits__RtlSignal
+        from hwt.hdl.types.bitsCast import HBits_reinterpret_cast__RtlSignal
+        return HBits_reinterpret_cast__RtlSignal
 
     @internal
     @override
@@ -135,12 +195,19 @@ class HBits(HdlType, Bits3t):
         return self.from_py(self._all_mask)
 
     def __hash__(self):
-        return hash((Bits3t.__hash__(self), self.const))
+        return hash((Bits3t.__hash__(self),
+                     self.const,
+                     self.negated,
+                     self.strict_sign,
+                     self.strict_width,))
 
     def __eq__(self, other):
         return Bits3t.__eq__(self, other) and \
              isinstance(other, self.__class__) and \
-             self.const == other.const
+             self.const == other.const and \
+             self.negated == other.negated and \
+             self.strict_sign == other.strict_sign and \
+             self.strict_width == other.strict_width
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
@@ -152,7 +219,7 @@ class HBits(HdlType, Bits3t):
         """
         constr = []
         if self.name is not None:
-            constr.append('"%s"' % self.name)
+            constr.append(f'"{self.name:s}"')
         c = self.bit_length()
         if c == 1:
             constr.append("1bit")
@@ -160,6 +227,9 @@ class HBits(HdlType, Bits3t):
                 constr.append("force_vector")
         else:
             constr.append(f"{c:d}bits")
+
+        if self.negated:
+            constr.append("n")
 
         if self.const:
             constr.append("const")
@@ -175,6 +245,4 @@ class HBits(HdlType, Bits3t):
         if not self.strict_width:
             constr.append("strict_width=False")
 
-        return "%s<%s, %s>" % (getIndent(indent),
-                               self.__class__.__name__,
-                               ", ".join(constr))
+        return f"{getIndent(indent)}<{self.__class__.__name__}, {', '.join(constr)}>"

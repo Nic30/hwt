@@ -4,9 +4,9 @@ from hdlConvertorAst.to.hdlUtils import bit_string
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
-from hwt.hdl.types.bits import HBits
+from hwt.hdl.types.bitConstFunctions import AnyHBitsValue
 from hwt.hdl.types.bitsConst import HBitsConst
-from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.mainBases import RtlSignalBase
@@ -20,14 +20,16 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
     # TO_UNSIGNED = HdlValueId("TO_UNSIGNED", obj=LanguageKeyword())
     # TO_SIGNED = HdlValueId("TO_SIGNED", obj=LanguageKeyword())
 
-    def as_hdl_cond(self, c, forceBool):
+    def as_hdl_cond(self, c: AnyHBitsValue, forceBool: bool) -> AnyHBitsValue:
+        """
+        Add optional conversion to bool.
+        """
         assert isinstance(c, (RtlSignalBase, HConst)), c
-        if not forceBool or c._dtype == BOOL:
+        isBool = self._analyze_boolean(c)
+        if not forceBool or isBool:
             return self.as_hdl(c)
-        elif c._dtype == BIT:
-            return self.as_hdl(c._eq(1))
-        elif isinstance(c._dtype, HBits):
-            return self.as_hdl(c != 0)
+        elif not isBool:
+            return self.as_hdl(self._as_Bool(c))
         else:
             raise NotImplementedError()
 
@@ -71,6 +73,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
         #    return hdl_call(cast_fn, [v, HdlValueInt(width, None, None)])
 
     def as_hdl_HBoolConst(self, val: HBitsConst):
+        assert val.vld_mask, val
         if val.val:
             return self.TRUE
         else:

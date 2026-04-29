@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import RtlSignalBase
@@ -136,4 +136,4 @@ class HStreamConst(HConst):
             eq = False
             vld = 0
 
-        return BOOL.getConstCls()(BOOL, int(eq), vld)
+        return BIT.getConstCls()(BIT, int(eq), vld)

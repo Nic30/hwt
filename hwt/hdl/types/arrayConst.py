@@ -8,7 +8,7 @@ from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.bitConstFunctions import HBitsAnyIndexCompatibleValue
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.mainBases import RtlSignalBase
@@ -237,7 +237,7 @@ class HArrayConst(HConst):
                 eq = False
                 vld = 0
 
-            return BOOL.getConstCls()(BOOL, int(eq), vld)
+            return BIT.getConstCls()(BIT, int(eq), vld)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

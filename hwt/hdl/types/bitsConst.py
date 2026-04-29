@@ -9,26 +9,28 @@ from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.types.bitConstFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp, bitsFloordiv, bitsMul, bitsLshift, \
-    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue, bitsRem
+    bitsRshift, HBitsAnyIndexCompatibleValue, HBitsAnyCompatibleValue, bitsRem, \
+    bitsIsOn, HBits_common_operand_type_checks_for_self
 from hwt.hdl.types.bitConstFunctionsGetitem import bitsGetitem
 from hwt.hdl.types.bitConst_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor, reduceSigCheckFnAnd, reduceSigCheckFnOr, reduceSigCheckFnXor
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsRtlSignal import HBitsRtlSignal
-from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
+from hwt.hdl.types.defs import INT, BIT, SLICE
 from hwt.hdl.types.sliceUtils import slice_to_HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.pyUtils.typingFuture import override
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
+from pyMathBitPrecise.bit_utils import to_signed
 
 
 class HBitsConst(HConst, Bits3val):
     """
     :attention: operator on signals are using value operator functions as well
     """
-    _BOOL = HBits(1, name="bool")
+    _BOOL = HBits(1)
     _SIGNED_FOR_SLICE_RESULT = NOT_SPECIFIED
     _SIGNED_FOR_CONCAT_RESULT = None
 
@@ -132,6 +134,7 @@ class HBitsConst(HConst, Bits3val):
             raise e_simplified
 
     def __invert__(self) -> Self:
+        HBits_common_operand_type_checks_for_self(self)
         try:
             return Bits3val.__invert__(self)
         except Exception as e:
@@ -144,7 +147,12 @@ class HBitsConst(HConst, Bits3val):
 
     # comparisons
     def _isOn(self):
-        return self._auto_cast(BOOL)
+        try:
+            return bitsIsOn(self)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _eq(self, other: HBitsAnyCompatibleValue) -> Union[Self, "HBitsRtlSignal"]:
         try:
@@ -358,8 +366,20 @@ class HBitsConst(HConst, Bits3val):
             raise NotImplementedError(b)
         return f"{signChar:s}{t.bit_length()}{vecSpec:s}'{base_char}{bs.val}"
 
-    def __repr__(self) -> str:
-        return Bits3val.__repr__(self)
+    def __repr__(self):
+        t = self._dtype
+        if self.vld_mask != t.all_mask():
+            m = f", mask {self.vld_mask:x}"
+        else:
+            m = ""
+        typeDescrChar = 'b' if t.signed is None else 'i' if t.signed else 'u'
+        if t.bit_length() == 1 and t.force_vector:
+            vecSpec = "vec"
+        else:
+            vecSpec = ""
+        v = to_signed(self.val, t.bit_length()) if t.signed else self.val
+        return (f"<{self.__class__.__name__:s} {typeDescrChar:s}{t.bit_length():d}{vecSpec:s}"
+                f" {v:d}{m:s}>")
 
 
 _b1 = BIT.from_py(1)

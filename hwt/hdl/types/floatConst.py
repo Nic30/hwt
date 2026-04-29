@@ -6,13 +6,13 @@ from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from pyMathBitPrecise.floatt import FloattVal
 
 
-_HBoolConst = BOOL.getConstCls()
+_HBitsConst = BIT.getConstCls()
 
 
 def _HFloatEq(self, self_is_val: bool, other):
@@ -20,10 +20,10 @@ def _HFloatEq(self, self_is_val: bool, other):
     other_is_val = isinstance(self, HConst)
 
     if self_is_val and other_is_val:
-        return _HBoolConst(BOOL, int(self.val == other.val), self.vld_mask & other.vld_mask)
+        return _HBitsConst(BIT, int(self.val == other.val), self.vld_mask & other.vld_mask)
     else:
         assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
-        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BOOL)
+        return HOperatorNode.withRes(HwtOps.EQ, [self, other], BIT)
 
 
 class HFloatRtlSignal(RtlSignal):

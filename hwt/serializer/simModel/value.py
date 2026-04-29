@@ -22,6 +22,7 @@ from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t, bitsBitOp__lshr, \
     bitsBitOp__rol, bitsBitOp__ror, bitsBitOp__ashr
 
+
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
 
@@ -50,6 +51,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         HwtOps.BitsAsSigned,
         HwtOps.BitsAsUnsigned,
         HwtOps.BitsAsVec,
+        HwtOps.BitsFlagCast,
     }
 
     def is_suitable_for_const_extract(self, val: HConst):
@@ -114,8 +116,9 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator
-
-        if o == HwtOps.EQ:
+        if o == HwtOps.BitsFlagCast:
+            return self.as_hdl(op.operands[0])
+        elif o == HwtOps.EQ:
             op0 = self.as_hdl_Value(ops[0])
             op1 = self.as_hdl_Value(ops[1])
             return hdl_call(hdl_getattr(op0, "_eq"), [op1, ])
@@ -162,7 +165,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                      "_sext" if o == HwtOps.SEXT else \
                      "_trunc"
             return hdl_call(hdl_getattr(v, fnName), [op1, ])
-            
+
         elif o == HwtOps.EQ:
             return hdl_call(hdl_getattr(self.as_hdl_Value(ops[0]), "_eq"),
                             [self.as_hdl_Value(ops[1]), ])

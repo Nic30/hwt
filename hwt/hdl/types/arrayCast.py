@@ -100,13 +100,15 @@ def reinterpret_HArray_to_HArray(typeFrom: HArray, sigOrConst: HArrayAnyValue, a
 
 
 @internal
-def reinterpret_HArray_to_HStruct(typeFrom: HArray, sigOrConst: HArrayAnyValue, structT):
+def reinterpret_HArray_to_HStruct(typeFrom: HArray, sigOrConst: HArrayAnyValue, structT: HStruct):
+    if typeFrom.bit_length() != structT.bit_length():
+        raise TypeConversionErr(typeFrom, structT, sigOrConst)
     as_bits = sigOrConst._reinterpret_cast(HBits(typeFrom.bit_length()))
     return as_bits._reinterpret_cast(structT)
 
 
 @internal
-def reinterpret_cast_HArray(typeFrom: HArray, sigOrConst: HArrayAnyValue, toType):
+def reinterpret_cast_HArray(typeFrom: HArray, sigOrConst: HArrayAnyValue, toType: HdlType):
     if isinstance(toType, HBits):
         return reinterptet_HArray_to_HBits(typeFrom, sigOrConst, toType)
     elif isinstance(toType, HArray):

@@ -21,7 +21,6 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr, \
     SignalDriverErrType
 
-
 OperatorCaheKeyType = Union[
     Tuple['OpDefinition', int, object],
     Tuple['OpDefinition', int, object, object],
@@ -246,6 +245,14 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
         """
         return self._dtype.auto_cast_RtlSignal(self, toType)
 
+    def _explicit_cast(self, toType: HdlType):
+        """
+        Cast value or signal of this type to another friendly type.
+
+        :param toType: instance of HdlType to cast into
+        """
+        return self._dtype.explicit_cast_RtlSignal(self, toType)
+
     def _reinterpret_cast(self, toType: HdlType):
         """
         Cast value or signal of this type to another type of same size.
@@ -322,7 +329,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
                         indexes.append(d.operands[1])
                     else:
                         raise HwtSyntaxError("can not assign to a static value", indexedOn)
-                
+
                 elif op == HwtOps.TRUNC:
                     indexedOn = d.operands[0]
                     width = int(d.operands[1])

@@ -1,6 +1,6 @@
 from typing import Union, Optional
 
-from hdlConvertorAst.hdlAst import HdlValueInt
+from hdlConvertorAst.hdlAst._bases import iHdlObj
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType, \
     HDLCONVERTAST_OPS_SHIFT_AND_ROT, HdlOthers
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
@@ -12,7 +12,8 @@ from hwt.doc_markers import internal
 from hwt.hdl.commonConstants import b0, b1
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
-from hwt.hdl.operatorDefs import HwtOps, CAST_OPS, HOperatorDef
+from hwt.hdl.operatorDefs import HwtOps, CAST_OPS, HOperatorDef, COMPARE_OPS, \
+    EVENT_OPS, BITWISE_OPS
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bitConstFunctions import AnyHBitsValue
@@ -28,14 +29,53 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from pyMathBitPrecise.bit_utils import ctlz, get_bit
 
 
+@staticmethod
+def getOperandOperatorWithBitsFlagCastIgnore(operand: Union[RtlSignal, HConst]) -> Optional[HOperatorDef]:
+    while True:
+        if isinstance(operand, RtlSignal) and operand._isUnnamedExpr:
+            try:
+                d = operand.singleDriver()
+            except SignalDriverErr:
+                return operand, None
+
+            op = d.operator
+            if op == HwtOps.BitsFlagCast:
+                # look trough BitsFlagCast
+                operand = d.operands[0]
+                continue
+
+            return operand, op
+        else:
+            return operand, None
+
+# @staticmethod
+# def getOperandOperatorWithoutAnyCast(operand: Union[RtlSignal, HConst]) -> Optional[HOperatorDef]:
+#    while True:
+#        if isinstance(operand, RtlSignal) and operand._isUnnamedExpr:
+#            try:
+#                d = operand.singleDriver()
+#            except SignalDriverErr:
+#                return operand, None
+#
+#            op = d.operator
+#            if op in CAST_OPS:
+#                # look trough BitsFlagCast
+#                operand = d.operands[0]
+#                continue
+#
+#            return operand, op
+#        else:
+#            return operand, None
+
+
 @internal
 def isResultOfTypeConversionForIndex(sig: RtlSignal):
     if len(sig._rtlDrivers) != 1:
         return False
 
-    if sig._isUnnamedExpr:
-        d = sig.singleDriver()
-        return d.operator not in (HwtOps.INDEX, HwtOps.TRUNC)
+    sig, sigOp = getOperandOperatorWithBitsFlagCastIgnore(sig)
+    if sigOp is not None and sigOp not in (HwtOps.INDEX, HwtOps.TRUNC):
+        return True
 
     return False
 
@@ -72,10 +112,8 @@ def matchZextOrSextArg(op: Union[RtlSignal, HConst]) -> tuple[Optional[AnyHBitsV
         except SignalDriverErr:
             return None, None
 
-        casts = []
         # drop unnecessary casts
         while isinstance(d, HOperatorNode) and d.operator in CAST_OPS:
-            casts.append(d.operator)
             d = d.operands[0].singleDriver()
 
         if isinstance(d, HOperatorNode) and d.operator in (HwtOps.ZEXT, HwtOps.SEXT):
@@ -116,8 +154,8 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         HwtOps.BitsAsUnsigned: ToHdlAstVhdl2008_types.UNSIGNED,
         HwtOps.BitsAsVec: ToHdlAstVhdl2008_types.STD_LOGIC_VECTOR,
     }
-
-    RESIZE = HdlValueId("RESIZE", obj=LanguageKeyword())
+    # https://opensource.ieee.org/vasg/Packages/-/blob/586ebeb9c3fcefd1ac9a07ce749d0e01e678503e/ieee/numeric_std.vhdl#L1101
+    RESIZE = HdlValueId("RESIZE", obj=LanguageKeyword())  # only UNRESOLVED_SIGNED/UNRESOLVED_UNSIGNED
     SHIFT_LEFT = HdlValueId("SHIFT_LEFT", obj=LanguageKeyword())
     SHIFT_RIGHT = HdlValueId("SHIFT_RIGHT", obj=LanguageKeyword())
     ROTATE_LEFT = HdlValueId("ROTATE_LEFT", obj=LanguageKeyword())
@@ -131,6 +169,8 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         HdlOpType.ROL: (ROTATE_LEFT, False),  # rotate left
         HdlOpType.ROR: (ROTATE_RIGHT, False),  # rotate right
     }
+    OPS_BOOLEAN_RESULT = {*COMPARE_OPS, *EVENT_OPS}
+    OPS_BOOLEAN_RESULT_IF_BOOLEAN_OPS = BITWISE_OPS
 
     @internal
     def _tmp_var_for_ternary(self, val: RtlSignal) -> RtlSignal:
@@ -179,13 +219,45 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             extra_args=(val, HdlOpType.MAP_ASSOCIATION))
         return o
 
-    def _as_Bits(self, val: Union[RtlSignal, HConst]):
-        if val._dtype == BOOL:
+    @internal
+    def _analyze_boolean(self, val: AnyHBitsValue) -> bool:
+        if isinstance(val, HConst):
+            return val._dtype == BOOL
+        else:
+            _isBooleanAnalysis = self._isBooleanAnalysis
+            isBool = _isBooleanAnalysis.get(val)
+            if isBool is not None:
+                return isBool
+            _val, op = getOperandOperatorWithBitsFlagCastIgnore(val)
+            isBool = _isBooleanAnalysis.get(_val)
+            if isBool is None:
+                # the val was not been analyzed yet
+                if op is None:
+                    # this has not any operator, so native type has to be used
+                    isBool = _val._dtype == BOOL
+                else:
+                    if op in self.OPS_BOOLEAN_RESULT:
+                        isBool = True
+                    elif op in self.OPS_BOOLEAN_RESULT_IF_BOOLEAN_OPS:
+                        d = _val.singleDriver()
+                        isBool = all(self._analyze_boolean(operand) for operand in d.operands)
+                    else:
+                        isBool = False
+
+                _isBooleanAnalysis[val] = isBool
+                if val is not _val:
+                    _isBooleanAnalysis[_val] = isBool
+
+            return isBool
+
+    def _as_Bits(self, val: AnyHBitsValue) -> AnyHBitsValue:
+        if self._analyze_boolean(val):
             isNew, o = self.tmpVars.create_var_cached(
                 "tmpBool2std_logic_",
                 BIT,
                 postponed_init=True,
                 extra_args=(val, int, 1, 0))
+
             if isNew:
                 ifTrue, ifFalse = b1, b0
                 if_ = If(val)
@@ -195,12 +267,44 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                 if_._outputs.append(o)
                 o._rtlDrivers.append(if_)
                 self.tmpVars.finish_var_init(o)
+
             return o
+
         else:
             assert isinstance(val._dtype, HBits), val._dtype
             return val
 
-    def _as_Bits_vec(self, val: Union[RtlSignal, HConst]):
+    def _as_Bool(self, val: AnyHBitsValue) -> AnyHBitsValue:
+        if self._analyze_boolean(val):
+            return val
+        elif isinstance(val, HConst):
+            return BOOL.from_py(val.val, val.vld_mask)
+        else:
+            if val._dtype.bit_length() == 1:
+                op = HwtOps.EQ
+                op1 = b1
+
+                # drop negations
+                val, valOp = getOperandOperatorWithBitsFlagCastIgnore(val)
+                while valOp == HwtOps.NOT:
+                    val = val.singleDriver().operands[0]
+                    if op1 is b1:
+                        op1 = b0
+                    else:
+                        op1 = b1
+                    val, valOp = getOperandOperatorWithBitsFlagCastIgnore(val)
+
+                if val._dtype != BIT:
+                    # :note: case for force_vector=True
+                    op1 = val._dtype.from_py(int(op1))
+
+            else:
+                op = HwtOps.NE
+                op1 = val._dtype.from_py(0)
+
+            return HOperatorNode.withRes(op, (val, op1), BOOL)
+
+    def _as_Bits_vec(self, val: AnyHBitsValue) -> AnyHBitsValue:
         val = self._as_Bits(val)
         t = val._dtype
         if not t.force_vector and t.bit_length() == 1:
@@ -227,13 +331,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         #   (0=>x, 1=>y) & "0"
         isTernaryOp = False
         isArrayAggregateOp = False
+        operand, operandOperator = getOperandOperatorWithBitsFlagCastIgnore(operand)
         try:
-            if operand._isUnnamedExpr:
+            if operandOperator is not None:
                 d = operand._rtlDrivers[0]
-                o = d.operator
-                if o == HwtOps.TERNARY:
+                if operandOperator == HwtOps.TERNARY:
                     isTernaryOp = True
-                elif o == HwtOps.SEXT or o == HwtOps.ZEXT:
+                elif operandOperator == HwtOps.SEXT or operandOperator == HwtOps.ZEXT:
                     op0T = d.operands[0]._dtype
                     if op0T.signed is None and op0T.bit_length() == 1 and not op0T.force_vector:
                         # :note: == if this is not SEXT/ZEXT implemented using VHDL resize()
@@ -250,20 +354,15 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
 
         return self.as_hdl(operand)
 
-    def apply_cast(self, t: HdlValueId, op):
+    def apply_cast(self, t: HdlValueId, op: iHdlObj):
         return hdl_call(t, [op, ])
 
-    def _wrapConcatInTmpVariable(self, op):
-        if isinstance(op, RtlSignalBase) and op._isUnnamedExpr:
-            # if left operand is concatenation and this is not concatenation we must extract it as tmp variable
-            # because VHDL would not be able to resolve type of concatenated signal otherwise
-            try:
-                d = op.singleDriver()
-            except SignalDriverErr:
-                d = None
-
-            if d is not None and isinstance(d, HOperatorNode) and d.operator is HwtOps.CONCAT:
-                _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
+    def _wrapConcatInTmpVariable(self, op: Union[RtlSignalBase, HConst]):
+        op, opOperator = getOperandOperatorWithBitsFlagCastIgnore(op)
+        # if left operand is concatenation and this is not concatenation we must extract it as tmp variable
+        # because VHDL would not be able to resolve type of concatenated signal otherwise
+        if opOperator is HwtOps.CONCAT:
+            _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
 
     def _as_hdl_HOperatorNode_mulWithTrunc(self, op: HOperatorNode,
@@ -330,7 +429,7 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         signedForVhdlResize = o == HwtOps.SEXT  # :note: VHDL std_numeric.resize supports only signed or unsinged
         if o == HwtOps.TRUNC:
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
-                _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+                _, op0 = self.tmpVars.create_var_cached("tmpTruncLhs_", op0._dtype, def_val=op0)
 
             if resultSign is None:
                 _op0 = self.as_hdl_operand(self._as_Bits(op0))
@@ -380,6 +479,8 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             res = hdl_call(self.RESIZE, [_op0, _op1])
 
             if resultSign != signedForVhdlResize:
+                # operand of cast must be of fixed width, that is why the tmp variable has to be created
+                # _, res = self.tmpVars.create_var_cached("tmpResizeCast_", res._dtype, def_val=res)
                 res = self.apply_cast(self._sign_flag_to_cast_id[resultSign], res)
 
         return res
@@ -388,12 +489,13 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         ops = op.operands
         op0, op1 = ops
         if isinstance(op0, RtlSignalBase) and isResultOfTypeConversionForIndex(op0):
-            _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+            _, op0 = self.tmpVars.create_var_cached("tmpIndexLhs_", op0._dtype, def_val=op0)
         if isinstance(op1, RtlSignalBase) and isResultOfTypeConversionForIndex(op1):
-            _, op1 = self.tmpVars.create_var_cached("tmpIndexTypeConv_", op1._dtype, def_val=op1)
+            _, op1 = self.tmpVars.create_var_cached("tmpIndexRhs_", op1._dtype, def_val=op1)
 
         # if the op0 is not signal or other index index operator it is extracted
         # as tmp variable
+        assert not self._analyze_boolean(op0), op0
         op0 = self.as_hdl_operand(op0)
         op0_t = ops[0]._dtype
         if isinstance(op0_t, HBits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
@@ -443,9 +545,22 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
         return res
 
     def as_hdl_HOperatorNode(self, op: HOperatorNode):
+        """
+        :note: The STD_LOGIC/BOOLEAN cast is not performed for result
+               but it is performed for operands.
+        """
         o = op.operator
+        _o = o.hdlConvertoAstOp
+        if _o is not None:
+            # handle cases with overrie
+            vhldFn, isArithmetical = self.HDLCONVERTORAST_TO_VHDL.get(_o, (None, None))
+            if vhldFn is not None:
+                return self.as_hdl_HOperatorNode_asVhdlFn(op, vhldFn, isArithmetical)
+            o = _o
 
-        if o == HwtOps.INDEX:
+        if o == HwtOps.BitsFlagCast:
+            return self.as_hdl(op.operands[0])
+        elif o == HwtOps.INDEX:
             return self.as_hdl_HOperatorNode_INDEX(op)
         elif o == HwtOps.TRUNC or o == HwtOps.SEXT or o == HwtOps.ZEXT:
             return self.as_hdl_HOperatorNode_TRUNC_SEXT_ZEXT(op, o)
@@ -453,24 +568,26 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
             return self.as_hdl_HOperatorNode_TERNARY(op)
         else:
             ops = op.operands
+            # handle casts
             _o = self._cast_ops.get(o, None)
             if _o is not None:
                 op0 = ops[0]
                 op0 = self._as_Bits_vec(op0)
-                if isinstance(op0, RtlSignalBase) and op0._isUnnamedExpr:
+                op0, op0Op = getOperandOperatorWithBitsFlagCastIgnore(op0)
+                if op0Op is not None:
+                    # operand of cast must be of fixed width, that is why the tmp variable has to be created
                     _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
 
-            _o = o.hdlConvertoAstOp
-            if _o is None:
-                o = self.op_transl_dict[o]
-            else:
-                vhldFn, isArithmetical = self.HDLCONVERTORAST_TO_VHDL.get(_o, (None, None))
-                if vhldFn is not None:
-                    return self.as_hdl_HOperatorNode_asVhdlFn(op, vhldFn, isArithmetical)
-                o = _o
+            o = self.op_transl_dict[o]
+
+            resultIsBool = self._analyze_boolean(op.result)
+            if resultIsBool:
+                if o in self.OPS_BOOLEAN_RESULT_IF_BOOLEAN_OPS:
+                    ops = tuple(self._as_Bool(_op) for _op in op.operands)
 
             if len(ops) == 2:
+                # handle binary operators with something special
                 res_t = op.result._dtype
                 op0, op1 = ops
 
@@ -479,22 +596,26 @@ class ToHdlAstVhdl2008_ops(ToHdlAstVhdl2008_types):
                     op0, op1 = matchFullWidthMul(op0, op1)
 
                 if o != HdlOpType.CONCAT:
+                    # vhdl does not support a & (b & c)
                     op0 = self._wrapConcatInTmpVariable(op0)
                     op1 = self._wrapConcatInTmpVariable(op1)
 
-                if isinstance(res_t, HBits) and res_t != BOOL:
-                    op0 = self._as_Bits(op0)
-                    op1 = self._as_Bits(op1)
+                if not resultIsBool:
+                    if isinstance(op0._dtype, HBits) and isinstance(res_t, HBits):
+                        op0 = self._as_Bits(op0)
+                        op1 = self._as_Bits(op1)
 
                 _op0 = self.as_hdl_operand(op0)
                 _op1 = self.as_hdl_operand(op1)
-                if o == HdlOpType.EQ and isinstance(_op0, HdlValueId) and\
-                        (isinstance(_op0.obj._dtype, HBits) and self._expandBitsOperandType(_op0.obj) == BOOL) and\
-                        isinstance(_op1, HdlValueInt) and\
-                        _op1.val == 1:
-                    # drop unnecessary casts
-                    return _op0
-                elif o == HdlOpType.MUL:
+                # if o == HdlOpType.EQ and isinstance(_op0, HdlValueId) and\
+                #        (isinstance(_op0.obj._dtype, HBits) and self._analyze_boolean(op0)) and\
+                #        isinstance(_op1, HdlValueInt) and\
+                #        _op1.val == 1:
+                #    # res = x = '1'
+                #    # drop unnecessary casts
+                #    return _op0
+                # el
+                if o == HdlOpType.MUL:
                     return self._as_hdl_HOperatorNode_mulWithTrunc(op, op0._dtype, op1._dtype, res_t, _op0, _op1)
                 else:
                     assert o not in HDLCONVERTAST_OPS_SHIFT_AND_ROT, (o, "shifts and rotations should have been handled sooner in this function")
