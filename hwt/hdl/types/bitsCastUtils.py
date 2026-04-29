@@ -1,9 +1,10 @@
 from typing import Union
 
 from hwt.hdl.types.bits import HBits
+from hwt.synthesizer.exceptions import TypeConversionErr
 
 
-class BitWidthErr(Exception):
+class BitWidthErr(TypeConversionErr):
     """
     Wrong bit width of signal/value
     """
@@ -32,7 +33,7 @@ def fitTo_t(what: Union["HBitsRtlSignal", "HBitsConst"], where_t: HBits,
         if not shrink:
             raise BitWidthErr()
 
-        return what[toWidth:]
+        return what._trunc(toWidth)
     else:
         if not extend:
             raise BitWidthErr()
