@@ -26,6 +26,8 @@ from pyMathBitPrecise.bits3t import _NOT_SPECIFIED, Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
 
+_SIGN_CAST_OPS = (HwtOps.BitsAsSigned, HwtOps.BitsAsUnsigned, HwtOps.BitsAsVec)
+
 
 class HBitsRtlSignal(RtlSignal):
 
@@ -41,6 +43,16 @@ class HBitsRtlSignal(RtlSignal):
         """
         if self._dtype.signed == signed:
             return self
+        # try reduce useless cast like ux._signed()._unsigned() -> ux
+        try:
+            d = self.singleDriver()
+        except SignalDriverErr:
+            d = None
+
+        if d is not None and isinstance(d, HOperatorNode):
+            if d.operator in _SIGN_CAST_OPS and d.operands[0]._dtype.signed is signed:
+                return d.operands[0]
+
         t = copy(self._dtype)
         t.signed = signed
         if t.signed is not None and t.bit_length() == 1:
