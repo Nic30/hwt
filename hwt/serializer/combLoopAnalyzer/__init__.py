@@ -10,11 +10,15 @@ from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
+from hwt.hwModule import HwModule
 from hwt.serializer.combLoopAnalyzer.tarjan import StronglyConnectedComponentSearchTarjan
 from hwt.serializer.resourceAnalyzer.analyzer import ResourceAnalyzer
 from hwt.synthesizer.componentPath import ComponentPath
-from hwt.hwModule import HwModule
 from ipCorePackager.constants import DIRECTION
+
+
+def freeze_set_of_sets(obj):
+    return frozenset(map(frozenset, obj))
 
 
 def collect_comb_inputs(ctx, seen, input_signal, comb_inputs):
@@ -142,3 +146,16 @@ class CombLoopAnalyzer():
         for scc in scc_search.search_strongly_connected_components():
             if len(scc) > 1:
                 yield scc
+
+    @staticmethod
+    def check_comb_loops_in_SimTestCase(tc: "SimTestCase"):
+        s = CombLoopAnalyzer()
+        s.visit_HwModule(tc.dut)
+        comb_loops = freeze_set_of_sets(s.report())
+        # for loop in comb_loops:
+        #     print(10 * "-")
+        #     for s in loop:
+        #         print(s.resolve()[1:])
+
+        tc.assertEqual(comb_loops, frozenset())
+
