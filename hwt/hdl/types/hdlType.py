@@ -63,12 +63,18 @@ class HdlType():
             castFn = self.get_auto_cast_HConst_fn()
             self._auto_cast_HConst_fn = castFn
 
+        castErr = None
         try:
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+
+        try:
+            return toType._reverse_auto_cast_HConst(v, self)
         except TypeConversionErr:
             pass
 
-        return toType._reverse_auto_cast_HConst(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     def auto_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
         """
@@ -83,12 +89,18 @@ class HdlType():
             castFn = self.get_auto_cast_RtlSignal_fn()
             self._auto_cast_RtlSignal_fn = castFn
 
+        castErr = None
         try:
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+
+        try:
+            return toType._reverse_auto_cast_RtlSignal(v, self)
         except TypeConversionErr:
             pass
 
-        return toType._reverse_auto_cast_RtlSignal(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     def explicit_cast_HConst(self, v: "HConst", toType: Self) -> "HConst":
         """
@@ -106,12 +118,18 @@ class HdlType():
             castFn = self.get_explicit_cast_HConst_fn()
             self._explicit_cast_HConst_fn = castFn
 
+        castErr = None
         try:
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+
+        try:
+            return toType._reverse_explicit_cast_HConst(v, self)
         except TypeConversionErr:
             pass
 
-        return toType._reverse_explicit_cast_HConst(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     def explicit_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
         """
@@ -129,12 +147,18 @@ class HdlType():
             castFn = self.get_explicit_cast_RtlSignal_fn()
             self._explicit_cast_RtlSignal_fn = castFn
 
+        castErr = None
         try:
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+
+        try:
+            return toType._reverse_explicit_cast_RtlSignal(v, self)
         except TypeConversionErr:
             pass
 
-        return toType._reverse_reinterpret_cast_RtlSignal(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     def reinterpret_cast_HConst(self, v: "HConst", toType: Self) -> "HConst":
         """
@@ -151,13 +175,18 @@ class HdlType():
         except AttributeError:
             castFn = self.get_reinterpret_cast_HConst_fn()
             self._reinterpret_cast_HConst_fn = castFn
-
+        castErr = None
         try:
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+
+        try:
+            return toType._reverse_reinterpret_cast_HConst(v, self)
         except TypeConversionErr:
             pass
 
-        return toType._reverse_reinterpret_cast_HConst(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     def reinterpret_cast_RtlSignal(self, v: "RtlSignal", toType: Self) -> "RtlSignal":
         """
@@ -175,13 +204,18 @@ class HdlType():
             castFn = self.get_reinterpret_cast_RtlSignal_fn()
             self._reinterpret_cast_RtlSignal_fn = castFn
 
+        castErr = None
         try:
             # call _reinterpret_cast_RtlSignal_fn to cast this type to toType
             return castFn(self, v, toType)
+        except TypeConversionErr as e:
+            castErr = e
+            pass
+        try:
+            return toType._reverse_reinterpret_cast_RtlSignal(v, self)
         except TypeConversionErr:
             pass
-
-        return toType._reverse_reinterpret_cast_RtlSignal(v, self)
+        raise castErr from castErr  # raise original exception from non-reverse cast
 
     # reverse casts which are doing the same thing but cast methods are implemented on dst type
     # :note: this is there to allow casting old types(self) to a new types(toType)
