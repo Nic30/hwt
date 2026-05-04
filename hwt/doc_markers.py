@@ -13,3 +13,10 @@ def hwt_expr_producer(fn):
     For documentation purposes it specifies that the function produces hwt expression.
     """
     return fn
+
+def hwt_stm_producer(fn):
+    """
+    Decorator which does not affect functionality.
+    For documentation purposes it specifies that the function produces hwt statement list.
+    """
+    return fn
