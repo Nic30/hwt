@@ -19,6 +19,24 @@ class HStream(HdlType):
         before valid data on stream (invalid bytes means the bytes
         which does not have bit validity set, e.g. Axi4Stream keep=0b10 -> offset=1
         )
+        
+    :note: Endianity of the field does not have effect on parsing/deparsing algorithm
+    
+    .. code-block::text
+        Stream with little endian field
+        0 x x
+        x 2 1
+        
+        append from right
+        2 1  0
+
+        
+        Stream with big endian field
+        2 x x
+        x 0 1
+        
+        append from right
+        0 1  2
     """
 
     def __init__(self, element_t,
@@ -33,7 +51,7 @@ class HStream(HdlType):
             frame_len = (frame_len, frame_len)
         self.len_min, self.len_max = frame_len
         if start_offsets is None:
-            start_offsets = (0, )
+            start_offsets = (0,)
         self.start_offsets = tuple(start_offsets)
 
     def bit_length(self):
@@ -73,7 +91,7 @@ class HStream(HdlType):
             self.__class__.__name__,
             (self.len_min, self.len_max),
             self.start_offsets,
-            self.element_t.__repr__(indent=indent+1,
+            self.element_t.__repr__(indent=indent + 1,
                                     withAddr=withAddr,
                                     expandStructs=expandStructs),
         )
