@@ -90,7 +90,7 @@ class HConst(Generic[T]):
         Cast HConst back to pythonic value like int/float/list[int] etc.
         """
         raise NotImplementedError(
-            "to_py method is not implemented for", cls)
+            "to_py method is not implemented for", self.__class__)
 
     def __eq__(self, other):
         if isinstance(other, HConst):
