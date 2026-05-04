@@ -383,35 +383,50 @@ def bitsArithOp(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatib
     otherIsHConst = isinstance(other, HConst)
 
     t0 = self._dtype
+    t1 = other._dtype
+    signed = t0.signed
+    # Promote sign from one of argument if necessary
+    if signed != t1.signed:
+        if not t1.strict_sign:
+            if not t0.strict_sign:
+                if t0.signed is None or (not t0.signed and t1.signed is not None):
+                    # priority None < False < True
+                    signed = t1.signed
+                else:
+                    signed = t0.signed
+            else:
+                signed = t0.signed
+        elif not t0.strict_sign:
+            signed = t1.signed
+        elif bool(t0.signed) != bool(t1.signed):
+            raise TypeError("incompatible sign", self._dtype, op, other._dtype, self, other)
+        elif t1.signed is False:
+            signed = False
+    
+    # Cast not-signed to unsigned
     if t0.signed is None:
         self = self._unsigned()
         t0 = self._dtype
 
-    t1 = other._dtype
     if t1.signed is None:
         other = other._unsigned()
         t1 = other._dtype
+
     self, other = HBits_auto_cast_operands_to_same_type(self, other, op)
 
     if selfIsHConst and otherIsHConst:
-        return bitsArithOp__val(self, other, op._evalFn)
+        return bitsArithOp__val(self, other, op._evalFn)._cast_sign(signed)
     else:
-        if self._dtype.signed is None:
-            self = self._unsigned()
-
         if op in (HwtOps.ADD, HwtOps.SUB):
             if otherIsHConst and other._is_full_valid() and int(other) == 0:
                 # x +- 0 -> x
-                return self
-            elif op  == HwtOps.ADD and selfIsHConst and self._is_full_valid() and int(self) == 0:
+                return self._cast_sign(signed)
+            elif op == HwtOps.ADD and selfIsHConst and self._is_full_valid() and int(self) == 0:
                 # 0 + x -> x
-                return other._auto_cast(t0)
-
-        else:
-            raise TypeError(self, op, other)
+                return other._auto_cast(t0)._cast_sign(signed)
 
         o = HOperatorNode.withRes(op, [self, other], self._dtype)
-        return o._auto_cast(t0)
+        return o._explicit_cast(self._dtype)._cast_sign(signed)
 
 
 @internal
@@ -529,8 +544,6 @@ def bitsRem(self: AnyHBitsValue, selfIsHConst: bool, other: HBitsAnyCompatibleVa
         myT = self._dtype
         if self._dtype.signed is None:
             self = self._unsigned()
-
-
 
         if isinstance(other._dtype, HBits):
             s = other._dtype.signed
