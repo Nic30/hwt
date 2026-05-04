@@ -83,7 +83,7 @@ def HBits_auto_cast__RtlSignal_try_reinterpret_flags(curType: HBits, v: Union[Rt
     if curType == toType:
         return v
 
-    tWithSameFlagsAsDst = curType._createMutated(force_vector=toType.force_vector,
+    tWithSameFlagsAsDst = curType._createMutated(force_vector=toType.force_vector and toType.bit_length() == 1,
                                                  negated=toType.negated if allowNegateCast else NOT_SPECIFIED,
                                                  is_bigendian=toType.is_bigendian,
                                                  const=toType.const,
