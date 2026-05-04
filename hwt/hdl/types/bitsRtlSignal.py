@@ -389,7 +389,7 @@ class HBitsRtlSignal(RtlSignal):
             self = self._signed()
         o = HOperatorNode.withRes(HwtOps.MINUS_UNARY, [self], self._dtype)
         if needsCast:
-            return o._auto_cast(resT)
+            return o._reinterpret_cast(resT)
         else:
             return o
 
