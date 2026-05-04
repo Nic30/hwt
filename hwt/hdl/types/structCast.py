@@ -11,11 +11,14 @@ from hwt.hdl.types.struct import HStruct
 from hwt.hwIOs.std import HwIOSignal
 from hwt.mainBases import HwIOBase
 from hwt.mainBases import RtlSignalBase
+from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 @internal
 def hstruct_reinterpret_to_bits(self: HStruct, sigOrConst: Union[RtlSignalBase, HConst], toType: HdlType):
-    assert toType.bit_length() == self.bit_length()
+    if toType.bit_length() != self.bit_length():
+        raise TypeConversionErr("reinterptret_cast to a type of a different bit_lenght",
+                                toType.bit_length(), '->', self.bit_length(), self, toType)
     parts = []
     for f in self.fields:
         if f.name is None:
