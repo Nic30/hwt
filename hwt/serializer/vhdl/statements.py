@@ -9,12 +9,14 @@ from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import HBits
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.sliceConst import HSliceConst
 from hwt.hdl.variables import HdlSignalItem
 from hwt.mainBases import RtlSignalBase
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.ops import getOperandOperatorWithBitsFlagCastIgnore
+from hwt.hdl.operator import HOperatorNode
+from hwt.hdl.operatorDefs import HwtOps
 
 
 class ToHdlAstVhdl2008_statements():
@@ -29,7 +31,8 @@ class ToHdlAstVhdl2008_statements():
                     i = i.__copy__()
                 dst = dst[i]
 
-        src = a.src
+        src, _ = getOperandOperatorWithBitsFlagCastIgnore(a.src)
+        dst, _ = getOperandOperatorWithBitsFlagCastIgnore(dst)
         if self._analyze_boolean(dst):
             dst_t = BOOL
         else:
@@ -38,52 +41,48 @@ class ToHdlAstVhdl2008_statements():
             src_t = BOOL
         else:
             src_t = src._dtype
+
         if dst_t == src_t:
             correct = True
         else:
-            src, _ = getOperandOperatorWithBitsFlagCastIgnore(src)
-            if self._analyze_boolean(src):
-                src_t = BOOL
-            else:
-                src_t = src._dtype
-
-            if dst_t == src_t:
-                correct = True
-            else:
-                correct = False
-                src = a.src
-                if isinstance(dst_t, HBits) and isinstance(src_t, HBits):
-                    # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
-                    while not (dst_t == src_t):
-                        # while is used because the casting could be required multiple times
-                        correct = False
-                        if dst_t.bit_length() == src_t.bit_length() == 1:
-                            if dst_t.force_vector and not src_t.force_vector:
-                                dst = dst[0]
-                                correct = True
-                            elif not dst_t.force_vector and src_t.force_vector:
-                                src = src[0]
-                                correct = True
-                            elif src_t == BOOL:
-                                src = src._ternary(b1, b0)
-                                correct = True
-                        elif not src_t.strict_width:
-                            if isinstance(src, HConst):
-                                src = copy(src)
-                                if a.indexes:
-                                    raise NotImplementedError()
-
-                                src._dtype = dst_t
-                                correct = True
-                            else:
+            correct = False
+            if isinstance(dst_t, HBits) and isinstance(src_t, HBits):
+                # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
+                while not (dst_t == src_t):
+                    # while is used because the casting could be required multiple times
+                    correct = False
+                    if dst_t.bit_length() == src_t.bit_length() == 1:
+                        if dst_t.force_vector and not src_t.force_vector:
+                            dst = dst[0]
+                            dst_t = dst_t._createMutated(force_vector=False)
+                            correct = True
+                        elif not dst_t.force_vector and src_t.force_vector:
+                            src = src[0]
+                            src_t = src_t._createMutated(force_vector=False)
+                            correct = True
+                        elif src_t == BOOL:
+                            src = src._ternary(b1, b0)
+                            src_t = BIT
+                            correct = True
+                        elif dst_t == BOOL:
+                            src = HOperatorNode.withRes(HwtOps.EQ, (src, src_t.from_py(1)), BOOL)
+                            src_t = BOOL
+                            correct = True
+                    elif not src_t.strict_width:
+                        if isinstance(src, HConst):
+                            src = copy(src)
+                            if a.indexes:
                                 raise NotImplementedError()
 
-                        src_t = src._dtype
-                        dst_t = dst._dtype
+                            src._dtype = dst_t
+                            src_t = src._dtype
+                            correct = True
+                        else:
+                            raise NotImplementedError()
 
-                        if not correct:
-                            # automatic type cast can not be performed
-                            break
+                    if not correct:
+                        # automatic type cast can not be performed
+                        break
         if correct:
             src = self.as_hdl(src)
             hdl_a = HdlStmAssign(src, self.as_hdl(dst))
