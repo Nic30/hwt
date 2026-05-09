@@ -51,6 +51,11 @@ def storeToRamMaskedByAddress(ram: dict[int, Union[tuple[int, int], HBitsConst]]
                               data: Union[int, HBitsConst],
                               bitmask: Union[int, HBitsConst],
                               isInHBits=False):
+    """
+    :param isInHBits: switches between implementation for int and HBitsConst type for data/bitmask
+    :param wordAlignAddrBitCnt: number of lsb bits which are discarded during conversion of address
+        to ram index and which are used to address inside of the ram word
+    """
     # print(f"storing a:{address:08x}: ({data:064x}, {bitmask:064x}) {bit_mask_to_byte_mask_int(bitmask, 256):08x}")
     alignShift = address & mask(wordAlignAddrBitCnt)
     index0 = address >> wordAlignAddrBitCnt
@@ -89,7 +94,7 @@ def storeToRamMaskedByAddress(ram: dict[int, Union[tuple[int, int], HBitsConst]]
                 data1 = data >> wordBitCnt
             storeToRamMaskedByIndex(ram, index0 + 1, data1, bitmask1, isInHBits=isInHBits)
     else:
-        storeToRamMaskedByIndex(ram, index0, data, bitmask)
+        storeToRamMaskedByIndex(ram, index0, data, bitmask, isInHBits=isInHBits)
 
 
 HwIOBramPort_noClkAgent_requestTy = Union[
