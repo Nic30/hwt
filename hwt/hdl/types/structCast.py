@@ -36,11 +36,14 @@ def hstruct_reinterpret_to_bits(self: HStruct, sigOrConst: Union[RtlSignalBase, 
                     parts.append(pp)
                 continue
             elif not isinstance(part, (HConst, RtlSignalBase, HwIOBase)):
+                # pythonic value to HBits
                 part = f.dtype.from_py(part)
             elif not isinstance(part._dtype, toType.__class__):
+                # non-HBits to HBits
                 part = part._reinterpret_cast(toType.__class__(part._dtype.bit_length()))
-            # else add part as is
-            assert isinstance(part._dtype, HBits), part
+            else:
+                # else add part as is
+                assert isinstance(part._dtype, toType.__class__), part
 
         parts.append(part)
 
