@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable
 
 from hwt.synthesizer.rtlLevel.extract_part_drivers import RtlNetlistPassExtractPartDrivers
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers
@@ -17,13 +17,13 @@ class DummyPlatform():
     """
 
     def __init__(self):
-        self.beforeToRtl = []
-        self.beforeToRtlImpl = []
-        self.afterToRtlImpl = []
+        self.beforeToRtl: list[Callable[["HwModule"], None]] = []
+        self.beforeToRtlImpl: list[Callable[["HwModule"], None]] = []
+        self.afterToRtlImpl: list[Callable[["HwModule"], None]] = []
 
-        self.beforeHdlArchGeneration: List[RtlNetlistPass] = [
+        self.beforeHdlArchGeneration: list[RtlNetlistPass] = [
             RtlNetlistPassExtractPartDrivers(),
             RtlNetlistPassRemoveUnconnectedSignals(),
             RtlNetlistPassMarkVisibilityOfSignalsAndCheckDrivers(),
         ]
-        self.afterToRtl = []
+        self.afterToRtl: list[Callable[["HwModule"], None]] = []
