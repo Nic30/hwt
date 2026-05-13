@@ -11,7 +11,7 @@ from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.bitsCastUtils import fitTo_t, BitWidthErr
 from hwt.hdl.types.defs import INT
 from hwt.hdl.types.hdlType import HdlType, default_auto_cast_fn, \
-    default_explicit_cast_fn
+    default_explicit_cast_fn, default_reinterpret_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hwIOs.hwIOArray import HwIOArray
@@ -257,7 +257,7 @@ def HBits_reinterpret_cast__HConst(curType: HBits, v: HConst, toType: HdlType):
     elif isinstance(toType, HArray):
         return HBits_reinterpret_cast_to_Harray(v, toType)
 
-    return default_auto_cast_fn(curType, v, toType)
+    return default_reinterpret_cast_fn(curType, v, toType)
 
 
 @internal
@@ -282,4 +282,4 @@ def HBits_reinterpret_cast__RtlSignal(curType: HBits, v: RtlSignal, toType: HdlT
         elif isinstance(toType, HArray):
             return HBits_reinterpret_cast_to_Harray(v, toType)
 
-    return default_auto_cast_fn(curType, v, toType)
+    return default_reinterpret_cast_fn(curType, v, toType)
