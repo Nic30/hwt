@@ -20,10 +20,10 @@ from hwt.hdl.types.defs import INT, BIT, SLICE
 from hwt.hdl.types.sliceUtils import slice_to_HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.pyUtils.typingFuture import override
+from pyMathBitPrecise.bit_utils import to_signed
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
-from pyMathBitPrecise.bit_utils import to_signed
 
 
 class HBitsConst(HConst, Bits3val):
@@ -35,7 +35,7 @@ class HBitsConst(HConst, Bits3val):
     _SIGNED_FOR_CONCAT_RESULT = None
 
     @classmethod
-    def from_py(cls, typeObj, val, vld_mask=None) -> Self:
+    def from_py(cls, typeObj: HBits, val: Union[int, None, bytes, Self], vld_mask=None) -> Self:
         val, vld_mask = typeObj._normalize_val_and_mask(val, vld_mask)
         return cls(typeObj, val, vld_mask=vld_mask)
 
