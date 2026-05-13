@@ -17,7 +17,7 @@
 ## How HWT can help you?
 
 * The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog. It is checking for correctness and synthetisability and removing specific of HDLs.
-* The system level and HLS layer allows you to quickly build desing generators with advance optimisation techniques of your choice.
+* The system level and HLS layer allows you to quickly build desing generators with advanced optimisation techniques of your choice.
 * Simulator API and it's UVM simulation environment is just python object with C++ binding. This makes it easy to use while not sacrificing performance.
 * Rich type system can describe also data locality and packet features. This significantly simplifies configuration of component which are working with packets or any data over remote bus.
 * HWT is not compiler nor transpiler but it is actually a core library. It contains only necessary stuff and you can can modify/extend any part any time.
