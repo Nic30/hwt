@@ -350,7 +350,10 @@ class HBitsConst(HConst, Bits3val):
             vecSpec = "vec"
         else:
             vecSpec = ""
-
+        if t.is_bigendian:
+            beSpec = "be"
+        else:
+            beSpec = ""
         if b == 2:
             if bs.bits == 1:
                 base_char = ""
@@ -364,7 +367,7 @@ class HBitsConst(HConst, Bits3val):
             base_char = 'h'
         else:
             raise NotImplementedError(b)
-        return f"{signChar:s}{t.bit_length()}{vecSpec:s}'{base_char}{bs.val}"
+        return f"{signChar:s}{t.bit_length()}{vecSpec:s}{beSpec:s}'{base_char}{bs.val}"
 
     def __repr__(self):
         t = self._dtype
@@ -377,8 +380,12 @@ class HBitsConst(HConst, Bits3val):
             vecSpec = "vec"
         else:
             vecSpec = ""
+        if t.is_bigendian:
+            beSpec = "be"
+        else:
+            beSpec = ""
         v = to_signed(self.val, t.bit_length()) if t.signed else self.val
-        return (f"<{self.__class__.__name__:s} {typeDescrChar:s}{t.bit_length():d}{vecSpec:s}"
+        return (f"<{self.__class__.__name__:s} {typeDescrChar:s}{t.bit_length():d}{vecSpec:s}{beSpec:s}"
                 f" {v:d}{m:s}>")
 
 

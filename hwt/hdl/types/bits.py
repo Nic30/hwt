@@ -10,6 +10,8 @@ from pyMathBitPrecise.bits3t import Bits3t
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
 BITS_DEFAUTL_NEGATED = False
+BITS_DEFAUTL_IS_BIGENDIAN = False
+BITS_DEFAUTL_BYTE_WIDTH = 8
 
 
 class HBits(HdlType, Bits3t):
@@ -24,6 +26,9 @@ class HBits(HdlType, Bits3t):
         This utitilty is there to allow users to write code agnostic
         to signal negation. For example for reset and reset_n_isOn() check can be used
         to resolve if reset is activated.
+    :ivar is_bigendian: if True the value is threated as big endian
+        (byte 0 the most significant) this does not affect
+        the direction of bit range (to/downto)
     :ivar ~.strict_width: if True width can not be auto_casted (in operators/assignment/...)
     :ivar ~.strict_sign: same thing as strict_width just for signed/unsigned
 
@@ -62,11 +67,16 @@ class HBits(HdlType, Bits3t):
                  signed:Literal[None, True, False]=BITS_DEFAUTL_SIGNED,
                  force_vector:bool=BITS_DEFAUTL_FORCEVECTOR,
                  negated:bool=BITS_DEFAUTL_NEGATED,
+                 is_bigendian:bool=BITS_DEFAUTL_IS_BIGENDIAN,
+                 byte_width: int=8,
                  name:Optional[str]=None,
                  const:bool=False,
                  strict_sign:bool=True,
                  strict_width:bool=True):
+        self.byte_width = byte_width
+        assert not is_bigendian or bit_length % byte_width == 0, ("bigendian requires bit_length to multiple of byte_width", bit_length)
         self.negated = negated
+        self.is_bigendian = is_bigendian
         self.strict_sign = strict_sign
         self.strict_width = strict_width
         HdlType.__init__(self, const=const)
@@ -81,6 +91,8 @@ class HBits(HdlType, Bits3t):
                  signed:Literal[None, True, False]=NOT_SPECIFIED,
                  force_vector:bool=NOT_SPECIFIED,
                  negated:bool=NOT_SPECIFIED,
+                 is_bigendian=NOT_SPECIFIED,
+                 byte_width=NOT_SPECIFIED,
                  name:Optional[str]=NOT_SPECIFIED,
                  const:bool=NOT_SPECIFIED,
                  strict_sign:bool=NOT_SPECIFIED,
@@ -97,6 +109,10 @@ class HBits(HdlType, Bits3t):
             force_vector = self.force_vector
         if negated is NOT_SPECIFIED:
             negated = self.negated
+        if is_bigendian is NOT_SPECIFIED:
+            is_bigendian = self.is_bigendian
+        if byte_width is NOT_SPECIFIED:
+            byte_width = self.byte_width
         if name is NOT_SPECIFIED:
             name = None
         if const is NOT_SPECIFIED:
@@ -111,6 +127,8 @@ class HBits(HdlType, Bits3t):
             signed=signed,
             force_vector=force_vector,
             negated=negated,
+            is_bigendian=is_bigendian,
+            byte_width=byte_width,
             name=name,
             const=const,
             strict_sign=strict_sign,
@@ -121,7 +139,9 @@ class HBits(HdlType, Bits3t):
         return Bits3t.__eq__(self, other) and \
              isinstance(other, self.__class__) and \
              self.const == other.const and \
-             self.negated == other.negated
+             self.negated == other.negated and \
+             self.is_bigendian == other.is_bigendian and \
+             self.byte_width == other.byte_width
     
     @internal
     def domain_size(self):
@@ -198,6 +218,8 @@ class HBits(HdlType, Bits3t):
         return hash((Bits3t.__hash__(self),
                      self.const,
                      self.negated,
+                     self.is_bigendian,
+                     self.byte_width,
                      self.strict_sign,
                      self.strict_width,))
 
@@ -206,10 +228,12 @@ class HBits(HdlType, Bits3t):
              isinstance(other, self.__class__) and \
              self.const == other.const and \
              self.negated == other.negated and \
+             self.is_bigendian == other.is_bigendian and \
+             self.byte_width == other.byte_width and \
              self.strict_sign == other.strict_sign and \
              self.strict_width == other.strict_width
 
-    def __repr__(self, indent=0, withAddr=None, expandStructs=False):
+    def __repr__(self, indent=0, withAddr=None, expandStructs=False, minify=False) -> str:
         """
         :param indent: number of indentation
         :param withAddr: if is not None is used as a additional
@@ -230,6 +254,12 @@ class HBits(HdlType, Bits3t):
 
         if self.negated:
             constr.append("n")
+
+        if self.is_bigendian:
+            constr.append("BE")
+
+        if self.byte_width != BITS_DEFAUTL_BYTE_WIDTH:
+            constr.append(f"byte_width={self.byte_width:d}")
 
         if self.const:
             constr.append("const")
