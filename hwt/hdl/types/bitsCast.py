@@ -21,7 +21,7 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.vectorUtils import iterBits
-from pyMathBitPrecise.bit_utils import set_bit_range, mask
+from pyMathBitPrecise.bit_utils import set_bit_range, mask, reverse_byte_order
 
 
 @internal
@@ -53,9 +53,6 @@ def HBits_auto_cast__HConst(curType: HBits, val: "HBitsConst", toType: HdlType):
                 new_m = set_bit_range(val.vld_mask, w_from, w_to - w_from, extra_mask_bits)
             val = toType.from_py(val.val, new_m)
 
-        if curType.is_bigendian != toType.is_bigendian:
-            raise NotImplementedError(curType, '->', toType)
-
         if val._dtype != toType:
             # sign and width checked, only name, strict_* flags can be different
             val = toType._from_py(val.val, val.vld_mask)
@@ -82,6 +79,9 @@ def HBits_auto_cast__RtlSignal_try_reinterpret_flags(curType: HBits, v: Union[Rt
 
     if curType == toType:
         return v
+
+    if curType.is_bigendian != toType.is_bigendian:
+        v = reverse_byte_order(v)
 
     tWithSameFlagsAsDst = curType._createMutated(force_vector=toType.force_vector and toType.bit_length() == 1,
                                                  negated=toType.negated if allowNegateCast else NOT_SPECIFIED,

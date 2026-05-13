@@ -198,7 +198,7 @@ class HwtOps():
     BitsAsUnsigned = HOperatorDef(bitsAsUnsignedFn, allowsAssignTo=True)
     BitsAsVec = HOperatorDef(bitsAsVec, allowsAssignTo=True)
     BitsFlagCast = HOperatorDef(bitsAsVec, allowsAssignTo=True)
-    # :note: BitsFlagCast is used to change negated, stric_width, strict_sign, is_bigendian flags 
+    # :note: BitsFlagCast is used to change negated, stric_width, strict_sign flags 
     #        internally but it does not have effect on HDL
 
 for a_name in dir(HwtOps):
