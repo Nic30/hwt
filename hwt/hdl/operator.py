@@ -16,7 +16,7 @@ def getCtxFromOps(operands: Sequence):
     for o in operands:
         if isinstance(o, RtlSignalBase):
             return o._rtlCtx
-    return None # case for casts of constants
+    return None  # case for casts of constants
 
 
 def isConst(item: Union[HConst, RtlSignalBase]):
