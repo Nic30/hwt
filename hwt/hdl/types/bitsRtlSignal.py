@@ -26,6 +26,7 @@ from pyMathBitPrecise.bits3t import _NOT_SPECIFIED, Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
 
+
 _SIGN_CAST_OPS = (HwtOps.BitsAsSigned, HwtOps.BitsAsUnsigned, HwtOps.BitsAsVec)
 
 
