@@ -1,4 +1,5 @@
-from typing import Union, List
+from collections import deque
+from typing import Union, List, Generator
 
 from hwt.hdl.const import HConst
 from hwt.hdl.types.array import HArray
@@ -11,15 +12,20 @@ from hwt.hdl.types.union import HUnion
 from hwt.mainBases import RtlSignalBase
 
 
-def walkFlattenFields(sigOrConst: Union[RtlSignalBase, HConst], skipPadding=True):
+def walkFlattenFields(sigOrConst: Union[RtlSignalBase, HConst, tuple, list, deque],
+                      skipPadding=True, allowPyCollections=False) -> Generator[Union[RtlSignalBase, HConst], None, None]:
     """
     Walk all simple values in HStruct or HArray
     """
+    if allowPyCollections and isinstance(sigOrConst, (tuple, list, deque)):
+        for item in sigOrConst:
+            yield from walkFlattenFields(item, skipPadding=skipPadding, allowPyCollections=allowPyCollections)
+        return
     t = sigOrConst._dtype
     if isinstance(t, HBits):
         yield sigOrConst
     elif isinstance(t, HUnion):
-        yield from walkFlattenFields(sigOrConst._val, skipPadding=skipPadding)
+        yield from walkFlattenFields(sigOrConst._val, skipPadding=skipPadding, allowPyCollections=allowPyCollections)
     elif isinstance(t, HStruct):
         for f in t.fields:
             isPadding = f.name is None
@@ -29,15 +35,15 @@ def walkFlattenFields(sigOrConst: Union[RtlSignalBase, HConst], skipPadding=True
                 else:
                     v = getattr(sigOrConst, f.name)
 
-                yield from walkFlattenFields(v)
+                yield from walkFlattenFields(v, skipPadding=skipPadding, allowPyCollections=allowPyCollections)
 
     elif isinstance(t, HArray):
         for item in sigOrConst:
-            yield from walkFlattenFields(item)
+            yield from walkFlattenFields(item, skipPadding=skipPadding, allowPyCollections=allowPyCollections)
     elif isinstance(t, HStream):
         assert isinstance(sigOrConst, HConst), sigOrConst
         for v in sigOrConst:
-            yield from walkFlattenFields(v)
+            yield from walkFlattenFields(v, skipPadding=skipPadding, allowPyCollections=allowPyCollections)
     else:
         raise NotImplementedError(t)
 
