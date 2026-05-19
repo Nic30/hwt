@@ -11,6 +11,7 @@ class HFunction(HdlType):
     :note: For compatibility with HDL only. It is not meant to be used
         as a function pointer to call a function in synthetisable code.
     """
+    _PRECOMPUTE_CONSTANT_SIGNALS = False
 
     def all_mask(self):
         return 1
