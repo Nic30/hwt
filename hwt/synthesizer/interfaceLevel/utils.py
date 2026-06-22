@@ -66,7 +66,7 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase,
 
         assert sig._dtype.bit_length() == s._dtype.bit_length(), (sig, s, sig._dtype, s._dtype)
         connections.append(sig(s._reinterpret_cast(sig._dtype)))
-
+    assert srcPacked._dtype.bit_length() == offset, ("Assert src not having width > than dst - exclude", srcPacked._dtype, offset)
     return connections
 
 
