@@ -63,7 +63,7 @@ class RtlSignal(RtlSignalBase, HdlSignalItem):
     __instCntr = 0
 
     __slots__ = [
-        "_ctx",
+        "_rtlCtx",
         "_rtlEndpoints",
         "_rtlDrivers",
         "_usedOps",
