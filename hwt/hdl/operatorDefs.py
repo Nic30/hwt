@@ -225,6 +225,19 @@ COMPARE_OPS = (
     HwtOps.SGE,
 )
 
+CMP_OP_OPPOSITE_SIGN = {
+    HwtOps.EQ: HwtOps.EQ,
+    HwtOps.NE: HwtOps.NE,
+    HwtOps.ULE: HwtOps.SLE,
+    HwtOps.ULT: HwtOps.SLT,
+    HwtOps.UGT: HwtOps.SGT,
+    HwtOps.UGE: HwtOps.SGE,
+    HwtOps.SLE: HwtOps.ULE,
+    HwtOps.SLT: HwtOps.ULT,
+    HwtOps.SGT: HwtOps.UGT,
+    HwtOps.SGE: HwtOps.UGE,
+}
+
 # change of compare operator on operand order swap
 CMP_OP_SWAP = {
     HwtOps.EQ: HwtOps.EQ,  # (a == b) == (b == a)
