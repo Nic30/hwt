@@ -45,6 +45,9 @@ class HwIOArray(HObjList[Optional[HwIO]], HwIO):
         HwIO is an unique object representig IO of the component that is only the same object should equal to self
         """
         return other is self
+    
+    def to_py(self):
+        return [item.to_py() for item in self]
 
     @override
     def __copy__(self):
