@@ -1,12 +1,14 @@
 from copy import copy
 from typing import Union, Self
 
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.operator import HOperatorNode
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.types.bitConstFunctions import HBitsAnyIndexCompatibleValue
+from hwt.hdl.types.bitConstFunctions import HBitsAnyIndexCompatibleValue, \
+    AnyHBitsValue
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.types.slice import HSlice
@@ -15,19 +17,49 @@ from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-def _HArrayGetitem(self: Union["HArrayRtlSignal", "HArrayConst"], iamVal: bool, key):
+def _HArrayGetitem(self: Union["HArrayRtlSignal", "HArrayConst"], iamConst: bool, key) -> Union["HArrayRtlSignal", "HArrayConst"]:
+    if iamConst and isinstance(key, slice):
+        T = self._dtype 
+        start = key.start
+        if start is None:
+            start = 0
+        else:
+            start = int(start)
+        
+        stop = key.stop
+        if stop is None:
+            stop = T.size
+        else:
+            stop = int(stop)
+
+        step = key.step
+        if step is None:
+            step = 1
+        else:
+            step = int(step)
+        oldD = self.val
+        newD = {}
+        newSize = len(range(start, stop, step))
+        assert step != 0
+        for i in range(start, stop, step):
+            d = oldD.get(i, NOT_SPECIFIED)
+            if d is not NOT_SPECIFIED:
+                newD[(i - start) // step] = copy(d)
+        return T.element_t[newSize].from_py(newD)
+        
     key = toHVal(key)
     isSLICE = isinstance(key, HSlice.getConstCls())
 
     if isSLICE:
-        raise NotImplementedError()
+        raise NotImplementedError("Non const slice on non const array")
+    
     elif isinstance(key, (HConst, RtlSignalBase)):
         pass
     else:
         raise NotImplementedError(
             f"Index operation not implemented for index {key}")
 
-    if iamVal and isinstance(key, HConst):
+    if iamConst and isinstance(key, HConst):
         return self._getitem__const(key)
 
     return HOperatorNode.withRes(HwtOps.INDEX, [self, key], self._dtype.element_t)
@@ -161,7 +193,7 @@ class HArrayConst(HConst):
         except KeyError:
             return self._dtype.element_t.from_py(None)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[Union[AnyHBitsValue, int, slice, "HSliceConst", "HSliceRtlSignal", "HwIoSignal[HBits]"]]):
         try:
             return _HArrayGetitem(self, True, key)
         except Exception as e:
