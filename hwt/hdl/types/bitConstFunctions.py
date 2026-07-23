@@ -599,12 +599,12 @@ def bitsRshift(self: AnyHBitsValue, shiftAmount: HBitsAnyCompatibleValue) -> Any
 
     if shiftAmount < width:
         return self[:shiftAmount]._ext(width, bool(self._dtype.signed))
-    elif shiftAmount > width:
+    elif shiftAmount >= width:
         if self._dtype.signed:
             msb = self[width - 1]
             return msb._sext(width)
         else:
             return self._dtype.from_py(0)
     else:
-        assert shiftAmount == 0, shiftAmount
+        assert shiftAmount == 0, (shiftAmount, width)
         return self
