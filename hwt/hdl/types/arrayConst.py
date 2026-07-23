@@ -274,3 +274,12 @@ class HArrayConst(HConst):
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
+
+    def __copy__(self):
+        d = {}
+        for i, v in self.val.items():
+            if not isinstance(v, RtlSignalBase):
+                v = v.__copy__()
+            d[i] = v
+
+        return self.__class__(self._dtype, d, self.vld_mask)
