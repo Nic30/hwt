@@ -3,10 +3,10 @@ from collections import deque
 from itertools import zip_longest
 from math import inf
 from types import GeneratorType
+from typing import Sequence, Generator, Callable, TypeVar
 
 from hdlConvertorAst.to.hdlUtils import iter_with_last
 from hwt.constants import NOT_SPECIFIED
-from typing import Sequence
 
 
 class DuplicitValueExc(Exception):
@@ -22,7 +22,10 @@ class NoValueExc(Exception):
     """
 
 
-def single(iterable, fn):
+_singleT = TypeVar("T")
+
+
+def single(iterable: Sequence[_singleT], fn: Callable[[_singleT], bool]) -> _singleT:
     """
     Get value from iterable where fn(item) and check
     if there is not fn(other item)
@@ -46,7 +49,10 @@ def single(iterable, fn):
     return ret
 
 
-def arr_any(iterable, fn):
+_arr_anyT = TypeVar("T")
+
+
+def arr_any(iterable: Sequence[_arr_anyT], fn: Callable[[_arr_anyT], bool]) -> bool:
     """
     :return: True if fn(item) for any item else False
     """
@@ -56,7 +62,10 @@ def arr_any(iterable, fn):
     return False
 
 
-def arr_all(iterable, fn):
+_arr_allT = TypeVar("T")
+
+
+def arr_all(iterable: Sequence[_arr_allT], fn: Callable[[_arr_allT], bool]) -> bool:
     """
     :return: True if fn(item) for all items in interable or iterable
         is empty else False
@@ -67,7 +76,10 @@ def arr_all(iterable, fn):
     return True
 
 
-def take(iterrable, howMay):
+_takeT = TypeVar("T")
+
+
+def take(iterrable:Sequence[_takeT], howMay:int) -> Generator[_takeT, None, None]:
     """
     :return: generator of first n items from iterrable
     """
@@ -83,7 +95,10 @@ def take(iterrable, howMay):
             return
 
 
-def where(iterable, fn):
+_whereT = TypeVar("T")
+
+
+def where(iterable: Sequence[_whereT], fn: Callable[[_whereT], bool]) -> Generator[_whereT, None, None]:
     """
     :return: generator of items from iterable where fn(item)
     """
@@ -92,7 +107,12 @@ def where(iterable, fn):
             yield i
 
 
-def groupedby(collection, fn):
+_groupedbyKeyT = TypeVar("Key")
+_groupedbyValueT = TypeVar("Val")
+
+
+def groupedby(collection: Sequence[_groupedbyValueT], fn: Callable[[_groupedbyValueT], _groupedbyKeyT])\
+    ->dict[_groupedbyKeyT, list[_groupedbyValueT]]:
     """
     same like itertools.groupby
 
@@ -100,13 +120,13 @@ def groupedby(collection, fn):
 
     :attention: Order of pairs is not deterministic.
     """
-    d = {}
+    d:dict[_groupedbyKeyT, list[_groupedbyValueT]] = {}
     for item in collection:
         k = fn(item)
         try:
             arr = d[k]
         except KeyError:
-            arr = []
+            arr:list[_groupedbyValueT] = []
             d[k] = arr
         arr.append(item)
 
@@ -128,7 +148,10 @@ def flatten(iterables, level=inf):
         yield iterables
 
 
-def grouper(n: int, iterable: Sequence, padvalue=None):
+_grouperT = TypeVar("T")
+
+
+def grouper(n: int, iterable: Sequence[_grouperT], padvalue=None) -> Sequence[tuple[_grouperT, ...]]:
     """grouper(3, 'abcdefg', 'x') -->
        ('a','b','c'), ('d','e','f'), ('g','x','x')
     """
@@ -142,7 +165,15 @@ def areSetsIntersets(setA: set, setB: set):
     return any(x in setA for x in setB)
 
 
-def balanced_reduce(arr: Sequence, opFn):
+_balanced_reduceT = TypeVar("T")
+
+
+def balanced_reduce(arr: Sequence[_balanced_reduceT],
+                    opFn: Callable[[_balanced_reduceT, _balanced_reduceT], _balanced_reduceT])\
+                    ->_balanced_reduceT:
+    """
+    Construct balaned binary tree given array of items and binary operator opFn
+    """
     while len(arr) > 1:
         nextArr = []
         for a, b in grouper(2, arr, NOT_SPECIFIED):
