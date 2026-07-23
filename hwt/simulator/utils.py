@@ -14,6 +14,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pyMathBitPrecise.bit_utils import ValidityError
 from pyMathBitPrecise.bits3t import Bits3val
+from hwt.hdl.types.structValBase import HStructConstBase
 
 
 def pprintHwIO(hwio: Union[HwModule, HwIOBase], indent:int=0, prefix:str="", file=sys.stdout):
@@ -122,26 +123,33 @@ def Bits3valToInt(v: HConst):
         return None
 
 
-def allHConstsToInts(sequenceOrVal):
+def allHConstsToInts(sequenceOrConst):
     """
     Convert HConst instances to int recursively (for sequences)
     """
-    if isinstance(sequenceOrVal, HArrayConst):
-        sequenceOrVal = sequenceOrVal.val
-
-    if isinstance(sequenceOrVal, (HConst, Bits3val)):
-        return Bits3valToInt(sequenceOrVal)
-    elif not sequenceOrVal:
-        return sequenceOrVal
-    elif (isinstance(sequenceOrVal, (list, tuple, deque))
-          or isgenerator(sequenceOrVal)):
+    if isinstance(sequenceOrConst, HArrayConst):
+        sequenceOrConst = sequenceOrConst.val
+    elif isinstance(sequenceOrConst, HStructConstBase):
+        sequenceOrConst = sequenceOrConst.to_py()
+    
+    if isinstance(sequenceOrConst, (HConst, Bits3val)):
+        return Bits3valToInt(sequenceOrConst)
+    elif not sequenceOrConst:
+        return sequenceOrConst
+    elif (isinstance(sequenceOrConst, (list, tuple, deque))
+          or isgenerator(sequenceOrConst)):
         seq = []
-        for i in sequenceOrVal:
+        for i in sequenceOrConst:
             seq.append(allHConstsToInts(i))
 
-        if isinstance(sequenceOrVal, tuple):
+        if isinstance(sequenceOrConst, tuple):
             return tuple(seq)
 
         return seq
+    elif isinstance(sequenceOrConst, dict):
+        res = {}
+        for k, v in sequenceOrConst.items():
+            res[allHConstsToInts(k)] = allHConstsToInts(v)
+        return res
     else:
-        return sequenceOrVal
+        return sequenceOrConst
