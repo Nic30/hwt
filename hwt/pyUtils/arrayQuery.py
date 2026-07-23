@@ -185,3 +185,30 @@ def balanced_reduce(arr: Sequence[_balanced_reduceT],
         arr = nextArr
 
     return arr[0]
+
+
+_iter_with_lookaheadT = TypeVar("T")
+
+
+def iter_with_lookahead(it: Sequence[_iter_with_lookaheadT], padValue=None)\
+    ->tuple[_iter_with_lookaheadT, _iter_with_lookaheadT]:
+    """
+    iterate all items with lookahead to next item, for last item the nextitem=padValue
+    """
+    # Ensure it's an iterator and get the first field
+    it = iter(it)
+    try:
+        prev = next(it)
+    except StopIteration:
+        # completly empty sequence
+        return
+
+    for item in it:
+        # Lag by one item so I know I'm not at the end
+        yield prev, item
+        prev = item
+
+    # Last item
+    yield prev, padValue
+
+    
