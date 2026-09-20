@@ -34,7 +34,7 @@
 HWT uses hilevel-netlists for internal representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc (hw processes are automatically resolved). This netlist is easy to use and easy to modify or analyse by user if there is something missing in main library.
 Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializer/mode.py) allows to tweaks how component should behave during serialization.
 
-HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language.
+HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specified names are checked for collision with target language.
 
 HWT designs are objects. No specific compiler execution is required, just run `python3`, import the thing and use `to_rtl` metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
@@ -56,7 +56,7 @@ pip3 install --upgrade --force-reinstall --no-cache-dir -r https://raw.githubuse
 ```
 
 Then you are able to use functions and classes defined in the hwt library from a python console or script.
-Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains common interfaces, agents, components etc...
+Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recommended as it contains common interfaces, agents, components etc...
 
 ## FAQ
 
@@ -164,6 +164,6 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [nmigen-boards](https://github.com/nmigen/nmigen-boards) - board and connector meta fo nmigen
 
 
-## Sources of informations in this area
+## Sources of information in this area
 
 * [computer-engineering-resources](https://github.com/rajesh-s/computer-engineering-resources) - list of conferences and hardware projects
