@@ -264,7 +264,8 @@ class HStruct(HdlType):
         """
         assert isinstance(other, HStruct)
         return HStruct(*self.fields, *other.fields)
-
+    # [todo] method to translate to python cstruct https://stackoverflow.com/a/71118250
+    
     @override
     def isScalar(self):
         return False
@@ -347,6 +348,7 @@ class HStructFromClass:
         {
            f0: <HBitsConst b8 0, mask 0>
         }
+    :attention: all property names has to be unique, and it is not checked
     """
 
     IGNORED_PADDING_NAME = "__"
@@ -414,6 +416,7 @@ class HStructFromClass:
         cls.__hStructObjOrig_from_py = hStruct.from_py
         hStruct.from_py = cls._from_py_withInitFromClsDefValues
         cls.__hStructObj = hStruct
+        hStruct.__pyCls__ = cls
         return hStruct
 
     @classmethod
