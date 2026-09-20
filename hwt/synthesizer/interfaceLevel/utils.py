@@ -38,7 +38,7 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase,
     :param packedSrc: vector which should be connected
     :param dstInterface: structuralized interface where should
         packedSrc be connected to
-    :param exclude: sub interfaces of self which should be excluded
+    :param exclude: sub interfaces of dstInterface which should be excluded
     """
     offset = 0
     connections = []
@@ -66,7 +66,8 @@ def HwIO_connectPacked(srcPacked: RtlSignalBase,
 
         assert sig._dtype.bit_length() == s._dtype.bit_length(), (sig, s, sig._dtype, s._dtype)
         connections.append(sig(s._reinterpret_cast(sig._dtype)))
-    assert srcPacked._dtype.bit_length() == offset, ("Assert src not having width > than dst - exclude", srcPacked._dtype, offset)
+
+    assert srcPacked._dtype.bit_length() == offset, ("Assert src not having width > than dst - exclude", srcPacked._dtype, offset, srcPacked, dstInterface, exclude)
     return connections
 
 
