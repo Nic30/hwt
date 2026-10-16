@@ -28,8 +28,13 @@ class HwIOStructAgent(AgentBase):
                 hio._ag.set_data(v)           
         else:
             assert len(d) == len(hwIO._hwIOs), (d, hwIO._hwIOs)
-            for v, hio in zip(d, hwIO._hwIOs):
-                hio._ag.set_data(v)
+            if isinstance(d, dict):
+                for hio in hwIO._hwIOs:
+                    v = d[hio._name]
+                    hio._ag.set_data(v)
+            else:
+                for v, hio in zip(d, hwIO._hwIOs):
+                    hio._ag.set_data(v)
     
     def get_data(self):
         hwIO = self.hwIO
