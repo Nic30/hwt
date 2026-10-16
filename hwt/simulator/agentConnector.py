@@ -14,7 +14,6 @@ def autoAddAgents(module: HwModule, sim: HdlSimulator):
     """
     for hio in module._hwIOs:
         assert hio._isExtern, hio
-
         hio._initSimAgent(sim)
         assert hio._ag is not None, hio
 
